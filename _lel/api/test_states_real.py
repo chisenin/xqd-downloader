@@ -30,7 +30,7 @@ os.environ.setdefault('XQD_TEST_HOME',
 import xqd_gui
 import xqd_history
 
-# 真 Cookie（来自 cache-analysis/_apitest.py）
+# 真 Cookie —— 统一走 xqd_creds（env -> 私有文件 -> 抓包原件）
 COOKIE = ''
 
 PASS = []
@@ -44,23 +44,14 @@ def ok(name, cond, extra=''):
 
 
 def load_cookie():
-    """从 cache-analysis/_apitest.py 里取真 Cookie。
+    """取真 Cookie —— 统一走 xqd_creds（env -> 私有文件 -> 抓包原件）。
 
-    ★ 那个文件里的 COOKIE 是**多行隐式拼接**的字符串，
-      正则匹配不到 —— 直接 import 它的模块变量最稳。
+    ★ 凭据不在源码里，详见 xqd_creds.py 顶部说明。
     """
     global COOKIE
-    root = os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))))
-    p = os.path.join(root, 'cache-analysis', '_apitest.py')
-    if not os.path.isfile(p):
-        return False
-    import importlib.util
+    import xqd_creds
     try:
-        spec = importlib.util.spec_from_file_location('_apitest_mod', p)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        COOKIE = getattr(mod, 'COOKIE', '') or ''
+        COOKIE = xqd_creds.load_cookie()
     except Exception as e:
         print('  读 Cookie 失败：%s' % e)
         return False

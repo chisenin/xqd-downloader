@@ -24,11 +24,13 @@ from PySide6.QtCore import QTimer
 
 import xqd_gui
 
-COOKIE = ('rsessionId=<RSESSION_ID>'
-          '<RSESSION_ID_TAIL>; '
-          'userId=<USER_ID>; cUserId=<C_USER_ID>; '
-          'uid=<UID>; '
-          'caller=app_edu; platform=android; ver=4260; deviceType=phone; os=35')
+# ★ 凭据不在源码里 —— 统一走 xqd_creds（env -> 私有文件 -> 抓包原件）
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+import xqd_creds            # noqa: E402
+
+COOKIE = xqd_creds.load_cookie()
 
 CAMP = sys.argv[1] if len(sys.argv) > 1 else '太极中阶复训营'
 IDX = int(sys.argv[2]) if len(sys.argv) > 2 else 1

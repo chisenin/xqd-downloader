@@ -18,6 +18,7 @@ APP_NAME = '兴趣岛视频下载器'
 # 需要一起打进去的自有模块
 HIDDEN = [
     'xqd_auth',
+    'xqd_creds',      # 凭据读取（env -> 私有文件），不含任何真实凭据
     'xqd_dedupe',
     'xqd_engine',
     'xqd_platform',

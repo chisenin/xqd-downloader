@@ -32,16 +32,21 @@ import urllib.error
 import json
 import re
 import os
+import sys
 import time
 
 DEFAULT_HOST = 'm.qianliao.net'
-DEFAULT_COOKIE = (
-    'rsessionId=<RSESSION_ID>'
-    '<RSESSION_ID_TAIL>; '
-    'userId=<USER_ID>; cUserId=<C_USER_ID>; '
-    'uid=<UID>; '
-    'caller=app_edu; platform=android; ver=4260; deviceType=phone; os=35'
-)
+
+# ★ 凭据**不在源码里**。取不到就是取不到 —— 抛错让调用方去拿授权，
+#   绝不静默用一个写死的 Cookie（那是账号密码级的凭据，不能进仓库）。
+#   优先级：环境变量 XQD_COOKIE / QLD_COOKIE -> %USERPROFILE%\.xqd_tool\cookie.txt
+#   -> cache-analysis/_apitest.py（抓包原件，本地遗留）。
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(os.path.dirname(_HERE))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+import xqd_creds            # noqa: E402
+
 UA_APP = 'Mozilla/5.0 (Linux; Android 12; M2102K1C) okhttp/4.9.0'
 
 
@@ -53,7 +58,7 @@ class QldClient:
     """兴趣岛业务 API 客户端。"""
 
     def __init__(self, cookie=None, host=DEFAULT_HOST, timeout=25, verbose=False):
-        self.cookie = cookie or os.environ.get('QLD_COOKIE') or DEFAULT_COOKIE
+        self.cookie = cookie or xqd_creds.load_cookie()
         self.host = host
         self.timeout = timeout
         self.verbose = verbose

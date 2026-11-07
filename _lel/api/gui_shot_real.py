@@ -45,7 +45,7 @@ def shot(name):
 
 
 def s1():
-    win._on_auth_ok('userId=<USER_ID>; rsessionId=<RSESSION_ID>')
+    win._on_auth_ok('userId=<FAKE_USER_ID>; rsessionId=<FAKE_RSESSION>')
     from xqd_platform import Camp, Lesson
     from PySide6.QtWidgets import QTableWidgetItem
 

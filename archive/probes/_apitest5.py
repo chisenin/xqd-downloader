@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 """用正确的 qianliao.net 域 cookie 重试 API。"""
+import os
+import sys
 import ssl, urllib.request, urllib.error, json
 CTX=ssl.create_default_context(); CTX.check_hostname=False; CTX.verify_mode=ssl.CERT_NONE
 OP=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=CTX))
 
-COOKIE=('rsessionId=<RSESSION_ID>; '
-        'uid=<UID>; '
-        'userId=<USER_ID>; caller=app_edu; platform=android; ver=4260; deviceType=phone; os=35')
+# ★ 凭据不在源码里 —— 统一走 xqd_creds（env -> 私有文件 -> 抓包原件）
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+import xqd_creds            # noqa: E402
+
+COOKIE = xqd_creds.load_cookie()
 
 def call(path, method='GET', body=None, host='m.qianliao.net', extra=None):
     h={'User-Agent':'Mozilla/5.0 (Linux; Android 12; M2102K1C) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36',

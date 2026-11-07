@@ -39,22 +39,16 @@ PASS = []
 FAIL = []
 
 # ★ 不要在这里硬编码 Cookie —— 会过期，而且脱敏时容易把内容改坏。
-#   统一从 cache-analysis/_apitest.py 动态读（与 test_states_real.py 一致）。
+#   统一走 xqd_creds（env -> 私有文件 -> 抓包原件），见 xqd_creds.py。
 COOKIE = ''
 
 
 def load_cookie():
-    """从 cache-analysis/_apitest.py 里取真 Cookie。"""
+    """取真 Cookie —— 统一走 xqd_creds（env -> 私有文件 -> 抓包原件）。"""
     global COOKIE
-    p = os.path.join(ROOT, 'cache-analysis', '_apitest.py')
-    if not os.path.isfile(p):
-        return False
-    import importlib.util
+    import xqd_creds
     try:
-        spec = importlib.util.spec_from_file_location('_apitest_mod', p)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        COOKIE = getattr(mod, 'COOKIE', '') or ''
+        COOKIE = xqd_creds.load_cookie()
     except Exception as e:
         print('  读 Cookie 失败：%s' % e)
         return False

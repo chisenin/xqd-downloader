@@ -47,7 +47,7 @@ def step1():
 
 def step2():
     # 模拟授权成功
-    win._on_auth_ok('userId=<USER_ID>; rsessionId=<RSESSION_ID>')
+    win._on_auth_ok('userId=<FAKE_USER_ID>; rsessionId=<FAKE_RSESSION>')
     print('授权后:', win.lbl_auth.text())
     shot('02_授权成功_横幅')
 
