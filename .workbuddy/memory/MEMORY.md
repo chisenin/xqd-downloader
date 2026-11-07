@@ -35,8 +35,6 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 - 端点（前缀 `/gate/course/`）：营列表 `myCourseListV2`（`skyType`：`FINANCIAL`→9 正式营、
   `INTENTION`→1 体验营、不传→26 含公开课）、课表 `playListOfCourse`、播放地址
   `getCoursePlayUrl`（`businessType`=`camp`/`OPEN_COURSE`）。
-  ★ Cookie 在 `cache-analysis/_apitest.py` —— 真网络测试靠它取授权，**别删**；
-  测试里**不要硬编码 Cookie**，动态 import 那个文件（会过期）。
 
 ## 授权（免 adbd）与 MuMu 启停 → 全部细节见 `docs/11` A 节
 
@@ -64,6 +62,7 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 5. **Windows 下载目录读注册表 Known Folder GUID**
    `{374DE290-123F-4565-9164-39C4925E467B}` → `D:\user\chisenin\download`。
 6. **测试必须设 `XQD_TEST_HOME`** 隔离配置/历史/分片缓存，否则会改用户下载目录。
+   ⚠️ 凭据文件**不受**它影响（隔离了就拿不到授权）——见 `docs/11` J 节。
 
 ## 合规与进度（见 `docs/12`）
 
@@ -72,3 +71,5 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
   → 复现的 163 内核不能声称 MIT；旧址 `PyJun/Mooc_Downloader` 已 404。
 - 进度：核心能力全就绪（API 全链路、端到端 6/6、GUI v1.4.0 含历史+续传、
   回归 284 项全绿 + 真网络 35 项）。待办：全量 266+6 节、163 适配器实战。
+- 安全：凭据已全面脱敏。`xqd_creds.load_cookie()` 是唯一入口（env `XQD_COOKIE`
+  → `%USERPROFILE%\.xqd_tool\cookie.txt`，仓库外）；**代码里绝不硬编码 Cookie**。
