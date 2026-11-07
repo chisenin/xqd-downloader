@@ -68,7 +68,6 @@ dist-csharp/
 .vs/
 vendor/
 state/exe_test/
-state/exe_test/
 
 # ── GUI v7 新增的运行产物（下载历史 / 自检截图） ──────────
 state/gui_hist_home/
@@ -88,11 +87,8 @@ state/links.json
 *.bundle
 
 # ── 抓包/逆向的临时工作区（含明文凭据，绝不入库） ──────────
-cache-analysis/
 webcache/
 dl_drm/
-*.hls
-*.m3u8
 
 # ── 凭据文件（仓库之外，这里兜底防止误拷进来） ──────────────
 cookie.txt
