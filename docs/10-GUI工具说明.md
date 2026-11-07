@@ -8,7 +8,7 @@
 **方式一：直接双击**（推荐给日常使用）
 
 ```
-D:\user\chisenin\Desktop\兴趣岛视频下载器.exe
+D:\user\chisenin\Desktop\xingqudao-downloader-v1.4.0.exe
 ```
 
 单文件，96 MB，绿色免安装。首次启动会自动检查授权。
@@ -348,8 +348,14 @@ HLS 分片的**文件名在两次会话之间完全稳定**（实测 150/150 一
 ### 打包
 
 ```bash
-python build_exe.py     # 产出 dist/兴趣岛视频下载器.exe
+python build_exe.py              # 产出 dist/xingqudao-downloader-v1.4.0.exe
+python build_exe.py --dry-run    # 只打印命令，不执行打包
 ```
+
+★ 产物名固定为**纯 ASCII**：`xingqudao-downloader-v<版本>.exe`，版本号自动读
+`xqd_gui.APP_VERSION`，升级版本后文件名跟着变（自检命令里的文件名同步替换）。
+原因是 GitHub Releases 会把中文附件名吞成 `default.exe`，而 96 MB 附件发布后
+不可改名，重传代价高。窗口标题与界面文字仍是中文（`APP_TITLE`）。
 
 PyInstaller 打包 PySide6 **必须显式收集顶层 `Qt6*.dll` + `plugins/`**，
 否则 exe 会报 `DLL load failed while importing QtCore`（双击无窗口）。
@@ -358,7 +364,7 @@ PyInstaller 打包 PySide6 **必须显式收集顶层 `Qt6*.dll` + `plugins/`**�
 ### 自检截图
 
 ```bash
-set XQD_SCREENSHOT=out.png && set XQD_EXIT_AFTER_SHOOT=1500 && 兴趣岛视频下载器.exe
+set XQD_SCREENSHOT=out.png && set XQD_EXIT_AFTER_SHOOT=1500 && xingqudao-downloader-v1.4.0.exe
 ```
 
 窗口显示后自动截图存盘再退出 —— 用于验证打包后的渲染是否正常

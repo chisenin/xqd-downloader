@@ -2,18 +2,24 @@
 """PyInstaller 打包脚本：产出单文件 exe。
 
 用法：
-    python build_exe.py
+    python build_exe.py              # 正式打包
+    python build_exe.py --dry-run    # 只打印命令，不执行
 
-产物：dist/兴趣岛视频下载器.exe（单文件，双击即用）
+产物：dist/xingqudao-downloader-v<版本>.exe（版本取自 xqd_gui.APP_VERSION）
+
+★ exe 文件名一律用 ASCII。GitHub Releases 会把中文附件名吞成
+  ``default.exe``，而 96 MB 的附件一旦发布（immutable release）就改不了名，
+  重传代价很高。窗口标题、界面文字仍是中文，见 xqd_gui.APP_TITLE。
 """
 
 import os
+import re
 import shutil
 import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-APP_NAME = '兴趣岛视频下载器'
+EXE_BASENAME = 'xingqudao-downloader'
 
 # 需要一起打进去的自有模块
 HIDDEN = [
@@ -32,6 +38,24 @@ EXCLUDE = [
 ]
 
 
+def app_version():
+    """从源码读 APP_VERSION；用正则而不用 import，避免打包前拉起 Qt。"""
+    try:
+        with open(os.path.join(ROOT, 'xqd_gui.py'), encoding='utf-8') as f:
+            src = f.read()
+        m = re.search(r"^APP_VERSION\s*=\s*['\"]([^'\"]+)['\"]", src, re.M)
+        if m:
+            return m.group(1)
+    except OSError:
+        pass
+    return 'dev'
+
+
+def exe_name():
+    """纯 ASCII 产物名（不含扩展名），与 Release tag ``v<版本>`` 对齐。"""
+    return '%s-v%s' % (EXE_BASENAME, app_version())
+
+
 def _pyside6_root():
     """定位 PySide6 安装目录（打包时需要收集 Qt 的 DLL 与 plugins）。"""
     try:
@@ -41,7 +65,8 @@ def _pyside6_root():
         return None
 
 
-def main():
+def build_cmd():
+    """构造 PyInstaller 命令。单独成函数，便于离线核对产物名与参数。"""
     if shutil.which('pyinstaller') is None:
         print('pyinstaller 不在 PATH，尝试用 -m 调用')
         base = [sys.executable, '-m', 'PyInstaller']
@@ -51,7 +76,7 @@ def main():
     cmd = base + [
         '--onefile',
         '--windowed',              # 不弹控制台
-        '--name', APP_NAME,
+        '--name', exe_name(),
         '--noconfirm',
         '--clean',
         '--distpath', os.path.join(ROOT, 'dist'),
@@ -92,14 +117,25 @@ def main():
         print('收集 %d 个 Qt DLL + plugins/' % len(dlls))
 
     cmd.append(os.path.join(ROOT, 'xqd_gui.py'))
+    return cmd
 
+
+def main():
+    name = exe_name()
+    cmd = build_cmd()
+
+    print('产物：dist/%s.exe' % name)
     print('执行：', ' '.join(cmd))
+    if '--dry-run' in sys.argv[1:]:
+        print('--dry-run：未执行打包')
+        return 0
+
     r = subprocess.run(cmd, cwd=ROOT)
     if r.returncode != 0:
         print('打包失败 rc=%s' % r.returncode)
         return r.returncode
 
-    exe = os.path.join(ROOT, 'dist', APP_NAME + '.exe')
+    exe = os.path.join(ROOT, 'dist', name + '.exe')
     if os.path.isfile(exe):
         print('\n✅ 打包完成：%s（%.1f MB）'
               % (exe, os.path.getsize(exe) / 1048576.0))

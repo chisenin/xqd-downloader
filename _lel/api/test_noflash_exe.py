@@ -99,8 +99,14 @@ def visible_host_windows():
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))))
-    exe = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
-        root, 'dist', '兴趣岛视频下载器.exe')
+    # 打包产物固定为英文名（见 build_exe.exe_name），版本号随 APP_VERSION 变化，
+    # 所以用通配取最新一份，避免在这里写死版本。
+    import glob
+    cands = sorted(glob.glob(os.path.join(
+        root, 'dist', 'xingqudao-downloader-v*.exe')))
+    exe = (sys.argv[1] if len(sys.argv) > 1 else
+           (cands[-1] if cands else
+            os.path.join(root, 'dist', 'xingqudao-downloader.exe')))
     if not os.path.isfile(exe):
         print('找不到 exe：%s' % exe)
         return 1

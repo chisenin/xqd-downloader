@@ -179,8 +179,14 @@ python test_dedupe.py       # 已下载检测与命名
 ## 打包与分发
 
 ```bash
-python build_exe.py     # 产出 dist/兴趣岛视频下载器.exe
+python build_exe.py              # 产出 dist/xingqudao-downloader-v1.4.0.exe
+python build_exe.py --dry-run    # 只打印命令，不执行打包
 ```
+
+★ **产物文件名固定为纯 ASCII**：`xingqudao-downloader-v<版本>.exe`，
+版本号自动取自 `xqd_gui.APP_VERSION`，与 Release 的 tag 对齐。原因：GitHub
+Releases 会把中文附件名吞成 `default.exe`，而附件发布后不可改名，只能从打包
+源头避开。窗口标题、界面文字仍为中文（`APP_TITLE`），不受影响。
 
 打包 PySide6 必须显式收集顶层 `Qt6*.dll` 与 `plugins/`，`build_exe.py` 已处理。
 
