@@ -17,20 +17,21 @@
 - 不用投屏 / HDMI / 录屏 / App 内手工下载（用户明确排除）。
 - 网络极不稳定、流量昂贵 → 少请求、别重复下载。
 - 教学大屏磁盘小 → 导出后及时删。
-- 只需「正式营」「体验营」（已付费）；「轻课」确认是空的，**别再探**。
+- 只需「正式营」「体验营」（付费）；「轻课」确认是空的，**别探**。
 - 成品结构见「命名规则」；全角冒号 `：` 保留。
+
 ## 代码结构（见 `docs/12`）
 
 采集 `xqd.py` / `_lel/api/qianliao.py` → 业务 `xqd_app.py` / `xqd_api.py` →
 `xqd_server.py` + `ui.html`（网页版）/ **`xqd_gui.py`（★ PySide6 桌面工具，
 用户现在用的就是它）**，配套 `xqd_platform.py`/`xqd_engine.py`/`xqd_auth.py`/
 `xqd_history.py`/`xqd_dedupe.py`/`xqd_creds.py`；CLI 批处理
-`xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
-两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
+`xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
 API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签名天然新鲜。
 **课名不靠播放反推**（课表一次拿全）。## ★ 业务 API（已全链路打通，详见 `docs/09`）
 
 `POST https://m.qianliao.net/financial/api/transfer/gate/<endpoint>`，Body `{"transferData":{...}}`
+
 - **成功码在 `state.code`**（不是顶层 `code`）—— 读顶层永远 None，会误判打不通。
 - **必须 `ProxyHandler({})` 禁用系统代理**，否则被代理吞掉返回 HTML。
 - 端点（前缀 `/gate/course/`）：营列表 `myCourseListV2`（`skyType`：`FINANCIAL`→9 正式营、
@@ -49,6 +50,7 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 ## 命名规则（见 `docs/01`）
 
 `Z:\太极营\<营名>\<序号>.<课名>.<YYYY.MM.DD>.mp4`
+
 - 序号 = 营内课表顺序（1 起）；`playListOfCourse` 顺序**与 App 列表一致**（实测吻合）。
 - 日期 = 该节 `startTime`。单一事实来源：`xqd_api.course_filename(item, seq, used)`。
 
@@ -73,4 +75,3 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
   回归 284 项全绿 + 真网络 35 项）。待办：全量 266+6 节、163 适配器实战。
 - 安全：凭据已脱敏。`xqd_creds.load_cookie()` 是唯一入口（env `XQD_COOKIE`
   → `~/.xqd_tool/cookie.txt`，仓库外）；**绝不硬编码 Cookie**。
-
