@@ -39,8 +39,7 @@ DEFAULT_HOST = 'm.qianliao.net'
 
 # ★ 凭据**不在源码里**。取不到就是取不到 —— 抛错让调用方去拿授权，
 #   绝不静默用一个写死的 Cookie（那是账号密码级的凭据，不能进仓库）。
-#   优先级：环境变量 XQD_COOKIE / QLD_COOKIE -> %USERPROFILE%\.xqd_tool\cookie.txt
-#   -> cache-analysis/_apitest.py（抓包原件，本地遗留）。
+#   优先级：环境变量 XQD_COOKIE / QLD_COOKIE -> %USERPROFILE%\.xqd_tool\cookie.txt。
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_HERE))
 if _ROOT not in sys.path:

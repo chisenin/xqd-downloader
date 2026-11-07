@@ -78,3 +78,14 @@ state/links.json
 *.exe
 *.pyz
 *.bundle
+
+# ── 抓包/逆向的临时工作区（含明文凭据，绝不入库） ──────────
+cache-analysis/
+webcache/
+dl_drm/
+*.hls
+*.m3u8
+
+# ── 凭据文件（仓库之外，这里兜底防止误拷进来） ──────────────
+cookie.txt
+*.cookie

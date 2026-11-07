@@ -81,7 +81,7 @@ def task_state(win, job_id):
 
 def main():
     if not load_cookie():
-        print('★ 拿不到真 Cookie（cache-analysis/_apitest.py），跳过')
+        print('★ 拿不到真 Cookie（xqd_creds / ~/.xqd_tool/cookie.txt），跳过')
         return 0
     print('Cookie 长度 %d' % len(COOKIE))
     patch_cookie()

@@ -10,8 +10,9 @@
 
 上一轮的核心卡点是「实测 `login-mooc.exe` 拿 Cookie」。**这条路线已被绕过**：
 
-- `cache-analysis/_apitest*.py` 里存着一份**从模拟器 App 抓包得到的真实 Cookie**
-  （`rsessionId` + `userId` + `caller=app_edu` …）。
+- 手里有一份**从模拟器 App 抓包得到的真实 Cookie**
+  （`rsessionId` + `userId` + `caller=app_edu` …），存在仓库外的
+  `%USERPROFILE%\.xqd_tool\cookie.txt`（凭据等价账号密码，不入库）。
 - 这份 Cookie 直接调业务网关即返回 `state.code = 0`。
 - → 于是「官方登录器」这个支点变得**不必要**了。`login-mooc.exe` 保留作为
   Cookie 过期时的备用手段，但不再是阻塞项。
@@ -169,7 +170,7 @@ master 多码率实测：码率列表 `[(480,480x852), (720,720x1280), (1080,108
 
 1. **Cookie 过期怎么办** —— `rsessionId` 有有效期。过期时 API 返回 `state.code=110`。
    备用方案（未验证）：
-   - 从模拟器 App 重新抓包 Cookie（`cache-analysis/_apitest*.py` 的来源）；
+   - 从模拟器 App 重新抓包 Cookie，写入 `%USERPROFILE%\.xqd_tool\cookie.txt`；
    - 或走 `login-mooc.exe`（参数契约已确认：
      `login-mooc.exe <cookies_file> <login_name>`，见 `_lel/login/extracted/main.js` 第 19-27 行）。
 2. **163 适配器** —— 解密内核已就绪（`_lel/core/netease_mooc.py`，官方样本 2/2 通过），

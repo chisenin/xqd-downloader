@@ -124,6 +124,11 @@ state/                 运行期数据（部分已忽略，不入版本库）
 archive/ · _lel/       一次性探测脚本与第三方分析材料（非运行时主链路）
 ```
 
+> `archive/` 只保留**有复用价值**的材料：DRM 明文孪生的推导脚本
+> （`archive/drm-analysis/`）、第三方提取脚本（`archive/xwz-v2/`）、
+> 端到端验证脚本（`archive/oneshot/`）、早期网页版文档存档
+> （`archive/legacy-docs/`）。抓包原件与明文凭据已清理。
+
 **授权链路**：`xqd_auth.py` 通过 MuMu 模拟器自带的内部 RPC 读取本机登录态，
 全程不启 adb、不依赖 adb 端口，也不会把任何凭据写进仓库或上传。
 细节见 [`docs/11-工具实现要点.md`](docs/11-工具实现要点.md) A 节。

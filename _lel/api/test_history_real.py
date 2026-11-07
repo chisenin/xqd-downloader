@@ -99,7 +99,7 @@ def seg_names(seg_dir):
 def main():
     keyword = sys.argv[1] if len(sys.argv) > 1 else None
     if not load_cookie():
-        print('★ 拿不到真 Cookie（cache-analysis/_apitest.py），跳过')
+        print('★ 拿不到真 Cookie（xqd_creds / ~/.xqd_tool/cookie.txt），跳过')
         return 1
     plat = patch_cookie()
     ok('授权有效（真实 Cookie）', plat.check_auth()[0], plat.check_auth()[1])
