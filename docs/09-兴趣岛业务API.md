@@ -103,7 +103,7 @@ Headers:
 ```json
 {
   "type": "VIDEO",
-  "playUrl": "https://video2.qianliao.net/43a5a542vodtranscq1500020547/c4e8eb573270835013331836280/v.f1440283.m3u8?t=6aee9e6a&us=25a4a5a1-...&sign=ef3d396c...",
+  "playUrl": "https://video2.qianliao.net/43a5a542vodtranscq1500020547/c4e8eb573270835013331836280/v.f1440283.m3u8?t=<REDACTED>&us=<REDACTED>&sign=<REDACTED>",
   "fileId": "3270835013331836280",
   "keySign": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
   "totalSeconds": 535,
