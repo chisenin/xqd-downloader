@@ -58,6 +58,14 @@ state/login_test.log
 build/
 dist/
 *.spec
+
+# ── C# 分支（csharp-wpf）构建产物 ───────────────────────
+src/**/bin/
+src/**/obj/
+dist-csharp/
+*.user
+*.suo
+.vs/
 vendor/
 state/exe_test/
 state/exe_test/

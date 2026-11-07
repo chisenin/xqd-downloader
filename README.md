@@ -224,3 +224,90 @@ GitHub 单文件上限 100 MB，而该 exe 约 96.5 MB 已贴边；二进制无�
   [`NOTICE.md`](NOTICE.md)。
 - 课程内容的权利不因本软件改变。请**只处理自己已购买、有权访问与保存的内容**，
   本工具不提供、也不鼓励用于未购内容的批量获取；仅供个人学习与本地教学使用。
+
+---
+
+# 分支 `csharp-wpf`：C# + WPF 完整移植
+
+> 本分支把 master 的 **全部功能**从 Python 移植为 C# / WPF，`master` 分支保持
+> Python 实现不变。上面的 Python 版说明仍然有效；以下只描述 C# 分支。
+
+## 环境与构建
+
+| 项 | 值 |
+|---|---|
+| 目标框架 | `net8.0`（Core / Server / CLI / Tests）、`net8.0-windows` + `UseWPF`（GUI） |
+| SDK | .NET 8 SDK 8.0.416（本机装在 `D:\user\chisenin\.dotnet`，**不改动系统目录**） |
+| 运行时 | 系统自带 `Microsoft.NETCore.App` + `Microsoft.WindowsDesktop.App` 8.0.22 |
+| 外部包 | **零 NuGet 依赖**，全部只用 BCL（System.Text.Json / HttpClient / Process / WPF） |
+| 外部工具 | ffmpeg / ffprobe（与 Python 版相同，需在 PATH 或固定回退目录） |
+
+```bash
+DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"
+
+# 编译整个解决方案（5 个项目，0 错误 0 警告）
+"$DOTNET" build src/Xqd.sln -c Release
+
+# 离线回归（199 项，不发网络请求、不启动模拟器、XQD_TEST_HOME 隔离）
+"$DOTNET" run --project src/Xqd.Tests -c Release
+
+# 发布三个可执行程序到 dist-csharp/（framework-dependent，需系统 .NET 8）
+"$DOTNET" publish src/Xqd.Gui/Xqd.Gui.csproj    -c Release -o dist-csharp/gui
+"$DOTNET" publish src/Xqd.Server/Xqd.Server.csproj -c Release -o dist-csharp/server
+"$DOTNET" publish src/Xqd.Cli/Xqd.Cli.csproj    -c Release -o dist-csharp/cli
+```
+
+日常使用：双击 `dist-csharp/gui/xingqudao-downloader.exe`（绿色免安装目录，
+整目录一起拷贝即可；不要只拷单个 exe）。
+
+```bash
+# 网页版（复用根目录 ui.html，接口与 Python 版一致）
+"$DOTNET" dist-csharp/server/Xqd.Server.dll --port 8765 --mode api --out "D:/user/chisenin/Videos"
+
+# CLI 全量批处理
+"$DOTNET" dist-csharp/cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 \
+    --seg-workers 12 --tabs 正式营,体验营 --quality max
+```
+
+★ `PublishSingleFile=true` 在本机会触发 `Microsoft.NET.ILLink.Tasks` 的 NuGet 还原，
+离线环境不可用，故采用普通目录发布（每个前端约 0.5 MB，共用系统 .NET 8 运行时）。
+
+## 模块对照表
+
+| Python（master） | C#（csharp-wpf） | 说明 |
+|---|---|---|
+| `xqd_platform.py` / `xqd_api.py` | `Xqd.Core/Api/{QianliaoClient,QianliaoPlatform,ApiCompat}.cs` | 网关 `transferData` / `state.code` / 禁代理 / 营表 / 播放地址 |
+| `xqd_engine.py` | `Xqd.Core/Engine/*.cs` | 清单分派、DRM 明文孪生、12 片抽样、并发分片、cat 拼接、转封装、ffprobe |
+| `xqd_auth.py` / `xqd_creds.py` / `xqd_proc.py` | `Xqd.Core/Auth/MumuAuth.cs` + 公共 `Creds.cs` / `Proc.cs` | MuMu 内部 RPC 读 Cookie、缓存授权优先、Qt 环境净化、无控制台窗口 |
+| `xqd_history.py` / `xqd_dedupe.py` | `Xqd.Core/History/HistoryStore.cs` / `Dedupe/ExistingChecker.cs` | 跨会话续传分片、终态保护、已下载检测 |
+| `xqd_gui.py`（3710 行） | `Xqd.Gui/*`（XAML + code-behind + 控件 + VM） | v1.5.1 全功能：多营勾选、6 列表格、双速率计、双槽位流水线、暂停/续传、日志 |
+| `xqd_server.py` + `ui.html` | `Xqd.Server/*` + 复用的 `ui.html` | HttpListener 回环服务，路由/JSON 协议完全一致 |
+| `xqd_batch.py` / `xqd_pdl.py` | `Xqd.Cli/*` | 全量批处理、断点状态、参数一致 |
+| `xqd.py` / `xqd_app.py` | `Xqd.Core/Adb/*.cs` | ADB 采集、uiautomator DOM、sweep、明文孪生 |
+| `_lel/core/netease_mooc.py` | `Xqd.Core/Crypto/Netease163.cs` | 163 AES 内核（**非 MIT**，见 NOTICE） |
+| `build_exe.py` | `dotnet publish` | 不再需要 PyInstaller / Qt DLL 收集 |
+
+## 移植时保持的关键契约
+
+- **单一事实来源**：`Xqd.Core/States.cs`（状态词 / 配色 / 列号 / 槽位常量）、
+  `Naming.cs`（`<序号>.<课名>.<YYYY.MM.DD>.mp4`）、`Config.cs`（目录记忆 / 注册表
+  Known Folder GUID / 测试隔离）、`Contracts.cs`（所有前端共用的接口）。
+- **少请求**：调用方现场解析的 `PlayUrl` 直接传给引擎，不重复 resolve；
+  `api` 模式不 sweep；轻课直接返回空，不探测。
+- **续传**：`%05d_<basename>` 分片命名、成功才清分片、`if (ownDir || (ok && !keepParts))`。
+- **三处状态一致**：课名后状态词 / 下载管理状态列 / 运行日志共用 `States` 词表，
+  终态守卫 + 阶段白名单含全部进行中阶段。
+- 凭据仍只从 `XQD_COOKIE` / `QLD_COOKIE` / `%USERPROFILE%\.xqd_tool\cookie.txt` 读取，
+  **代码里绝不硬编码**；`XQD_TEST_HOME` 只隔离配置/历史/分片，不影响凭据读取。
+
+## 验证结果
+
+- `dotnet build src/Xqd.sln -c Release`：**0 错误 / 0 警告**。
+- 离线回归 **199 项全绿**（命名、状态、格式、配置隔离、历史合并、去重、
+  引擎分片/孪生/短边、ADB DOM、API 契约、Qt 环境净化、服务装配）。
+- 三个前端均已 Release 发布；WPF 实机启动确认窗口标题
+  「兴趣岛视频下载器 v1.5.1」、进程响应正常、无未处理异常；
+  本地服务 `/api/state`、`/`（`ui.html` 16.6 KB）、`/api/camps?tab=轻课`（空）已实跑通过。
+- ⚠️ **未做真网络全量下载**（网络不稳定、流量昂贵，且 master 已端到端验证过 6/6）；
+  下载链路的行为由离线断言 + 与 Python 版逐行对照保证。
+

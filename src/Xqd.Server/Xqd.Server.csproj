@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Xqd.Server</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />
+    <Content Include="..\..\ui.html" Link="ui.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -60,3 +60,23 @@ Windows 客户端**（V1.5.0 / V2.19.70）的行为。本仓库中：
 课程内容的权利不因本软件或本仓库的许可而改变。
 使用者请遵守课程提供方的授权要求，**只处理自己有权访问与保存的内容**。
 本工具不提供、也不鼓励用于未购内容的批量获取。
+
+---
+
+## 五、`csharp-wpf` 分支（C# / WPF 移植）的额外声明
+
+该分支把运行时主链路从 Python 移植为 C#，`master` 的 Python 实现及上文声明不变。
+C# 分支的组件与授权：
+
+| 组件 | 授权 | 说明 |
+|---|---|---|
+| .NET 8 SDK / Runtime、Windows Desktop Runtime（含 WPF） | MIT（.NET Foundation / Microsoft） | 使用系统自带运行时，**不随本仓库分发** |
+| `System.Text.Json` / `HttpClient` / `Process` 等 BCL | MIT（.NET） | **零第三方 NuGet 依赖** |
+| FFmpeg / ffprobe | LGPL-2.1+ / GPL | 外部可执行文件，不由本仓库分发；用途与 Python 版相同 |
+| Qt / PySide6 | LGPL-3.0 | **C# 分支不再使用**，仅 master 的 Python GUI 需要 |
+
+`Xqd.Core/Crypto/Netease163.cs` 是 `_lel/core/netease_mooc.py` 的等价移植，
+**延续上文第二节的边界**：依据第三方客户端行为独立复现，
+不属于 `Xue-Wu-Zhi/xuewuzhi-downloader` 仓库的 MIT 授权范围，不得声称 MIT。
+
+C# 分支同样**不含任何账号凭据**，凭据只在运行时从环境变量或用户私有文件读取。
