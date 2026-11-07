@@ -19,7 +19,6 @@
 - 教学大屏磁盘小 → 导出后及时删除。
 - 只需「正式营」「体验营」（已付费）；「轻课」确认是空的，**别再探**。
 - 成品结构见「命名规则」一节；全角冒号 `：` 保留。
-
 ## 代码结构（见 `docs/12`）
 
 采集 `xqd.py` / `_lel/api/qianliao.py` → 业务 `xqd_app.py` / `xqd_api.py` →
@@ -28,9 +27,7 @@
 `xqd_dedupe.py`；CLI 批处理 `xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
 两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
 API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签名天然新鲜。
-**课名不靠播放反推**（课表一次拿全）。
-
-## ★ 业务 API（已全链路打通，详见 `docs/09`）
+**课名不靠播放反推**（课表一次拿全）。## ★ 业务 API（已全链路打通，详见 `docs/09`）
 
 `POST https://m.qianliao.net/financial/api/transfer/gate/<endpoint>`，Body `{"transferData":{...}}`
 - **成功码在 `state.code`**（不是顶层 `code`）—— 读顶层永远 None，会误判打不通。
@@ -46,8 +43,7 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 - `MuMuManager sh -v 0 -c "sqlite3 '.../Cookies' \"select ...;\""` 走**模拟器内部 RPC
   （非 adb 协议）**，uid=0(root)，Cookie 明文存 rsessionId。
 - ★ 参数顺序**子命令在前、`-v` 在后**；SQL `like '%%x%%'` 匹配不到行，**必须 `'%x%'`**；
-  域名覆盖 `.qianliao.net` / `.xqdaolove.cn` / **`.nicegoods.cn`**；
-  设备已关返回 `{"errcode":-201,...}`（非空输出）→ `xqd_auth.vm_not_running()`。
+  域名覆盖 `.qianliao.net` / `.xqdaolove.cn` / **`.nicegoods.cn`**。
 - 直接 `control -v 0 launch` 会连带拉起主程序（13 秒就绪）；**先 `main launch` 反而卡住**。
   `control shutdown` 异步 → 轮询 `info` 等 `is_android_started` 变 False。
 
