@@ -14,6 +14,23 @@
 
 ---
 
+## v1.5.2 补丁（2026-11-08）
+
+- 修复营列表「全选」：点全选后下面各营的方框**立即全部勾上**，再点一次全部取消。
+- 各营方框单独勾选 / 取消时，表头「全选」同步显示 **未勾 / 半勾 / 全勾** 三态。
+- 课程列表的「全选 / 清空 / 表头勾选」是同一套机制，一并修好。
+- 根因：`SetCheckedSilently()` 调用无参 `Raise()`，`[CallerMemberName]` 变成方法名
+  `SetCheckedSilently`，WPF 的 TwoWay 绑定收不到 `IsChecked` 属性通知 →
+  「数据已勾上、界面方框不动」。改为显式 `Raise(nameof(IsChecked))`，
+  表头三态统一走 `States.CheckAllState(k, n)`。
+- 回归：离线断言新增 K 组（直接编译 GUI 的 ViewModel 源码），合计 **224 项全绿**；
+  另用真实 WPF 绑定跑了 **12 项** 双向联动实测，全部通过。
+
+> 本补丁目前是**本地构建版**；GitHub Release 仍为 `v1.5.1-csharp-wpf`。
+> 替换时把整个发布目录一起覆盖，不要只拷单个 exe。
+
+---
+
 ## 能做什么
 
 - 拉取**正式营 / 体验营**的营列表与课表。课名一次拿全，不靠播放反推。
@@ -112,7 +129,7 @@ src/Xqd.sln
 ├── Xqd.Gui/           WPF 桌面工具（XAML + code-behind + 控件 + VM）
 ├── Xqd.Server/        HttpListener 本地网页版（复用根目录 ui.html）
 ├── Xqd.Cli/           全量批处理
-└── Xqd.Tests/         离线回归（199 项）
+└── Xqd.Tests/         离线回归（224 项）
 ```
 
 前端**只经 `Services.*`** 取实现（`CreatePlatform` / `CreateDataSource` / `Engine` /
@@ -173,7 +190,7 @@ src/Xqd.sln
 DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"   # 或直接用 dotnet
 
 "$DOTNET" build src/Xqd.sln -c Release
-"$DOTNET" run --project src/Xqd.Tests -c Release       # 199 项离线回归
+"$DOTNET" run --project src/Xqd.Tests -c Release       # 224 项离线回归
 
 "$DOTNET" publish src/Xqd.Gui/Xqd.Gui.csproj    -c Release -o dist-csharp/gui    --self-contained false
 "$DOTNET" publish src/Xqd.Server/Xqd.Server.csproj -c Release -o dist-csharp/server --self-contained false
@@ -190,7 +207,7 @@ DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"   # 或直接用 dotnet
 
 ## 验证结果
 
-- Release 编译 **0 错误 / 0 警告**；离线回归 **199 项全绿**。
+- Release 编译 **0 错误 / 0 警告**；离线回归 **224 项全绿**。
 - WPF 实机启动确认窗口标题「兴趣岛视频下载器 v1.5.1」、进程响应正常、无未处理异常。
 - 本地服务 `/api/state`、`/`（`ui.html` 16.6 KB）、`/api/camps?tab=轻课`（空）已实跑通过；
   CLI `--help` 在原生 Windows 控制台中文正常。

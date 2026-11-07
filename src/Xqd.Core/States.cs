@@ -12,7 +12,7 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.5.1";
+    public const string AppVersion = "1.5.2";   // v1.5.2：修复营/课程「全选」与勾选框联动
     public const string ProductExeName = "xingqudao-downloader";
 
     // 课程列表 6 列（v1.5.0 起）。界面与测试一律引用这些常量。
@@ -34,6 +34,16 @@ public static class States
     public const int TaskColumnCount = 6;
 
     public const string CampSeparator = " · ";
+
+    /// <summary>表头「全选」三态词 —— 单一事实来源（营列表 / 课程表 / 回归测试共用）。</summary>
+    public const string CheckNone = "none";
+    public const string CheckPartial = "partial";
+    public const string CheckAll = "all";
+
+    /// <summary>已勾选 k 个 / 共 n 个 → 表头该显示的状态。</summary>
+    public static string CheckAllState(int k, int n) =>
+        n <= 0 || k <= 0 ? CheckNone : (k >= n ? CheckAll : CheckPartial);
+
     public const int MaxLessonWorkers = 3;   // 网络槽位
     public const int SegmentWorkers = 12;    // 每节课内部的分片并发
     public const int MaxMuxWorkers = 2;      // 本地封装槽位

@@ -84,15 +84,20 @@ public sealed class LessonRow : NotifyBase
         {
             if (_isChecked == value) return;
             _isChecked = value;
-            Raise();
+            Raise(nameof(IsChecked));
             CheckChanged?.Invoke(this);
         }
     }
 
+    /// <summary>
+    /// 课程表「全选 / 清空 / 表头勾选」批量设置。
+    /// ★ 同 CampItem：必须显式 Raise(nameof(IsChecked))，否则 TwoWay 绑定
+    ///   收不到通知，界面方框不会跟着变。
+    /// </summary>
     public void SetCheckedSilently(bool value)
     {
         _isChecked = value;
-        Raise();
+        Raise(nameof(IsChecked));
     }
 
     /// <summary>课程「时长」列显示：MM:SS / H:MM:SS（对齐 xqd_gui._fmt_dur，非倒计时格式）。</summary>

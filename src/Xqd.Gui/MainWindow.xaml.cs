@@ -303,9 +303,9 @@ public partial class MainWindow : Window
     {
         int n = _campItems.Count;
         int k = _campItems.Count(c => c.IsChecked);
-        _campHeaderState = k == 0 ? "none" : (k == n && n > 0 ? "all" : "partial");
-        ChkAllCamps.IsChecked = _campHeaderState == "all" ? true
-            : _campHeaderState == "none" ? (bool?)false : null;
+        _campHeaderState = States.CheckAllState(k, n);
+        ChkAllCamps.IsChecked = _campHeaderState == States.CheckAll ? true
+            : _campHeaderState == States.CheckNone ? (bool?)false : null;
         LblCampHint.Text = n + " 个营" + (k > 0 ? " · 已勾选 " + k + " 个" : "");
     }
 
@@ -453,11 +453,11 @@ public partial class MainWindow : Window
     {
         int total = _lessonRows.Count;
         int k = _lessonRows.Count(r => r.IsChecked);
-        _lessonHeaderState = k == 0 ? "none" : (k == total && total > 0 ? "all" : "partial");
+        _lessonHeaderState = States.CheckAllState(k, total);
         var cb = LessonsGrid.Columns[States.ColCheck].Header as CheckBox;
         if (cb != null)
-            cb.IsChecked = _lessonHeaderState == "all" ? true
-                : _lessonHeaderState == "none" ? (bool?)false : null;
+            cb.IsChecked = _lessonHeaderState == States.CheckAll ? true
+                : _lessonHeaderState == States.CheckNone ? (bool?)false : null;
     }
 
     private void SetAllLessonChecks(bool v)
@@ -1515,7 +1515,11 @@ public partial class MainWindow : Window
     private void ChkAllCamps_Click(object sender, RoutedEventArgs e)
     {
         if (_campUpdating) return;
-        bool want = _campHeaderState != "all";
+        // ★ 用真实勾选数推导意图（不依赖缓存的表头状态）：
+        //   没全勾 → 一次勾满；已全勾 → 一次全清。
+        //   个别营的方框变动走 OnCampItemCheckChanged → SyncAllCampsCheckbox，
+        //   把表头同步成 未勾 / 半勾 / 全勾 三态。
+        bool want = CheckedCamps().Count < _campItems.Count;
         _campUpdating = true;
         foreach (var it in _campItems) it.SetCheckedSilently(want);
         _campUpdating = false;
@@ -1545,7 +1549,7 @@ public partial class MainWindow : Window
 
     private void ChkLessonAll_Click(object sender, RoutedEventArgs e)
     {
-        bool want = _lessonHeaderState != "all";
+        bool want = _lessonRows.Count(r => r.IsChecked) < _lessonRows.Count;
         SetAllLessonChecks(want);
         UpdateLessonHeaderState();
     }

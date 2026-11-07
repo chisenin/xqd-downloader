@@ -6,5 +6,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />
+    <!-- ★ 直接编译 GUI 的 ViewModel 源码（纯数据类、无 WPF 依赖），
+         这样勾选联动的回归断言跑在真实生产代码上，而不是复制品。 -->
+    <Compile Include="..\Xqd.Gui\ViewModels\NotifyBase.cs" Link="Linked\NotifyBase.cs" />
+    <Compile Include="..\Xqd.Gui\ViewModels\CampItem.cs" Link="Linked\CampItem.cs" />
+    <Compile Include="..\Xqd.Gui\ViewModels\LessonRow.cs" Link="Linked\LessonRow.cs" />
   </ItemGroup>
 </Project>

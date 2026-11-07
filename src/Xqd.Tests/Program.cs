@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Xqd.Core;
+using Xqd.Gui.ViewModels;   // 链接编译的 GUI ViewModel 真实源码（K 组）
 
 namespace Xqd.Tests;
 
@@ -78,6 +79,7 @@ internal static class Program
         Group("H. ADB DOM 解析", AdbTests);
         Group("I. 业务 API / 平台 / 授权 / 进程", ApiTests);
         Group("J. 163 内核 / 服务装配", MiscTests);
+        Group("K. 营/课程 全选 ↔ 勾选框联动（v1.5.2）", CheckLinkTests);
 
         Console.WriteLine($"\n=== 结果：通过 {_pass} / 失败 {_fail} ===");
         try { Directory.Delete(_tmp, true); } catch { /* ignore */ }
@@ -170,7 +172,7 @@ internal static class Program
         True("本地阶段含封装", States.LocalPhases.Contains("封装"));
         True("本地阶段含校验", States.LocalPhases.Contains("校验"));
         Eq("工具名", "兴趣岛视频下载器", States.AppTitle);
-        Eq("版本", "1.5.1", States.AppVersion);
+        Eq("版本", "1.5.2", States.AppVersion);
         Eq("标签 4 个", 4, States.Tabs.Length);
         Eq("轻课是第 4 个标签", "轻课", States.Tabs[3]);
     }
@@ -505,5 +507,88 @@ internal static class Program
         Eq("显示格式", "[01] 课", le.Display);
         Eq("每行绑定所属营", "道德经诵读", le.CampOfRow.Name);
         Eq("营 ToString", "<Camp 道德经诵读 (27节)>", camp.ToString());
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // K 组：v1.5.2 小 BUG —— 「全选」勾上了但下面各营方框不动。
+    // 根因：SetCheckedSilently 调用无参 Raise()，[CallerMemberName]
+    // 变成方法名 "SetCheckedSilently"，WPF TwoWay 绑定收不到
+    // "IsChecked" 通知。这里把「批量设置 → 界面通知 → 表头三态」
+    // 整条链路固化成断言。
+    private static void CheckLinkTests()
+    {
+        // ① 三态映射（单一事实来源 States.CheckAllState）
+        Eq("三态：0 / 9", States.CheckNone, States.CheckAllState(0, 9));
+        Eq("三态：1 / 9", States.CheckPartial, States.CheckAllState(1, 9));
+        Eq("三态：8 / 9", States.CheckPartial, States.CheckAllState(8, 9));
+        Eq("三态：9 / 9", States.CheckAll, States.CheckAllState(9, 9));
+        Eq("三态：空列表", States.CheckNone, States.CheckAllState(0, 0));
+        Eq("三态：异常 k>n 也当全选", States.CheckAll, States.CheckAllState(10, 9));
+
+        // ② 造 9 个营（与用户截图的正式营数量一致）
+        var camps = Enumerable.Range(1, 9).Select(i =>
+            new CampItem(new Camp
+            {
+                Name = "营" + i, CampId = "c" + i, Badge = i + "节", Kind = "正式营"
+            })).ToList();
+        var notified = new List<string>();
+        int callbacks = 0;
+        foreach (var c in camps)
+        {
+            c.PropertyChanged += (_, e) => notified.Add(e.PropertyName ?? "");
+            c.CheckChanged = _ => callbacks++;
+        }
+
+        // ③ 模拟点「全选」：批量 SetCheckedSilently(true)
+        foreach (var c in camps) c.SetCheckedSilently(true);
+        Eq("★ 全选后 9 个营的数据都勾上", 9, camps.Count(c => c.IsChecked));
+        Eq("★ 批量设置必须逐行通知 IsChecked（否则界面方框不变）", 9,
+            notified.Count(n => n == "IsChecked"));
+        True("★ 通知里不能出现方法名 SetCheckedSilently",
+             !notified.Contains("SetCheckedSilently"));
+        Eq("★ 批量设置不触发逐行重建课表", 0, callbacks);
+        Eq("全选后表头 = all", States.CheckAll,
+            States.CheckAllState(camps.Count(c => c.IsChecked), camps.Count));
+
+        // ④ 用户手动取消一个营的方框 → 表头必须变成 partial
+        notified.Clear();
+        camps[0].IsChecked = false;
+        True("★ 手动取消会通知 IsChecked", notified.Contains("IsChecked"));
+        Eq("★ 手动取消触发一次课表重建", 1, callbacks);
+        Eq("★ 表头随之变 partial", States.CheckPartial,
+            States.CheckAllState(camps.Count(c => c.IsChecked), camps.Count));
+
+        // ⑤ 逐个取消到全空 → 表头变 none；再逐个勾回来 → all
+        for (int i = 1; i < camps.Count; i++) camps[i].IsChecked = false;
+        Eq("全部取消后表头 = none", States.CheckNone,
+            States.CheckAllState(camps.Count(c => c.IsChecked), camps.Count));
+        foreach (var c in camps) c.IsChecked = true;
+        Eq("逐个勾满后表头 = all", States.CheckAll,
+            States.CheckAllState(camps.Count(c => c.IsChecked), camps.Count));
+
+        // ⑥ 「全不选」批量设置同样要刷新界面
+        notified.Clear();
+        foreach (var c in camps) c.SetCheckedSilently(false);
+        Eq("★ 全不选 9 个营数据都取消", 0, camps.Count(c => c.IsChecked));
+        Eq("★ 全不选也要逐行通知 IsChecked", 9,
+            notified.Count(n => n == "IsChecked"));
+
+        // ⑦ 课程表「全选 / 清空」走同一个 ViewModel 机制
+        var camp = new Camp { Name = "道德经诵读", CampId = "c1" };
+        var row = new LessonRow(new Lesson { Index = 0, Title = "课一" }, camp, 1);
+        string rowEvent = "";
+        int rowCallbacks = 0;
+        row.PropertyChanged += (_, e) => rowEvent = e.PropertyName ?? "";
+        row.CheckChanged = _ => rowCallbacks++;
+        row.SetCheckedSilently(true);
+        True("★ 课程行批量勾选后 IsChecked=true", row.IsChecked);
+        Eq("★ 课程行批量勾选通知 IsChecked", "IsChecked", rowEvent);
+        Eq("★ 课程行批量设置不触发回调", 0, rowCallbacks);
+        row.SetCheckedSilently(false);
+        True("★ 课程行批量清空后 IsChecked=false", !row.IsChecked);
+        Eq("★ 课程行批量清空通知 IsChecked", "IsChecked", rowEvent);
+        row.IsChecked = true;
+        Eq("★ 课程行手动勾选触发一次回调", 1, rowCallbacks);
+        Eq("课程三态：1 / 1", States.CheckAll, States.CheckAllState(1, 1));
     }
 }

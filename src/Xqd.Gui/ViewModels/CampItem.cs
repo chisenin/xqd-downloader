@@ -31,14 +31,22 @@ public sealed class CampItem : NotifyBase
         {
             if (_isChecked == value) return;
             _isChecked = value;
-            Raise();
+            // ★ 必须显式写属性名：Raise() 的 [CallerMemberName] 只在 setter 里
+            //   恰好等于 "IsChecked"，批量设置方法里会变成方法名，绑定收不到通知。
+            Raise(nameof(IsChecked));
             CheckChanged?.Invoke(this);
         }
     }
 
+    /// <summary>
+    /// 批量勾选（「全选」/ 刷新恢复）用：只刷界面，不发 CheckChanged（避免逐行重建课表）。
+    /// ★ v1.5.2 修复：以前这里调用无参 Raise()，CallerMemberName 变成
+    ///   "SetCheckedSilently"，WPF 的 TwoWay 绑定不会刷新 → 数据已勾上、
+    ///   界面方框仍是空的（截图里「已勾选 9 个」但下面 9 个框全空）。
+    /// </summary>
     public void SetCheckedSilently(bool value)
     {
         _isChecked = value;
-        Raise();
+        Raise(nameof(IsChecked));
     }
 }

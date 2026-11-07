@@ -253,7 +253,7 @@ DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"
 # 编译整个解决方案（5 个项目，0 错误 0 警告）
 "$DOTNET" build src/Xqd.sln -c Release
 
-# 离线回归（199 项，不发网络请求、不启动模拟器、XQD_TEST_HOME 隔离）
+# 离线回归（224 项，不发网络请求、不启动模拟器、XQD_TEST_HOME 隔离）
 "$DOTNET" run --project src/Xqd.Tests -c Release
 
 # 发布三个可执行程序到 dist-csharp/（framework-dependent，需系统 .NET 8）
@@ -308,8 +308,11 @@ DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"
 ## 验证结果
 
 - `dotnet build src/Xqd.sln -c Release`：**0 错误 / 0 警告**。
-- 离线回归 **199 项全绿**（命名、状态、格式、配置隔离、历史合并、去重、
-  引擎分片/孪生/短边、ADB DOM、API 契约、Qt 环境净化、服务装配）。
+- 离线回归 **224 项全绿**（命名、状态、格式、配置隔离、历史合并、去重、
+  引擎分片/孪生/短边、ADB DOM、API 契约、Qt 环境净化、服务装配、
+  **v1.5.2 新增 K 组：营/课程「全选」与勾选框联动**）。
+- v1.5.2 修复营列表「全选」不刷新各营方框、以及表头三态不跟随的问题
+  （根因 `SetCheckedSilently()` 的属性通知名错误）；真实 WPF TwoWay 绑定实测 12 项全绿。
 - 三个前端均已 Release 发布；WPF 实机启动确认窗口标题
   「兴趣岛视频下载器 v1.5.1」、进程响应正常、无未处理异常；
   本地服务 `/api/state`、`/`（`ui.html` 16.6 KB）、`/api/camps?tab=轻课`（空）已实跑通过。
