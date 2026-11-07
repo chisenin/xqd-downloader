@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""v1.5.1 离线回归：MuMu「no Qt platform plugin」弹窗的根因修复。
+"""v1.5.2 离线回归：MuMu「no Qt platform plugin」弹窗的根因修复。
 
 覆盖两层修复：
   A. xqd_proc —— 子进程 Qt 环境隔离（打包 exe 注入的 QT_PLUGIN_PATH 不再
@@ -308,7 +308,7 @@ def test_gui_auth():
 
 def test_meta():
     print('\n--- D. 版本与帮助文案 ---')
-    ok('版本号为 1.5.1', xqd_gui.APP_VERSION == '1.5.1',
+    ok('版本号为 1.5.2', xqd_gui.APP_VERSION == '1.5.2',
        xqd_gui.APP_VERSION)
     ok('帮助说明「平时不用开模拟器」',
        '平时启动工具直接使用本机保存的授权' in xqd_gui.HELP_HTML)

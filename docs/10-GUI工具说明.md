@@ -8,7 +8,7 @@
 **方式一：直接双击**（推荐给日常使用）
 
 ```
-D:\user\chisenin\Desktop\xingqudao-downloader-v1.5.1.exe
+D:\user\chisenin\Desktop\xingqudao-downloader-v1.5.2.exe
 ```
 
 单文件，约 97 MB，绿色免安装。
@@ -439,12 +439,12 @@ PATH             = <_MEIPASS>;<原 PATH>
 
 ★ 若**手动**双击 MuMu 也弹同样的框，那是另一回事（MuMu 自身安装损坏），
 本机静态检查已排除。旧版 exe（v1.5.0 及更早）没有这两层修复，
-仍可能弹框 —— 请改用 v1.5.1。
+仍可能弹框 —— 请改用 v1.5.2（或更新版本）。
 
 ### 打包
 
 ```bash
-python build_exe.py              # 产出 dist/xingqudao-downloader-v1.5.1.exe
+python build_exe.py              # 产出 dist/xingqudao-downloader-v1.5.2.exe
 python build_exe.py --dry-run    # 只打印命令，不执行打包
 ```
 
@@ -460,7 +460,7 @@ PyInstaller 打包 PySide6 **必须显式收集顶层 `Qt6*.dll` + `plugins/`**�
 ### 自检截图
 
 ```bash
-set XQD_SCREENSHOT=out.png && set XQD_EXIT_AFTER_SSHOT=1500 && xingqudao-downloader-v1.5.1.exe
+set XQD_SCREENSHOT=out.png && set XQD_EXIT_AFTER_SSHOT=1500 && xingqudao-downloader-v1.5.2.exe
 ```
 
 窗口显示后自动截图存盘再退出 —— 用于验证打包后的渲染是否正常

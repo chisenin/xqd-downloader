@@ -68,6 +68,14 @@ state/gui_hist_out/
 state/hist_real/
 state/v7_shot*.png
 state/states_shot.png
+
+# ── master 分支上不跟踪 C# / WPF 分支的产物 ─────────────────
+#   切分支时 src/ 的 bin/obj 残留会变成未跟踪文件，dist-csharp/ 是交付物；
+#   显式忽略，避免 `git add -A` 把 500MB 产物收进 master 提交。
+dist-csharp/
+src/**/bin/
+src/**/obj/
+_crop_*.png
 state/v8_shot*.png
 
 # 裁剪/调试用的临时图
