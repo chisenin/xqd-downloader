@@ -1,0 +1,14 @@
+{
+  "e1": {
+    "format": "hls",
+    "k": "LvvtEahZbV/G/0Z0xLuUDDZpAVxrlMfSuyNVfv5WG152RhsFZpFnSVoQ//gUbnFadA9/g9hpIoBVAUBazJm4vm0iOMgKAuzmWw8md3R/bAADutIEFy1tYcdaj1YvHl3sYK/uEaStxJYf3B/+aIgMmRjYiKtec1rRLVTHIFviHFJuBxhxLlG2quJ5O7Gd+JBFyQfjyhzq2c/h31jdqFMir7bamOhv/Y5wjHTqZKBNy9O7sBbLv139qS0y4hyL4enh",
+    "v": "1",
+    "videoUrl": "http://jdvodrvfb210d.vod.126.net/jdvodrvfb210d/nos/ept/hls/2018/09/27/1010559794_07b668dc979a4a9f9a6938ddf8061902_ehd.m3u8?ak=<REDACTED>"
+  },
+  "e2": {
+    "videoUrl": "http://vodm0pihssv.vod.126.net/edu-video/nos/ept/hls/2015/08/17/1988196_34c5243cf84d4ab4a5dfbc4b73af5616_eshd.m3u8?ak=<REDACTED>",
+    "format": "hls",
+    "v": "1",
+    "k": "MislTvjC/5k6fYp2AQyFgrOiyN+joiRcv9O39XtmGRJXM0ksiuACfYqOGQHLqFM0lz7mipzLC3dTuSb+NqkzHyRfv4lDJ79crCEqyAq6DPrpN52za49jiUzcMzZleiKrl9SgtE9rtulFi1MI0aP4+u8GNQU9iSZMIGo46wHIv68re+iFkcLa4XebjSZpcpjanuZyel8IrzwM3NAj4lxz0xVxJHfEfO33tBUFH+c1ZoMHNjTCjhaA0FRmmLWa9+MX"
+  }
+}

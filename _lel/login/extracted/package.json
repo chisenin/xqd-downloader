@@ -1,0 +1,89 @@
+{
+  "author": "学无止科技",
+  "name": "login-mooc",
+  "version": "1.0.0",
+  "main": "main.js",
+  "devDependencies": {
+    "electron": "8.5.5",
+    "electron-builder": "^22.14.13"
+  },
+  "scripts": {
+    "postinstall": "install-electron",
+    "start": "electron . cookies icourse163",
+    "build:slim-safe": "electron-builder -w --config electron-builder.slim-safe.json",
+    "pack": "cmd /c ..\\pack-login.bat"
+  },
+  "build": {
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "main.js",
+      "fenbi-compatibility.js",
+      "babel-standalone.min.js",
+      "babel-standalone.LICENSE",
+      "local-file-url.js",
+      "yuyou_login.js",
+      "pukewx_login.js",
+      "yikaobang_login.js",
+      "yikaobang-login.html",
+      "yikaobang-preload.js",
+      "yikaobang-renderer.js",
+      "yikaobang-logo.png",
+      "yikaobang-assets.txt",
+      "plaso_client_uuid.js",
+      "package.json",
+      "xuewuzhi.png",
+      "*.ico",
+      "plaso_qr_login.js",
+      "plaso_sms_login.js",
+      "plaso_login.html",
+      "aiwenyun_login.html",
+      "jhpy_login.html",
+      "ledu-login.html",
+      "huomiao-login.html",
+      "lexuepeiyou-login.html",
+      "speiyou-login.html",
+      "xiaoyuanyouke-login.html",
+      "huoke-login.html",
+      "login_helper.exe",
+      "xiaoeapp-login.html",
+      "xinghuo-login.html",
+      "course-selector.html",
+      "download-directory.html",
+      "charge.html",
+      "charge.css",
+      "charge-renderer.js",
+      "charge-preload.js",
+      "charge-window.js",
+      "invite.html",
+      "invite.css",
+      "invite-renderer.js",
+      "universal.html",
+      "universal.css",
+      "universal-renderer.js",
+      "universal-preload.js",
+      "universal-window.js",
+      "universal-browser.js",
+      "universal-icons.js",
+      "classin-login.html",
+      "cctalk-login.html",
+      "mddclass-login.html",
+      "duanshu-login.html",
+      "duanshu_qr.js",
+      "duanshu-logo.png",
+      "duanshu-assets.LICENSE.txt",
+      "mddclass_device_id.js"
+    ],
+    "win": {
+      "icon": "xuewuzhi.png",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
+    }
+  }
+}

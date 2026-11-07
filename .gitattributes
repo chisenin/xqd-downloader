@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+*.py    text diff=python
+*.json  text
+*.md    text
+*.html  text
+*.ps1   text eol=crlf
+
+# 二进制/大文件
+*.mp4   binary
+*.ts    binary
+*.pcap  binary
+*.apk   binary
+*.m3u8  text
+*.hls   text

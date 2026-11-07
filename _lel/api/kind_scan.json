@@ -1,0 +1,2500 @@
+{
+ "道德经诵读": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "《道德经》一至三章",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 414,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》四至六章",
+    "index": 1,
+    "type": "VIDEO",
+    "when": "07.28 00:00",
+    "duration": 224,
+    "when_date": "2026.07.28",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》七至九章",
+    "index": 2,
+    "type": "VIDEO",
+    "when": "07.29 00:00",
+    "duration": 270,
+    "when_date": "2026.07.29",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》十至十二章",
+    "index": 3,
+    "type": "VIDEO",
+    "when": "07.30 00:00",
+    "duration": 298,
+    "when_date": "2026.07.30",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》十三至十五章",
+    "index": 4,
+    "type": "VIDEO",
+    "when": "07.31 00:00",
+    "duration": 493,
+    "when_date": "2026.07.31",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》第十六至十八章",
+    "index": 5,
+    "type": "VIDEO",
+    "when": "08.01 00:00",
+    "duration": 366,
+    "when_date": "2026.08.01",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》十九至二十一章",
+    "index": 6,
+    "type": "VIDEO",
+    "when": "08.02 00:00",
+    "duration": 599,
+    "when_date": "2026.08.02",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》二十二至二十四章",
+    "index": 7,
+    "type": "VIDEO",
+    "when": "08.03 00:00",
+    "duration": 520,
+    "when_date": "2026.08.03",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》二十五至二十七章",
+    "index": 8,
+    "type": "VIDEO",
+    "when": "08.04 00:00",
+    "duration": 505,
+    "when_date": "2026.08.04",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》二十八章至三十章",
+    "index": 9,
+    "type": "VIDEO",
+    "when": "08.05 00:00",
+    "duration": 523,
+    "when_date": "2026.08.05",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》第三十一至三十三章",
+    "index": 10,
+    "type": "VIDEO",
+    "when": "08.06 00:00",
+    "duration": 498,
+    "when_date": "2026.08.06",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》三十四至三十六章",
+    "index": 11,
+    "type": "VIDEO",
+    "when": "08.07 00:00",
+    "duration": 363,
+    "when_date": "2026.08.07",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》三十七至三十九章",
+    "index": 12,
+    "type": "VIDEO",
+    "when": "08.08 00:00",
+    "duration": 583,
+    "when_date": "2026.08.08",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》四十至四十二章",
+    "index": 13,
+    "type": "VIDEO",
+    "when": "08.09 00:00",
+    "duration": 394,
+    "when_date": "2026.08.09",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》四十三至四十五章",
+    "index": 14,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 248,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》四十六至四十八章",
+    "index": 15,
+    "type": "VIDEO",
+    "when": "08.11 00:00",
+    "duration": 269,
+    "when_date": "2026.08.11",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》四十九至五十一章",
+    "index": 16,
+    "type": "VIDEO",
+    "when": "08.12 00:00",
+    "duration": 373,
+    "when_date": "2026.08.12",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》五十二至五十四章",
+    "index": 17,
+    "type": "VIDEO",
+    "when": "08.13 00:00",
+    "duration": 417,
+    "when_date": "2026.08.13",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》五十五至五十七章",
+    "index": 18,
+    "type": "VIDEO",
+    "when": "08.14 00:00",
+    "duration": 288,
+    "when_date": "2026.08.14",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》五十八至六十章",
+    "index": 19,
+    "type": "VIDEO",
+    "when": "08.15 00:00",
+    "duration": 230,
+    "when_date": "2026.08.15",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》第六十一至六十三章",
+    "index": 20,
+    "type": "VIDEO",
+    "when": "08.16 00:00",
+    "duration": 306,
+    "when_date": "2026.08.16",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》六十四至六十六章",
+    "index": 21,
+    "type": "VIDEO",
+    "when": "08.17 00:00",
+    "duration": 339,
+    "when_date": "2026.08.17",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》六十七至六十九章",
+    "index": 22,
+    "type": "VIDEO",
+    "when": "08.18 00:00",
+    "duration": 373,
+    "when_date": "2026.08.18",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》七十至七十二章",
+    "index": 23,
+    "type": "VIDEO",
+    "when": "08.19 00:00",
+    "duration": 247,
+    "when_date": "2026.08.19",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》七十三至七十五章",
+    "index": 24,
+    "type": "VIDEO",
+    "when": "08.20 00:00",
+    "duration": 330,
+    "when_date": "2026.08.20",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》七十六至七十八章",
+    "index": 25,
+    "type": "VIDEO",
+    "when": "08.21 00:00",
+    "duration": 337,
+    "when_date": "2026.08.21",
+    "kind": "media"
+   },
+   {
+    "title": "《道德经》七十九至八十一章",
+    "index": 26,
+    "type": "VIDEO",
+    "when": "08.22 00:00",
+    "duration": 332,
+    "when_date": "2026.08.22",
+    "kind": "media"
+   }
+  ]
+ },
+ "太极功法巩固班": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "聚气凝神巩固课——八段锦讲解带练",
+    "index": 0,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.14 20:00",
+    "duration": 4019,
+    "when_date": "2026.07.14",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课——太极拳讲解带练",
+    "index": 1,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.15 20:00",
+    "duration": 3872,
+    "when_date": "2026.07.15",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课——龟形、龙形、鹤形导引功带练",
+    "index": 2,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.16 20:00",
+    "duration": 4225,
+    "when_date": "2026.07.16",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课——虎形、蛇形导引功",
+    "index": 3,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.17 20:00",
+    "duration": 3791,
+    "when_date": "2026.07.17",
+    "kind": "master"
+   }
+  ]
+ },
+ "静坐内观-身心共养计划": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "清晰目标：开启性命双修之旅",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "06.26 06:00",
+    "duration": 535,
+    "when_date": "2026.06.26",
+    "kind": "media"
+   },
+   {
+    "title": "【静坐姿势】道家七支坐法",
+    "index": 1,
+    "type": "VIDEO",
+    "when": "06.26 06:00",
+    "duration": 1164,
+    "when_date": "2026.06.26",
+    "kind": "media"
+   },
+   {
+    "title": "【静坐法门】静坐准备、方法和注意事项",
+    "index": 2,
+    "type": "VIDEO",
+    "when": "06.26 06:00",
+    "duration": 583,
+    "when_date": "2026.06.26",
+    "kind": "media"
+   },
+   {
+    "title": "聚气凝神巩固课——五行导引功串联+六字呼吸法",
+    "index": 3,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.20 20:00",
+    "duration": 4251,
+    "when_date": "2026.07.20",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课——十二段锦（9-12段）讲解带练",
+    "index": 4,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.21 20:00",
+    "duration": 3842,
+    "when_date": "2026.07.21",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课---太极拳详解",
+    "index": 5,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.22 20:00",
+    "duration": 3773,
+    "when_date": "2026.07.22",
+    "kind": "master"
+   },
+   {
+    "title": "聚气凝神巩固课：功法带练+静坐答疑",
+    "index": 6,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.23 20:00",
+    "duration": 3629,
+    "when_date": "2026.07.23",
+    "kind": "master"
+   },
+   {
+    "title": "【静坐方向】静坐修炼的四个层次",
+    "index": 7,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 782,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "【静坐行气】道音行气法+读经四正法",
+    "index": 8,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 704,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "【静坐核心】道家内观五步法",
+    "index": 9,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 1189,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "静坐引导口令【身体放松】",
+    "index": 10,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 1214,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "静坐引导口令【身体放松】无背景音乐版",
+    "index": 11,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 1214,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "【呼吸口令】深入感受呼吸四层次",
+    "index": 12,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 1104,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "【赠】李老师四正法领读《清静经》音频",
+    "index": 13,
+    "type": "AUDIO",
+    "when": "07.27 00:00",
+    "duration": 480,
+    "when_date": "2026.07.27",
+    "kind": "direct"
+   },
+   {
+    "title": "【赠】李老师四正法领读《清静经》-视频版",
+    "index": 14,
+    "type": "VIDEO",
+    "when": "07.27 00:00",
+    "duration": 479,
+    "when_date": "2026.07.27",
+    "kind": "media"
+   },
+   {
+    "title": "李老师开营课堂：七支坐法教学",
+    "index": 15,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.27 19:40",
+    "duration": 6233,
+    "when_date": "2026.07.27",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：静坐方法及修炼方向",
+    "index": 16,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.29 19:40",
+    "duration": 8095,
+    "when_date": "2026.07.29",
+    "kind": "master"
+   },
+   {
+    "title": "晨练课堂：静坐颂钵和声能调控",
+    "index": 17,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.31 06:30",
+    "duration": 4695,
+    "when_date": "2026.07.31",
+    "kind": "master"
+   },
+   {
+    "title": "【五种感通力】活在当下：逍遥自在+接纳现实：为而不争",
+    "index": 18,
+    "type": "VIDEO",
+    "when": "08.03 00:00",
+    "duration": 619,
+    "when_date": "2026.08.03",
+    "kind": "media"
+   },
+   {
+    "title": "【五种感通力】聆听需求：听之以心",
+    "index": 19,
+    "type": "VIDEO",
+    "when": "08.03 00:00",
+    "duration": 473,
+    "when_date": "2026.08.03",
+    "kind": "media"
+   },
+   {
+    "title": "【五种感通力】化解干扰：常应常静+促进行动：勤而行之",
+    "index": 20,
+    "type": "VIDEO",
+    "when": "08.03 00:00",
+    "duration": 518,
+    "when_date": "2026.08.03",
+    "kind": "media"
+   },
+   {
+    "title": "【内观口令】减少念头，快速入静",
+    "index": 21,
+    "type": "AUDIO",
+    "when": "08.03 00:00",
+    "duration": 688,
+    "when_date": "2026.08.03",
+    "kind": "direct"
+   },
+   {
+    "title": "【内心平静】在忙碌的生活中找回平静",
+    "index": 22,
+    "type": "VIDEO",
+    "when": "08.03 00:00",
+    "duration": 1144,
+    "when_date": "2026.08.03",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：内观五步法",
+    "index": 23,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.03 19:40",
+    "duration": 8280,
+    "when_date": "2026.08.03",
+    "kind": "master"
+   },
+   {
+    "title": "心诀专场——道家秘传「太极拳心诀」",
+    "index": 24,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.04 19:40",
+    "duration": 5740,
+    "when_date": "2026.08.04",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：五种感通力（上）",
+    "index": 25,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.05 19:40",
+    "duration": 7484,
+    "when_date": "2026.08.05",
+    "kind": "master"
+   },
+   {
+    "title": "晨练课堂：太极拳带练",
+    "index": 26,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.07 06:30",
+    "duration": 4397,
+    "when_date": "2026.08.07",
+    "kind": "master"
+   },
+   {
+    "title": "中医加餐课堂——十二正经专场",
+    "index": 27,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.08 19:40",
+    "duration": 4005,
+    "when_date": "2026.08.08",
+    "kind": "master"
+   },
+   {
+    "title": "【静坐口令】提升觉知力",
+    "index": 28,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 641,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "【三类关系实践】父母&伴侣&子女",
+    "index": 29,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 1253,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "【助眠口令】睡得香，睡得沉",
+    "index": 30,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 788,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "【添油接命】北斗七星前三星",
+    "index": 31,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 675,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "【添油接命】北斗七星第四星",
+    "index": 32,
+    "type": "VIDEO",
+    "when": "08.10 00:00",
+    "duration": 485,
+    "when_date": "2026.08.10",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：五种感通力+阶段性回顾",
+    "index": 33,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.10 19:40",
+    "duration": 5948,
+    "when_date": "2026.08.10",
+    "kind": "master"
+   },
+   {
+    "title": "心诀专场——道家秘传「五行导引功心诀」",
+    "index": 34,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.11 19:40",
+    "duration": 7326,
+    "when_date": "2026.08.11",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：三类关系实践",
+    "index": 35,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.12 19:40",
+    "duration": 6945,
+    "when_date": "2026.08.12",
+    "kind": "master"
+   },
+   {
+    "title": "晨练课堂：五行导引功带练",
+    "index": 36,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.14 06:30",
+    "duration": 4106,
+    "when_date": "2026.08.14",
+    "kind": "master"
+   },
+   {
+    "title": "【添油接命】北斗七星后三星",
+    "index": 37,
+    "type": "VIDEO",
+    "when": "08.17 00:00",
+    "duration": 378,
+    "when_date": "2026.08.17",
+    "kind": "media"
+   },
+   {
+    "title": "【恢复精力】晚睡、早醒、疲劳可用",
+    "index": 38,
+    "type": "VIDEO",
+    "when": "08.17 00:00",
+    "duration": 1940,
+    "when_date": "2026.08.17",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：添油接命（上）",
+    "index": 39,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.17 19:40",
+    "duration": 7066,
+    "when_date": "2026.08.17",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：添油接命（中）",
+    "index": 40,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.18 19:40",
+    "duration": 6473,
+    "when_date": "2026.08.18",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：添油接命（下）",
+    "index": 41,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.19 19:40",
+    "duration": 10477,
+    "when_date": "2026.08.19",
+    "kind": "master"
+   },
+   {
+    "title": "晨练课堂：十二段锦+站桩带练",
+    "index": 42,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.21 06:30",
+    "duration": 6617,
+    "when_date": "2026.08.21",
+    "kind": "master"
+   },
+   {
+    "title": "【道家智慧】：世界观解读",
+    "index": 43,
+    "type": "VIDEO",
+    "when": "08.24 00:00",
+    "duration": 1071,
+    "when_date": "2026.08.24",
+    "kind": "media"
+   },
+   {
+    "title": "【道家智慧】：生命观解读",
+    "index": 44,
+    "type": "VIDEO",
+    "when": "08.24 00:00",
+    "duration": 780,
+    "when_date": "2026.08.24",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：静坐内观总结巩固专场",
+    "index": 45,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.24 19:40",
+    "duration": 7970,
+    "when_date": "2026.08.24",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：道家的生命智慧",
+    "index": 46,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.26 19:40",
+    "duration": 8818,
+    "when_date": "2026.08.26",
+    "kind": "master"
+   },
+   {
+    "title": "【最后一课】李老师结营课堂：未来的性命双修之路",
+    "index": 47,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.31 19:40",
+    "duration": 9270,
+    "when_date": "2026.08.31",
+    "kind": "master"
+   },
+   {
+    "title": "中医加餐课堂—十二正经（脏腑）专场",
+    "index": 48,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.15 19:40",
+    "duration": 3563,
+    "when_date": "2026.08.15",
+    "kind": "master"
+   },
+   {
+    "title": "小吕老师经络课（肺肾专场）",
+    "index": 49,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.22 19:40",
+    "duration": 4294,
+    "when_date": "2026.08.22",
+    "kind": "master"
+   },
+   {
+    "title": "静坐内观后的修行之路——第二轮百日筑基",
+    "index": 50,
+    "type": "VIDEO",
+    "when": "08.25 19:00",
+    "duration": 359,
+    "when_date": "2026.08.25",
+    "kind": "media"
+   },
+   {
+    "title": "李老师惊喜加餐：静坐时身体不适的根源与化解方法",
+    "index": 51,
+    "type": "INTELLIGENT_LIVE",
+    "when": "08.28 19:40",
+    "duration": 7500,
+    "when_date": "2026.08.28",
+    "kind": "master"
+   },
+   {
+    "title": "添油接命带练【视频版】",
+    "index": 52,
+    "type": "VIDEO",
+    "when": "09.02 14:00",
+    "duration": 4444,
+    "when_date": "2026.09.02",
+    "kind": "media"
+   },
+   {
+    "title": "添油接命带练【音频版】",
+    "index": 53,
+    "type": "AUDIO",
+    "when": "09.02 14:00",
+    "duration": 3722,
+    "when_date": "2026.09.02",
+    "kind": "direct"
+   },
+   {
+    "title": "养正十三式心诀带练【正面】",
+    "index": 54,
+    "type": "VIDEO",
+    "when": "09.03 07:00",
+    "duration": 623,
+    "when_date": "2026.09.03",
+    "kind": "media"
+   },
+   {
+    "title": "养正十三式心诀带练【背面】",
+    "index": 55,
+    "type": "VIDEO",
+    "when": "09.03 07:00",
+    "duration": 623,
+    "when_date": "2026.09.03",
+    "kind": "media"
+   },
+   {
+    "title": "心诀带练——五行导引功",
+    "index": 56,
+    "type": "VIDEO",
+    "when": "09.04 07:00",
+    "duration": 2484,
+    "when_date": "2026.09.04",
+    "kind": "media"
+   },
+   {
+    "title": "惊喜加餐：百日筑基功法带练与纠偏",
+    "index": 57,
+    "type": "INTELLIGENT_LIVE",
+    "when": "09.05 19:40",
+    "duration": 8180,
+    "when_date": "2026.09.05",
+    "kind": "master"
+   },
+   {
+    "title": "心诀专场——道家秘传「十二段锦心诀」",
+    "index": 58,
+    "type": "INTELLIGENT_LIVE",
+    "when": "09.08 19:40",
+    "duration": 8176,
+    "when_date": "2026.09.08",
+    "kind": "master"
+   },
+   {
+    "title": "舒缓腰部法",
+    "index": 59,
+    "type": "VIDEO",
+    "when": "09.08 14:00",
+    "duration": 90,
+    "when_date": "2026.09.08",
+    "kind": "media"
+   },
+   {
+    "title": "十二段锦心诀带练",
+    "index": 60,
+    "type": "VIDEO",
+    "when": "09.09 14:00",
+    "duration": 2572,
+    "when_date": "2026.09.09",
+    "kind": "media"
+   }
+  ]
+ },
+ "太极中阶复训营": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "【复训营课程1】养正十三式复习",
+    "index": 0,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.18 19:38",
+    "duration": 3747,
+    "when_date": "2026.04.18",
+    "kind": "master"
+   },
+   {
+    "title": "【复训营课程2】八段锦复习",
+    "index": 1,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.20 19:38",
+    "duration": 4293,
+    "when_date": "2026.04.20",
+    "kind": "master"
+   },
+   {
+    "title": "【复训营课程3】龟形功＋吹字诀预习",
+    "index": 2,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.22 19:38",
+    "duration": 3600,
+    "when_date": "2026.04.22",
+    "kind": "master"
+   }
+  ]
+ },
+ "五行养生音乐": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "商金音入肺15-19点【阳关三叠】",
+    "index": 0,
+    "type": "AUDIO",
+    "when": "12.30 06:00",
+    "duration": 314,
+    "when_date": "2025.12.30",
+    "kind": "direct"
+   },
+   {
+    "title": "商金音入肺15-19点【阳春白雪】",
+    "index": 1,
+    "type": "AUDIO",
+    "when": "12.30 06:00",
+    "duration": 200,
+    "when_date": "2025.12.30",
+    "kind": "direct"
+   },
+   {
+    "title": "角木音疏肝19-23点【姑苏行】",
+    "index": 2,
+    "type": "AUDIO",
+    "when": "12.30 06:00",
+    "duration": 0,
+    "when_date": "2025.12.30",
+    "kind": "direct"
+   },
+   {
+    "title": "角木音疏肝19-23点【胡笳十八拍】",
+    "index": 3,
+    "type": "AUDIO",
+    "when": "12.30 06:00",
+    "duration": 589,
+    "when_date": "2025.12.30",
+    "kind": "direct"
+   },
+   {
+    "title": "宫土音养脾-餐后一小时内【苏武牧羊】",
+    "index": 4,
+    "type": "AUDIO",
+    "when": "12.30 06:00",
+    "duration": 294,
+    "when_date": "2025.12.30",
+    "kind": "direct"
+   },
+   {
+    "title": "宫土音养脾-餐后一小时内【十面埋伏】",
+    "index": 5,
+    "type": "AUDIO",
+    "when": "03.11 06:00",
+    "duration": 408,
+    "when_date": "2025.03.11",
+    "kind": "direct"
+   },
+   {
+    "title": "徵火音养心21-23点【紫竹调】",
+    "index": 6,
+    "type": "AUDIO",
+    "when": "03.12 06:00",
+    "duration": 1064,
+    "when_date": "2025.03.12",
+    "kind": "direct"
+   },
+   {
+    "title": " 徵火音养心21-23点【高山流水】",
+    "index": 7,
+    "type": "AUDIO",
+    "when": "03.12 06:00",
+    "duration": 346,
+    "when_date": "2025.03.12",
+    "kind": "direct"
+   },
+   {
+    "title": "羽水音强肾7-12点【流水】",
+    "index": 8,
+    "type": "AUDIO",
+    "when": "03.13 06:00",
+    "duration": 451,
+    "when_date": "2025.03.13",
+    "kind": "direct"
+   },
+   {
+    "title": "羽水音强肾7-12点【梅花三弄】",
+    "index": 9,
+    "type": "AUDIO",
+    "when": "03.13 06:00",
+    "duration": 308,
+    "when_date": "2025.03.13",
+    "kind": "direct"
+   }
+  ]
+ },
+ "引气归源太极营": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "先导课：解谜自然之道",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "04.28 06:00",
+    "duration": 587,
+    "when_date": "2026.04.28",
+    "kind": "media"
+   },
+   {
+    "title": "五行导引功第一课：龟形导引功教学",
+    "index": 1,
+    "type": "VIDEO",
+    "when": "05.18 06:00",
+    "duration": 858,
+    "when_date": "2026.05.18",
+    "kind": "media"
+   },
+   {
+    "title": "开营典礼：龟形导引功教学",
+    "index": 2,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.18 19:28",
+    "duration": 5666,
+    "when_date": "2026.05.18",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第二课：龟形导引功带练",
+    "index": 3,
+    "type": "VIDEO",
+    "when": "05.19 06:00",
+    "duration": 474,
+    "when_date": "2026.05.19",
+    "kind": "media"
+   },
+   {
+    "title": "五行导引功第三课：龙形导引功教学",
+    "index": 4,
+    "type": "VIDEO",
+    "when": "05.20 06:00",
+    "duration": 994,
+    "when_date": "2026.05.20",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：龙形导引功教学",
+    "index": 5,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.20 19:28",
+    "duration": 5645,
+    "when_date": "2026.05.20",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第四课：龙形导引功带练",
+    "index": 6,
+    "type": "VIDEO",
+    "when": "05.21 06:00",
+    "duration": 423,
+    "when_date": "2026.05.21",
+    "kind": "media"
+   },
+   {
+    "title": "第一场宁心安神晚安课：入门静坐，调养心神",
+    "index": 7,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.22 20:00",
+    "duration": 3793,
+    "when_date": "2026.05.22",
+    "kind": "master"
+   },
+   {
+    "title": "第一节晨练课堂——龟形及龙形复习",
+    "index": 8,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.23 06:30",
+    "duration": 6464,
+    "when_date": "2026.05.23",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第五课：鹤形导引功教学",
+    "index": 9,
+    "type": "VIDEO",
+    "when": "05.25 06:00",
+    "duration": 1100,
+    "when_date": "2026.05.25",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：鹤形导引功教学",
+    "index": 10,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.25 19:28",
+    "duration": 5335,
+    "when_date": "2026.05.25",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第六课：鹤形导引功带练",
+    "index": 11,
+    "type": "VIDEO",
+    "when": "05.26 06:00",
+    "duration": 495,
+    "when_date": "2026.05.26",
+    "kind": "media"
+   },
+   {
+    "title": "五行导引功第七课：虎形导引功教学",
+    "index": 12,
+    "type": "VIDEO",
+    "when": "05.27 06:00",
+    "duration": 906,
+    "when_date": "2026.05.27",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：虎形导引功教学",
+    "index": 13,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.27 19:28",
+    "duration": 5546,
+    "when_date": "2026.05.27",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第八课：虎形导引功带练",
+    "index": 14,
+    "type": "VIDEO",
+    "when": "05.28 06:00",
+    "duration": 370,
+    "when_date": "2026.05.28",
+    "kind": "media"
+   },
+   {
+    "title": "第二场宁心安神晚安课：关注呼吸，静能生慧",
+    "index": 15,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.29 20:00",
+    "duration": 4569,
+    "when_date": "2026.05.29",
+    "kind": "master"
+   },
+   {
+    "title": "第二节晨练课堂——鹤形、虎形复习",
+    "index": 16,
+    "type": "INTELLIGENT_LIVE",
+    "when": "05.30 06:30",
+    "duration": 5528,
+    "when_date": "2026.05.30",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第九课：蛇形导引功教学",
+    "index": 17,
+    "type": "VIDEO",
+    "when": "06.01 06:00",
+    "duration": 800,
+    "when_date": "2026.06.01",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：蛇形导引功教学",
+    "index": 18,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.01 19:28",
+    "duration": 5726,
+    "when_date": "2026.06.01",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功第十课：蛇形导引功带练",
+    "index": 19,
+    "type": "VIDEO",
+    "when": "06.02 06:00",
+    "duration": 283,
+    "when_date": "2026.06.02",
+    "kind": "media"
+   },
+   {
+    "title": "录播课：六字呼吸法",
+    "index": 20,
+    "type": "VIDEO",
+    "when": "06.03 06:00",
+    "duration": 1235,
+    "when_date": "2026.06.03",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：六字呼吸法教学",
+    "index": 21,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.03 19:28",
+    "duration": 6713,
+    "when_date": "2026.06.03",
+    "kind": "master"
+   },
+   {
+    "title": "录播课：五行导引功串联",
+    "index": 22,
+    "type": "VIDEO",
+    "when": "06.05 06:00",
+    "duration": 2002,
+    "when_date": "2026.06.05",
+    "kind": "media"
+   },
+   {
+    "title": "五行导引功串联—背面带练",
+    "index": 23,
+    "type": "VIDEO",
+    "when": "06.05 06:00",
+    "duration": 2033,
+    "when_date": "2026.06.05",
+    "kind": "media"
+   },
+   {
+    "title": "第三场宁心安神晚安课：觉察自我，与内心建立深度连接",
+    "index": 24,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.05 20:00",
+    "duration": 4747,
+    "when_date": "2026.06.05",
+    "kind": "master"
+   },
+   {
+    "title": "第三节晨练课堂——蛇形及六字呼吸法复习",
+    "index": 25,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.06 06:30",
+    "duration": 5136,
+    "when_date": "2026.06.06",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂：五行相生相应",
+    "index": 26,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.08 19:28",
+    "duration": 5562,
+    "when_date": "2026.06.08",
+    "kind": "master"
+   },
+   {
+    "title": "十二段锦第一课：采光引气注丹田",
+    "index": 27,
+    "type": "VIDEO",
+    "when": "06.09 06:00",
+    "duration": 533,
+    "when_date": "2026.06.09",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：第九段锦-采光引气注丹田教学",
+    "index": 28,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.10 19:28",
+    "duration": 5901,
+    "when_date": "2026.06.10",
+    "kind": "master"
+   },
+   {
+    "title": "十二段锦第二课：海底捞针分两边",
+    "index": 29,
+    "type": "VIDEO",
+    "when": "06.11 06:00",
+    "duration": 661,
+    "when_date": "2026.06.11",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：海底捞针分两边",
+    "index": 30,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.12 19:28",
+    "duration": 5509,
+    "when_date": "2026.06.12",
+    "kind": "master"
+   },
+   {
+    "title": "第四场宁心安神晚安课：感知生活，迎接幸福人生",
+    "index": 31,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.13 20:00",
+    "duration": 3649,
+    "when_date": "2026.06.13",
+    "kind": "master"
+   },
+   {
+    "title": "十二段锦第三课：起落闪臂练耳目",
+    "index": 32,
+    "type": "VIDEO",
+    "when": "06.15 06:00",
+    "duration": 650,
+    "when_date": "2026.06.15",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：起落闪臂练耳目",
+    "index": 33,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.15 19:28",
+    "duration": 5737,
+    "when_date": "2026.06.15",
+    "kind": "master"
+   },
+   {
+    "title": "李老师午间答疑加餐",
+    "index": 34,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.16 12:28",
+    "duration": 4185,
+    "when_date": "2026.06.16",
+    "kind": "master"
+   },
+   {
+    "title": "十二段锦第四课：弓步轻云上九天",
+    "index": 35,
+    "type": "VIDEO",
+    "when": "06.17 06:00",
+    "duration": 542,
+    "when_date": "2026.06.17",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：弓步轻云上九天",
+    "index": 36,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.17 19:28",
+    "duration": 9448,
+    "when_date": "2026.06.17",
+    "kind": "master"
+   },
+   {
+    "title": "李老师晚间答疑加餐",
+    "index": 37,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.19 19:28",
+    "duration": 5795,
+    "when_date": "2026.06.19",
+    "kind": "master"
+   },
+   {
+    "title": "第五场宁心安神晚安课：修心养性，提升生命境界",
+    "index": 38,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.20 20:00",
+    "duration": 4124,
+    "when_date": "2026.06.20",
+    "kind": "master"
+   },
+   {
+    "title": "录播课：十二段锦串联（9-12段）",
+    "index": 39,
+    "type": "VIDEO",
+    "when": "06.22 06:00",
+    "duration": 571,
+    "when_date": "2026.06.22",
+    "kind": "media"
+   },
+   {
+    "title": "录播课：十二段锦串联（1-12段）",
+    "index": 40,
+    "type": "VIDEO",
+    "when": "06.22 06:00",
+    "duration": 2369,
+    "when_date": "2026.06.22",
+    "kind": "media"
+   },
+   {
+    "title": "晚间课堂：十二段锦串联",
+    "index": 41,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.22 19:28",
+    "duration": 10095,
+    "when_date": "2026.06.22",
+    "kind": "master"
+   },
+   {
+    "title": "第六场宁心安神晚安课：道家添油接命的活力延续法",
+    "index": 42,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.24 20:00",
+    "duration": 4143,
+    "when_date": "2026.06.24",
+    "kind": "master"
+   },
+   {
+    "title": "晚间课堂: 五行导引功串联",
+    "index": 43,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.25 19:28",
+    "duration": 8654,
+    "when_date": "2026.06.25",
+    "kind": "master"
+   },
+   {
+    "title": "引炁归源太极营—未来修行之路",
+    "index": 44,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.27 19:28",
+    "duration": 5519,
+    "when_date": "2026.06.27",
+    "kind": "master"
+   },
+   {
+    "title": "结营典礼：复归先天一炁",
+    "index": 45,
+    "type": "INTELLIGENT_LIVE",
+    "when": "06.29 19:28",
+    "duration": 8555,
+    "when_date": "2026.06.29",
+    "kind": "master"
+   },
+   {
+    "title": "太极剑第一课：上步含剑",
+    "index": 46,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 1279,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第二课：仙人指路",
+    "index": 47,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 239,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第三课：三环套月",
+    "index": 48,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 195,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第四课：大魁星式",
+    "index": 49,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 157,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第五课：燕子抄水",
+    "index": 50,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 117,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第六课：童子提炉",
+    "index": 51,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 373,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第七课：黄蜂入洞",
+    "index": 52,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 158,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第八课：灵猫扑鼠",
+    "index": 53,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 238,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第九课：蜻蜓点水",
+    "index": 54,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 198,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第十课：金蛇盘柳",
+    "index": 55,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 212,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第十一课：燕子入巢",
+    "index": 56,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 135,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第十二课：大鹏展翅",
+    "index": 57,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 357,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑第十三课：挑帘式+收势",
+    "index": 58,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 1131,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "太极剑十三式串联",
+    "index": 59,
+    "type": "VIDEO",
+    "when": "06.30 18:00",
+    "duration": 463,
+    "when_date": "2026.06.30",
+    "kind": "media"
+   },
+   {
+    "title": "引炁归源太极营惊喜加播",
+    "index": 60,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.02 19:28",
+    "duration": 8319,
+    "when_date": "2026.07.02",
+    "kind": "master"
+   },
+   {
+    "title": "五行导引功串联音频",
+    "index": 61,
+    "type": "AUDIO",
+    "when": "07.03 06:00",
+    "duration": 2003,
+    "when_date": "2026.07.03",
+    "kind": "direct"
+   },
+   {
+    "title": "十二段锦串联（1-12段）音频",
+    "index": 62,
+    "type": "AUDIO",
+    "when": "07.03 06:00",
+    "duration": 2276,
+    "when_date": "2026.07.03",
+    "kind": "direct"
+   },
+   {
+    "title": "水生木：龟伏龙腾",
+    "index": 63,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 904,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "木生火：龙飞鹤舞",
+    "index": 64,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 979,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "火生土：鹤翔虎跃",
+    "index": 65,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 995,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "土生金：虎步蛇形",
+    "index": 66,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 760,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "金生水：龟循蛇迹",
+    "index": 67,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 804,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "水火既济：龟鹤遐寿",
+    "index": 68,
+    "type": "VIDEO",
+    "when": "07.03 06:00",
+    "duration": 967,
+    "when_date": "2026.07.03",
+    "kind": "media"
+   },
+   {
+    "title": "引炁归源太极营惊喜加餐",
+    "index": 69,
+    "type": "INTELLIGENT_LIVE",
+    "when": "07.07 19:28",
+    "duration": 8659,
+    "when_date": "2026.07.07",
+    "kind": "master"
+   }
+  ]
+ },
+ "先导课——以自然之道，养生命之源": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "先导课：解谜自然之道",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "06.12 14:13",
+    "duration": 587,
+    "when_date": "2024.06.12",
+    "kind": "media"
+   }
+  ]
+ },
+ "调和养正太极营": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "太极：以阴阳之道，启身心之门",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "02.25 06:00",
+    "duration": 585,
+    "when_date": "2026.02.25",
+    "kind": "media"
+   },
+   {
+    "title": "第一课 《步法虚实转换》",
+    "index": 1,
+    "type": "VIDEO",
+    "when": "02.26 06:00",
+    "duration": 2032,
+    "when_date": "2026.02.26",
+    "kind": "media"
+   },
+   {
+    "title": "第二课 《左右抱球+变换教程》",
+    "index": 2,
+    "type": "VIDEO",
+    "when": "02.27 06:00",
+    "duration": 992,
+    "when_date": "2026.02.27",
+    "kind": "media"
+   },
+   {
+    "title": "第三课 《掤捋挤按》",
+    "index": 3,
+    "type": "VIDEO",
+    "when": "02.28 06:00",
+    "duration": 1030,
+    "when_date": "2026.02.28",
+    "kind": "media"
+   },
+   {
+    "title": "第四课 《采挒肘靠》",
+    "index": 4,
+    "type": "VIDEO",
+    "when": "03.01 06:00",
+    "duration": 827,
+    "when_date": "2026.03.01",
+    "kind": "media"
+   },
+   {
+    "title": "第五课 《太极五步》",
+    "index": 5,
+    "type": "VIDEO",
+    "when": "03.02 06:00",
+    "duration": 1153,
+    "when_date": "2026.03.02",
+    "kind": "media"
+   },
+   {
+    "title": "开营典礼【存德老师】",
+    "index": 6,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.04 17:00",
+    "duration": 3063,
+    "when_date": "2026.03.04",
+    "kind": "master"
+   },
+   {
+    "title": "W1开营典礼——虚实步法+左右抱球教学",
+    "index": 7,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.05 19:38",
+    "duration": 7101,
+    "when_date": "2026.03.05",
+    "kind": "master"
+   },
+   {
+    "title": "W1第二节课程——八法五步",
+    "index": 8,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.07 19:38",
+    "duration": 7120,
+    "when_date": "2026.03.07",
+    "kind": "master"
+   },
+   {
+    "title": "太极八法带练",
+    "index": 9,
+    "type": "VIDEO",
+    "when": "03.08 06:00",
+    "duration": 422,
+    "when_date": "2026.03.08",
+    "kind": "media"
+   },
+   {
+    "title": "太极五步带练",
+    "index": 10,
+    "type": "VIDEO",
+    "when": "03.08 06:00",
+    "duration": 404,
+    "when_date": "2026.03.08",
+    "kind": "media"
+   },
+   {
+    "title": "第六课 《祛邪十三式》",
+    "index": 11,
+    "type": "VIDEO",
+    "when": "03.08 06:00",
+    "duration": 1348,
+    "when_date": "2026.03.08",
+    "kind": "media"
+   },
+   {
+    "title": "W2第三节课程——祛邪十三式",
+    "index": 12,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.09 19:38",
+    "duration": 6611,
+    "when_date": "2026.03.09",
+    "kind": "master"
+   },
+   {
+    "title": "祛邪十三式【双向对照版】",
+    "index": 13,
+    "type": "VIDEO",
+    "when": "03.10 06:00",
+    "duration": 134,
+    "when_date": "2026.03.10",
+    "kind": "media"
+   },
+   {
+    "title": "第七课 《起势+引气归田+抱球式》",
+    "index": 14,
+    "type": "VIDEO",
+    "when": "03.10 06:00",
+    "duration": 1294,
+    "when_date": "2026.03.10",
+    "kind": "media"
+   },
+   {
+    "title": "第八课 《野马分鬃》",
+    "index": 15,
+    "type": "VIDEO",
+    "when": "03.10 06:00",
+    "duration": 582,
+    "when_date": "2026.03.10",
+    "kind": "media"
+   },
+   {
+    "title": "助教课堂【祛邪十三式】",
+    "index": 16,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.11 06:30",
+    "duration": 4806,
+    "when_date": "2026.03.11",
+    "kind": "master"
+   },
+   {
+    "title": "W2第四节课程——养正1-4式（起势+引气归田+抱球式+野马分鬃）",
+    "index": 17,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.12 19:38",
+    "duration": 7460,
+    "when_date": "2026.03.12",
+    "kind": "master"
+   },
+   {
+    "title": "养正十三式前四式【双向对照版】",
+    "index": 18,
+    "type": "VIDEO",
+    "when": "03.13 06:00",
+    "duration": 209,
+    "when_date": "2026.03.13",
+    "kind": "media"
+   },
+   {
+    "title": "第九课 《揽雀尾+玉女穿梭+顺手单鞭》",
+    "index": 19,
+    "type": "VIDEO",
+    "when": "03.13 06:00",
+    "duration": 1202,
+    "when_date": "2026.03.13",
+    "kind": "media"
+   },
+   {
+    "title": "W2第五节课程——养正5-7式（揽雀尾+玉女穿梭＋顺手单鞭）",
+    "index": 20,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.14 19:38",
+    "duration": 7321,
+    "when_date": "2026.03.14",
+    "kind": "master"
+   },
+   {
+    "title": "养正1-7式带练【双向对照版】",
+    "index": 21,
+    "type": "VIDEO",
+    "when": "03.15 06:00",
+    "duration": 354,
+    "when_date": "2026.03.15",
+    "kind": "media"
+   },
+   {
+    "title": "加餐课程——养正1-7式巩固与答疑",
+    "index": 22,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.16 19:38",
+    "duration": 7472,
+    "when_date": "2026.03.16",
+    "kind": "master"
+   },
+   {
+    "title": "第十课《提手上势+小擒拿+白鹤亮翅+搂膝拗步》",
+    "index": 23,
+    "type": "VIDEO",
+    "when": "03.18 06:00",
+    "duration": 1351,
+    "when_date": "2026.03.18",
+    "kind": "media"
+   },
+   {
+    "title": "W3第六节课程——养正8-10式（提手上势＋小擒拿+白鹤亮翅）",
+    "index": 24,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.19 19:38",
+    "duration": 7001,
+    "when_date": "2026.03.19",
+    "kind": "master"
+   },
+   {
+    "title": "养正1-10式带练【双向对照版】",
+    "index": 25,
+    "type": "VIDEO",
+    "when": "03.20 06:00",
+    "duration": 449,
+    "when_date": "2026.03.20",
+    "kind": "media"
+   },
+   {
+    "title": "加餐课堂——静坐及《道德经》（第一节）",
+    "index": 26,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.21 19:38",
+    "duration": 6620,
+    "when_date": "2026.03.21",
+    "kind": "master"
+   },
+   {
+    "title": " 静坐带练",
+    "index": 27,
+    "type": "VIDEO",
+    "when": "03.22 06:00",
+    "duration": 571,
+    "when_date": "2026.03.22",
+    "kind": "media"
+   },
+   {
+    "title": "第十一课 《云手+十字化手》",
+    "index": 28,
+    "type": "VIDEO",
+    "when": "03.22 06:00",
+    "duration": 914,
+    "when_date": "2026.03.22",
+    "kind": "media"
+   },
+   {
+    "title": "W3第七节课程——养正11-13式（搂膝拗步＋云手+十字化手）",
+    "index": 29,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.23 19:38",
+    "duration": 6422,
+    "when_date": "2026.03.23",
+    "kind": "master"
+   },
+   {
+    "title": "养正十三式正面＋背面带练【双向对照版】",
+    "index": 30,
+    "type": "VIDEO",
+    "when": "03.24 06:00",
+    "duration": 584,
+    "when_date": "2026.03.24",
+    "kind": "media"
+   },
+   {
+    "title": "第十二课 《养正十三式》",
+    "index": 31,
+    "type": "VIDEO",
+    "when": "03.24 06:00",
+    "duration": 1392,
+    "when_date": "2026.03.24",
+    "kind": "media"
+   },
+   {
+    "title": "助教课堂【养正十三式】",
+    "index": 32,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.25 06:30",
+    "duration": 6666,
+    "when_date": "2026.03.25",
+    "kind": "master"
+   },
+   {
+    "title": "W4第八节课程——养正十三式串联",
+    "index": 33,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.26 19:38",
+    "duration": 6490,
+    "when_date": "2026.03.26",
+    "kind": "master"
+   },
+   {
+    "title": "养正十三式正面带练【户外版】",
+    "index": 34,
+    "type": "VIDEO",
+    "when": "03.27 06:00",
+    "duration": 617,
+    "when_date": "2026.03.27",
+    "kind": "media"
+   },
+   {
+    "title": "养正十三式背面带练【户外版】",
+    "index": 35,
+    "type": "VIDEO",
+    "when": "03.27 06:00",
+    "duration": 615,
+    "when_date": "2026.03.27",
+    "kind": "media"
+   },
+   {
+    "title": "W4第九节课程——八段锦＋养正十三式串联",
+    "index": 36,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.28 19:38",
+    "duration": 6378,
+    "when_date": "2026.03.28",
+    "kind": "master"
+   },
+   {
+    "title": "嘘字诀带练及讲解",
+    "index": 37,
+    "type": "VIDEO",
+    "when": "03.29 06:00",
+    "duration": 932,
+    "when_date": "2026.03.29",
+    "kind": "media"
+   },
+   {
+    "title": "加餐课堂——静坐及《道德经》（第二节）",
+    "index": 38,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.29 19:38",
+    "duration": 7924,
+    "when_date": "2026.03.29",
+    "kind": "master"
+   },
+   {
+    "title": "第十三课 《太极剑》",
+    "index": 39,
+    "type": "VIDEO",
+    "when": "03.30 06:00",
+    "duration": 1214,
+    "when_date": "2026.03.30",
+    "kind": "media"
+   },
+   {
+    "title": "W4第十节教学——太极剑体验与“养正十三式”复习",
+    "index": 40,
+    "type": "INTELLIGENT_LIVE",
+    "when": "03.31 19:38",
+    "duration": 8427,
+    "when_date": "2026.03.31",
+    "kind": "master"
+   },
+   {
+    "title": "太极拳全套带练（八段锦热身+养正十三式+收功）",
+    "index": 41,
+    "type": "VIDEO",
+    "when": "04.01 06:00",
+    "duration": 1093,
+    "when_date": "2026.04.01",
+    "kind": "media"
+   },
+   {
+    "title": "【五行功体验】金龟吐丹和二龙戏珠",
+    "index": 42,
+    "type": "VIDEO",
+    "when": "04.01 06:00",
+    "duration": 1021,
+    "when_date": "2026.04.01",
+    "kind": "media"
+   },
+   {
+    "title": "第十四课 《太极扇》",
+    "index": 43,
+    "type": "VIDEO",
+    "when": "04.01 06:00",
+    "duration": 883,
+    "when_date": "2026.04.01",
+    "kind": "media"
+   },
+   {
+    "title": "W5第十一节教学——太极扇体验与“养正十三式”复习",
+    "index": 44,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.02 19:38",
+    "duration": 8776,
+    "when_date": "2026.04.02",
+    "kind": "master"
+   },
+   {
+    "title": "采光引气注丹田带练",
+    "index": 45,
+    "type": "VIDEO",
+    "when": "04.03 06:00",
+    "duration": 266,
+    "when_date": "2026.04.03",
+    "kind": "media"
+   },
+   {
+    "title": "吹字诀带练",
+    "index": 46,
+    "type": "VIDEO",
+    "when": "04.03 06:00",
+    "duration": 344,
+    "when_date": "2026.04.03",
+    "kind": "media"
+   },
+   {
+    "title": "以意引气 以气养肾——太极内劲与固本培元之道",
+    "index": 47,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.07 19:38",
+    "duration": 4778,
+    "when_date": "2026.04.07",
+    "kind": "master"
+   },
+   {
+    "title": "惊喜加餐——春季专场",
+    "index": 48,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.09 19:38",
+    "duration": 8719,
+    "when_date": "2026.04.09",
+    "kind": "master"
+   },
+   {
+    "title": "“清调补”功法专训加餐",
+    "index": 49,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.12 19:38",
+    "duration": 7781,
+    "when_date": "2026.04.12",
+    "kind": "master"
+   },
+   {
+    "title": "W5第十二节-结营典礼",
+    "index": 50,
+    "type": "INTELLIGENT_LIVE",
+    "when": "04.14 19:38",
+    "duration": 8476,
+    "when_date": "2026.04.14",
+    "kind": "master"
+   },
+   {
+    "title": "惊喜加餐--春季专场【带练切片视频】",
+    "index": 51,
+    "type": "VIDEO",
+    "when": "04.11 06:00",
+    "duration": 628,
+    "when_date": "2026.04.11",
+    "kind": "media"
+   }
+  ]
+ },
+ "【全面升级】养元活血太极营": {
+  "kind": "正式营",
+  "rows": [
+   {
+    "title": "【以“九不做”之诺，建兴趣岛信任新标杆】",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 192,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "太极正价学员预告课第一：八段锦基础手型、步法、呼吸法",
+    "index": 1,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 604,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "太极正价学员预告课第二：八段锦第一段——双手托天理三焦",
+    "index": 2,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 635,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "太极正价学员预告课第三：八段锦第二段——左右开弓似射雕",
+    "index": 3,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 561,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "热身功法",
+    "index": 4,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 1196,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "收功",
+    "index": 5,
+    "type": "VIDEO",
+    "when": "12.02 06:00",
+    "duration": 382,
+    "when_date": "2025.12.02",
+    "kind": "media"
+   },
+   {
+    "title": "开营典礼",
+    "index": 6,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.27 19:00",
+    "duration": 3783,
+    "when_date": "2025.12.27",
+    "kind": "master"
+   },
+   {
+    "title": "第一周晚间课堂——八段锦预备式及前两段教学",
+    "index": 7,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.28 19:40",
+    "duration": 6269,
+    "when_date": "2025.12.28",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦录播第一课——双手托天理三焦",
+    "index": 8,
+    "type": "VIDEO",
+    "when": "12.29 06:00",
+    "duration": 1174,
+    "when_date": "2025.12.29",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦录播第二课——左右开弓似射雕",
+    "index": 9,
+    "type": "VIDEO",
+    "when": "12.30 06:00",
+    "duration": 775,
+    "when_date": "2025.12.30",
+    "kind": "media"
+   },
+   {
+    "title": "第一周晨练课堂——八段锦前两段复习+站桩学习",
+    "index": 10,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.31 06:30",
+    "duration": 5449,
+    "when_date": "2025.12.31",
+    "kind": "master"
+   },
+   {
+    "title": "第一周站桩练习——“吐故纳新桩”与“太极混元桩”",
+    "index": 11,
+    "type": "VIDEO",
+    "when": "01.01 06:00",
+    "duration": 1306,
+    "when_date": "2026.01.01",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦录播第三课——调理脾胃需单举",
+    "index": 12,
+    "type": "VIDEO",
+    "when": "01.02 06:00",
+    "duration": 572,
+    "when_date": "2026.01.02",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦1-3段带练",
+    "index": 13,
+    "type": "VIDEO",
+    "when": "01.03 06:00",
+    "duration": 445,
+    "when_date": "2026.01.03",
+    "kind": "media"
+   },
+   {
+    "title": "第二周晚间课堂——八段锦第三第四第五段教学",
+    "index": 14,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.04 19:40",
+    "duration": 6663,
+    "when_date": "2026.01.04",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦录播第四课——五劳七伤向后瞧",
+    "index": 15,
+    "type": "VIDEO",
+    "when": "01.05 06:00",
+    "duration": 867,
+    "when_date": "2026.01.05",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦录播第五课——摇头摆尾去心火",
+    "index": 16,
+    "type": "VIDEO",
+    "when": "01.06 06:00",
+    "duration": 1182,
+    "when_date": "2026.01.06",
+    "kind": "media"
+   },
+   {
+    "title": " 第二周晨练课堂-八段锦前五段复习+站桩学习",
+    "index": 17,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.07 06:30",
+    "duration": 5387,
+    "when_date": "2026.01.07",
+    "kind": "master"
+   },
+   {
+    "title": "第二周站桩练习——霸王举鼎桩",
+    "index": 18,
+    "type": "VIDEO",
+    "when": "01.08 06:00",
+    "duration": 982,
+    "when_date": "2026.01.08",
+    "kind": "media"
+   },
+   {
+    "title": "小飞助教－纠功班会",
+    "index": 19,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.08 19:00",
+    "duration": 4199,
+    "when_date": "2026.01.08",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦1-5段带练",
+    "index": 20,
+    "type": "VIDEO",
+    "when": "01.09 06:00",
+    "duration": 978,
+    "when_date": "2026.01.09",
+    "kind": "media"
+   },
+   {
+    "title": "惊喜加播——清静经与静坐讲解",
+    "index": 21,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.09 19:40",
+    "duration": 7263,
+    "when_date": "2026.01.09",
+    "kind": "master"
+   },
+   {
+    "title": "第三周晚间课堂——八段锦第五第六第七段教学",
+    "index": 22,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.11 19:40",
+    "duration": 6345,
+    "when_date": "2026.01.11",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦录播第六课——背后七颠百病消",
+    "index": 23,
+    "type": "VIDEO",
+    "when": "01.12 06:00",
+    "duration": 921,
+    "when_date": "2026.01.12",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦录播第七课——攒拳怒目增气力",
+    "index": 24,
+    "type": "VIDEO",
+    "when": "01.13 06:00",
+    "duration": 754,
+    "when_date": "2026.01.13",
+    "kind": "media"
+   },
+   {
+    "title": "第三周晨练课堂——八段锦前七段复习+初识动站桩",
+    "index": 25,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.14 06:30",
+    "duration": 5885,
+    "when_date": "2026.01.14",
+    "kind": "master"
+   },
+   {
+    "title": "第三周站桩练习——“妙转太极桩”与“旋转乾坤桩”",
+    "index": 26,
+    "type": "VIDEO",
+    "when": "01.15 06:00",
+    "duration": 909,
+    "when_date": "2026.01.15",
+    "kind": "media"
+   },
+   {
+    "title": "小飞师兄-加餐带练分享班会（第三周）",
+    "index": 27,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.15 19:00",
+    "duration": 3953,
+    "when_date": "2026.01.15",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦1-7段带练",
+    "index": 28,
+    "type": "VIDEO",
+    "when": "01.16 06:00",
+    "duration": 1637,
+    "when_date": "2026.01.16",
+    "kind": "media"
+   },
+   {
+    "title": "惊喜加餐-—清静经与太极拳分享",
+    "index": 29,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.16 19:40",
+    "duration": 6465,
+    "when_date": "2026.01.16",
+    "kind": "master"
+   },
+   {
+    "title": "第四周晚间课堂——八段锦第八段教学与复习带练",
+    "index": 30,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.18 19:40",
+    "duration": 8327,
+    "when_date": "2026.01.18",
+    "kind": "master"
+   },
+   {
+    "title": "八段锦录播第八课——双手攀足固肾腰",
+    "index": 31,
+    "type": "VIDEO",
+    "when": "01.19 06:00",
+    "duration": 1040,
+    "when_date": "2026.01.19",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦全套带练版视频",
+    "index": 32,
+    "type": "VIDEO",
+    "when": "01.20 06:00",
+    "duration": 1846,
+    "when_date": "2026.01.20",
+    "kind": "media"
+   },
+   {
+    "title": "第四周晨练课堂——八段锦全套带练+引气归元桩",
+    "index": 33,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.21 06:30",
+    "duration": 7672,
+    "when_date": "2026.01.21",
+    "kind": "master"
+   },
+   {
+    "title": "第四周站桩练习——引气归元桩",
+    "index": 34,
+    "type": "VIDEO",
+    "when": "01.22 06:00",
+    "duration": 831,
+    "when_date": "2026.01.22",
+    "kind": "media"
+   },
+   {
+    "title": "站桩全套带练视频",
+    "index": 35,
+    "type": "VIDEO",
+    "when": "01.23 06:00",
+    "duration": 1262,
+    "when_date": "2026.01.23",
+    "kind": "media"
+   },
+   {
+    "title": "八段锦结营课课堂",
+    "index": 36,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.25 19:40",
+    "duration": 7751,
+    "when_date": "2026.01.25",
+    "kind": "master"
+   },
+   {
+    "title": "【八段锦全套带练&加餐答疑】李老师福利加餐专场（j）",
+    "index": 37,
+    "type": "INTELLIGENT_LIVE",
+    "when": "01.23 19:40",
+    "duration": 7946,
+    "when_date": "2026.01.23",
+    "kind": "master"
+   }
+  ]
+ },
+ "道门-柔筋活络太极营-2营": {
+  "kind": "体验营",
+  "rows": [
+   {
+    "title": "先导课——道门热身功+站桩初体验，打下健康基础",
+    "index": 0,
+    "type": "VIDEO",
+    "when": "12.04 08:00",
+    "duration": 658,
+    "when_date": "2025.12.04",
+    "kind": "media"
+   },
+   {
+    "title": "【观天视地】舒肩颈,松腰椎,生发阳气打开通道",
+    "index": 1,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.11 19:38",
+    "duration": 5317,
+    "when_date": "2025.12.11",
+    "kind": "master"
+   },
+   {
+    "title": "【青龙戏水】正脊柱,拉筋骨",
+    "index": 2,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.12 19:38",
+    "duration": 4241,
+    "when_date": "2025.12.12",
+    "kind": "master"
+   },
+   {
+    "title": "晨光八段锦，唤醒活力源",
+    "index": 3,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.13 06:28",
+    "duration": 3674,
+    "when_date": "2025.12.13",
+    "kind": "master"
+   },
+   {
+    "title": "拉筋骨，通气血，提免疫，焕美颜——武当太极李在峰直播课",
+    "index": 4,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.14 19:38",
+    "duration": 8431,
+    "when_date": "2025.12.14",
+    "kind": "master"
+   },
+   {
+    "title": "练好功法，睡个好觉——李在峰太极营加餐直播",
+    "index": 5,
+    "type": "INTELLIGENT_LIVE",
+    "when": "12.15 19:38",
+    "duration": 7809,
+    "when_date": "2025.12.15",
+    "kind": "master"
+   }
+  ]
+ }
+}

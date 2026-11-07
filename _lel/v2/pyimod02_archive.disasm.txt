@@ -1,0 +1,2110 @@
+# pydisasm version 6.3.0
+# CPython Python bytecode 3.7 (-1)
+#   Disassembled from CPython Python 3.13.14 (main, Jun 11 2026, 04:04:46) [MSC v.1944 64 bit (AMD64)]
+# Timestamp in code: 812218736 (1995-09-28 00:18:56)
+# Method Name:       <module>
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        4
+# Flags:             0x00000040 (NOFREE)
+# First Line:        27
+# Constants:
+#    0: 0
+#    1: None
+#    2: 2
+#    3: 16
+#    4: 1
+#    5: <Code3 code object FilePos at 0x274347f7d90, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 46
+#    6: 'FilePos'
+#    7: <Code3 code object ArchiveFile at 0x274349b6250, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 58
+#    8: 'ArchiveFile'
+#    9: <Code3 code object ArchiveReadError at 0x274348f7250, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 114
+#   10: 'ArchiveReadError'
+#   11: <Code3 code object ArchiveReader at 0x2743492eb70, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 118
+#   12: 'ArchiveReader'
+#   13: <Code3 code object _pyi_stream_tables at 0x2743492ee40, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 249
+#   14: '_pyi_stream_tables'
+#   15: <Code3 code object _pyi_stream_crypt at 0x2743492ef30, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 256
+#   16: '_pyi_stream_crypt'
+#   17: <Code3 code object Cipher at 0x2743492f3e0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 263
+#   18: 'Cipher'
+#   19: <Code3 code object ZlibArchiveReader at 0x2743492f7a0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 334
+#   20: 'ZlibArchiveReader'
+# Names:
+#    0: marshal
+#    1: struct
+#    2: sys
+#    3: zlib
+#    4: version_info
+#    5: thread
+#    6: _thread
+#    7: CRYPT_BLOCK_SIZE
+#    8: PYZ_TYPE_MODULE
+#    9: PYZ_TYPE_PKG
+#   10: PYZ_TYPE_DATA
+#   11: object
+#   12: FilePos
+#   13: ArchiveFile
+#   14: RuntimeError
+#   15: ArchiveReadError
+#   16: ArchiveReader
+#   17: _PYI_STREAM_MASK_LEN
+#   18: _PYI_STREAM_TABLES
+#   19: _pyi_stream_tables
+#   20: _pyi_stream_crypt
+#   21: Cipher
+#   22: ZlibArchiveReader
+
+ 27:           0 LOAD_CONST           (0)
+               2 LOAD_CONST           (None)
+               4 IMPORT_NAME          (marshal)
+               6 STORE_NAME           (marshal)
+
+ 28:           8 LOAD_CONST           (0)
+              10 LOAD_CONST           (None)
+              12 IMPORT_NAME          (struct)
+              14 STORE_NAME           (struct)
+
+ 29:          16 LOAD_CONST           (0)
+              18 LOAD_CONST           (None)
+              20 IMPORT_NAME          (sys)
+              22 STORE_NAME           (sys)
+
+ 30:          24 LOAD_CONST           (0)
+              26 LOAD_CONST           (None)
+              28 IMPORT_NAME          (zlib)
+              30 STORE_NAME           (zlib)
+
+ 31:          32 LOAD_NAME            (sys)
+              34 LOAD_ATTR            (version_info)
+              36 LOAD_CONST           (0)
+              38 BINARY_SUBSCR
+              40 LOAD_CONST           (2)
+              42 COMPARE_OP           (==)
+              44 POP_JUMP_IF_FALSE    (to 56)
+
+ 32:          46 LOAD_CONST           (0)
+              48 LOAD_CONST           (None)
+              50 IMPORT_NAME          (thread)
+              52 STORE_NAME           (thread)
+              54 JUMP_FORWARD         (to 64)
+
+ 34:     >>   56 LOAD_CONST           (0)
+              58 LOAD_CONST           (None)
+              60 IMPORT_NAME          (_thread)
+              62 STORE_NAME           (thread)
+
+ 38:     >>   64 LOAD_CONST           (16)
+              66 STORE_NAME           (CRYPT_BLOCK_SIZE)
+
+ 42:          68 LOAD_CONST           (0)
+              70 STORE_NAME           (PYZ_TYPE_MODULE)
+
+ 43:          72 LOAD_CONST           (1)
+              74 STORE_NAME           (PYZ_TYPE_PKG)
+
+ 44:          76 LOAD_CONST           (2)
+              78 STORE_NAME           (PYZ_TYPE_DATA)
+
+ 46:          80 LOAD_BUILD_CLASS
+              82 LOAD_CONST           (<Code3 code object FilePos at 0x274347f7d90, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 46)
+              84 LOAD_CONST           ("FilePos")
+              86 MAKE_FUNCTION        (No arguments)
+              88 LOAD_CONST           ("FilePos")
+              90 LOAD_NAME            (object)
+              92 CALL_FUNCTION        (3 positional arguments)
+              94 STORE_NAME           (FilePos)
+
+ 58:          96 LOAD_BUILD_CLASS
+              98 LOAD_CONST           (<Code3 code object ArchiveFile at 0x274349b6250, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 58)
+             100 LOAD_CONST           ("ArchiveFile")
+             102 MAKE_FUNCTION        (No arguments)
+             104 LOAD_CONST           ("ArchiveFile")
+             106 LOAD_NAME            (object)
+             108 CALL_FUNCTION        (3 positional arguments)
+             110 STORE_NAME           (ArchiveFile)
+
+114:         112 LOAD_BUILD_CLASS
+             114 LOAD_CONST           (<Code3 code object ArchiveReadError at 0x274348f7250, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 114)
+             116 LOAD_CONST           ("ArchiveReadError")
+             118 MAKE_FUNCTION        (No arguments)
+             120 LOAD_CONST           ("ArchiveReadError")
+             122 LOAD_NAME            (RuntimeError)
+             124 CALL_FUNCTION        (3 positional arguments)
+             126 STORE_NAME           (ArchiveReadError)
+
+118:         128 LOAD_BUILD_CLASS
+             130 LOAD_CONST           (<Code3 code object ArchiveReader at 0x2743492eb70, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 118)
+             132 LOAD_CONST           ("ArchiveReader")
+             134 MAKE_FUNCTION        (No arguments)
+             136 LOAD_CONST           ("ArchiveReader")
+             138 LOAD_NAME            (object)
+             140 CALL_FUNCTION        (3 positional arguments)
+             142 STORE_NAME           (ArchiveReader)
+
+245:         144 LOAD_CONST           (16)
+             146 STORE_NAME           (_PYI_STREAM_MASK_LEN)
+
+246:         148 LOAD_CONST           (None)
+             150 STORE_GLOBAL         (_PYI_STREAM_TABLES)
+
+249:         152 LOAD_CONST           (<Code3 code object _pyi_stream_tables at 0x2743492ee40, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 249)
+             154 LOAD_CONST           ("_pyi_stream_tables")
+             156 MAKE_FUNCTION        (No arguments)
+             158 STORE_NAME           (_pyi_stream_tables)
+
+256:         160 LOAD_CONST           (<Code3 code object _pyi_stream_crypt at 0x2743492ef30, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 256)
+             162 LOAD_CONST           ("_pyi_stream_crypt")
+             164 MAKE_FUNCTION        (No arguments)
+             166 STORE_NAME           (_pyi_stream_crypt)
+
+263:         168 LOAD_BUILD_CLASS
+             170 LOAD_CONST           (<Code3 code object Cipher at 0x2743492f3e0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 263)
+             172 LOAD_CONST           ("Cipher")
+             174 MAKE_FUNCTION        (No arguments)
+             176 LOAD_CONST           ("Cipher")
+             178 LOAD_NAME            (object)
+             180 CALL_FUNCTION        (3 positional arguments)
+             182 STORE_NAME           (Cipher)
+
+334:         184 LOAD_BUILD_CLASS
+             186 LOAD_CONST           (<Code3 code object ZlibArchiveReader at 0x2743492f7a0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 334)
+             188 LOAD_CONST           ("ZlibArchiveReader")
+             190 MAKE_FUNCTION        (No arguments)
+             192 LOAD_CONST           ("ZlibArchiveReader")
+             194 LOAD_NAME            (ArchiveReader)
+             196 CALL_FUNCTION        (3 positional arguments)
+             198 STORE_NAME           (ZlibArchiveReader)
+             200 LOAD_CONST           (None)
+             202 RETURN_VALUE
+
+
+# Method Name:       FilePos
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        2
+# Flags:             0x00000040 (NOFREE)
+# First Line:        46
+# Constants:
+#    0: 'FilePos'
+#    1: '\n    This class keeps track of the file object representing and current position\n    in a file.\n    '
+#    2: <Code3 code object __init__ at 0x274349a4d70, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 51
+#    3: 'FilePos.__init__'
+#    4: None
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+#    3: __doc__
+#    4: __init__
+
+ 46:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("FilePos")
+               6 STORE_NAME           (__qualname__)
+
+ 50:           8 LOAD_CONST           ("\n    This class keeps track of the file object representing and current position\n    in a file.\n    ")
+              10 STORE_NAME           (__doc__)
+
+ 51:          12 LOAD_CONST           (<Code3 code object __init__ at 0x274349a4d70, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 51)
+              14 LOAD_CONST           ("FilePos.__init__")
+              16 MAKE_FUNCTION        (No arguments)
+              18 STORE_NAME           (__init__)
+              20 LOAD_CONST           (None)
+              22 RETURN_VALUE
+
+
+# Method Name:       ArchiveFile
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        2
+# Flags:             0x00000040 (NOFREE)
+# First Line:        58
+# Constants:
+#    0: 'ArchiveFile'
+#    1: '\n    File class support auto open when access member from file object\n    This class is use to avoid file locking on windows\n    '
+#    2: <Code3 code object __init__ at 0x274347f7ed0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 64
+#    3: 'ArchiveFile.__init__'
+#    4: <Code3 code object local at 0x2743485b950, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 69
+#    5: 'ArchiveFile.local'
+#    6: <Code3 code object __getattr__ at 0x2743485ba80, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 80
+#    7: 'ArchiveFile.__getattr__'
+#    8: <Code3 code object __enter__ at 0x274348fbe30, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 89
+#    9: 'ArchiveFile.__enter__'
+#   10: <Code3 code object __exit__ at 0x274349b6360, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 100
+#   11: 'ArchiveFile.__exit__'
+#   12: None
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+#    3: __doc__
+#    4: __init__
+#    5: local
+#    6: __getattr__
+#    7: __enter__
+#    8: __exit__
+
+ 58:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("ArchiveFile")
+               6 STORE_NAME           (__qualname__)
+
+ 62:           8 LOAD_CONST           ("\n    File class support auto open when access member from file object\n    This class is use to avoid file locking on windows\n    ")
+              10 STORE_NAME           (__doc__)
+
+ 64:          12 LOAD_CONST           (<Code3 code object __init__ at 0x274347f7ed0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 64)
+              14 LOAD_CONST           ("ArchiveFile.__init__")
+              16 MAKE_FUNCTION        (No arguments)
+              18 STORE_NAME           (__init__)
+
+ 69:          20 LOAD_CONST           (<Code3 code object local at 0x2743485b950, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 69)
+              22 LOAD_CONST           ("ArchiveFile.local")
+              24 MAKE_FUNCTION        (No arguments)
+              26 STORE_NAME           (local)
+
+ 80:          28 LOAD_CONST           (<Code3 code object __getattr__ at 0x2743485ba80, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 80)
+              30 LOAD_CONST           ("ArchiveFile.__getattr__")
+              32 MAKE_FUNCTION        (No arguments)
+              34 STORE_NAME           (__getattr__)
+
+ 89:          36 LOAD_CONST           (<Code3 code object __enter__ at 0x274348fbe30, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 89)
+              38 LOAD_CONST           ("ArchiveFile.__enter__")
+              40 MAKE_FUNCTION        (No arguments)
+              42 STORE_NAME           (__enter__)
+
+100:          44 LOAD_CONST           (<Code3 code object __exit__ at 0x274349b6360, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 100)
+              46 LOAD_CONST           ("ArchiveFile.__exit__")
+              48 MAKE_FUNCTION        (No arguments)
+              50 STORE_NAME           (__exit__)
+              52 LOAD_CONST           (None)
+              54 RETURN_VALUE
+
+
+# Method Name:       ArchiveReadError
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        1
+# Flags:             0x00000040 (NOFREE)
+# First Line:        114
+# Constants:
+#    0: 'ArchiveReadError'
+#    1: None
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+
+114:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("ArchiveReadError")
+               6 STORE_NAME           (__qualname__)
+
+115:           8 LOAD_CONST           (None)
+              10 RETURN_VALUE
+
+
+# Method Name:       ArchiveReader
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        3
+# Flags:             0x00000040 (NOFREE)
+# First Line:        118
+# Constants:
+#    0: 'ArchiveReader'
+#    1: '\n    A base class for a repository of python code objects.\n    The extract method is used by imputil.ArchiveImporter\n    to get code objects by name (fully qualified name), so\n    an enduser "import a.b" would become\n      extract(\'a.__init__\')\n      extract(\'a.b\')\n    '
+#    2: b'PYL\x00'
+#    3: 12
+#    4: 8
+#    5: None
+#    6: 0
+#    7: <Code3 code object __init__ at 0x274348f7350, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 133
+#    8: 'ArchiveReader.__init__'
+#    9: <Code3 code object loadtoc at 0x2743492e210, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 164
+#   10: 'ArchiveReader.loadtoc'
+#   11: <Code3 code object is_package at 0x2743492e7b0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 184
+#   12: 'ArchiveReader.is_package'
+#   13: <Code3 code object extract at 0x2743492e8a0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 191
+#   14: 'ArchiveReader.extract'
+#   15: <Code3 code object contents at 0x2743492e990, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 217
+#   16: 'ArchiveReader.contents'
+#   17: <Code3 code object checkmagic at 0x2743492ea80, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 225
+#   18: 'ArchiveReader.checkmagic'
+#   19: (None, 0)
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+#    3: __doc__
+#    4: MAGIC
+#    5: HDRLEN
+#    6: TOCPOS
+#    7: os
+#    8: _bincache
+#    9: __init__
+#   10: loadtoc
+#   11: is_package
+#   12: extract
+#   13: contents
+#   14: checkmagic
+
+118:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("ArchiveReader")
+               6 STORE_NAME           (__qualname__)
+
+126:           8 LOAD_CONST           ('\n    A base class for a repository of python code objects.\n    The extract method is used by imputil.ArchiveImporter\n    to get code objects by name (fully qualified name), so\n    an enduser "import a.b" would become\n      extract(\'a.__init__\')\n      extract(\'a.b\')\n    ')
+              10 STORE_NAME           (__doc__)
+
+127:          12 LOAD_CONST           (b'PYL\x00')
+              14 STORE_NAME           (MAGIC)
+
+128:          16 LOAD_CONST           (12)
+              18 STORE_NAME           (HDRLEN)
+
+129:          20 LOAD_CONST           (8)
+              22 STORE_NAME           (TOCPOS)
+
+130:          24 LOAD_CONST           (None)
+              26 STORE_NAME           (os)
+
+131:          28 LOAD_CONST           (None)
+              30 STORE_NAME           (_bincache)
+
+133:          32 LOAD_CONST           ((None, 0))
+              34 LOAD_CONST           (<Code3 code object __init__ at 0x274348f7350, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 133)
+              36 LOAD_CONST           ("ArchiveReader.__init__")
+              38 MAKE_FUNCTION        (default)
+              40 STORE_NAME           (__init__)
+
+164:          42 LOAD_CONST           (<Code3 code object loadtoc at 0x2743492e210, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 164)
+              44 LOAD_CONST           ("ArchiveReader.loadtoc")
+              46 MAKE_FUNCTION        (No arguments)
+              48 STORE_NAME           (loadtoc)
+
+184:          50 LOAD_CONST           (<Code3 code object is_package at 0x2743492e7b0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 184)
+              52 LOAD_CONST           ("ArchiveReader.is_package")
+              54 MAKE_FUNCTION        (No arguments)
+              56 STORE_NAME           (is_package)
+
+191:          58 LOAD_CONST           (<Code3 code object extract at 0x2743492e8a0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 191)
+              60 LOAD_CONST           ("ArchiveReader.extract")
+              62 MAKE_FUNCTION        (No arguments)
+              64 STORE_NAME           (extract)
+
+217:          66 LOAD_CONST           (<Code3 code object contents at 0x2743492e990, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 217)
+              68 LOAD_CONST           ("ArchiveReader.contents")
+              70 MAKE_FUNCTION        (No arguments)
+              72 STORE_NAME           (contents)
+
+225:          74 LOAD_CONST           (<Code3 code object checkmagic at 0x2743492ea80, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 225)
+              76 LOAD_CONST           ("ArchiveReader.checkmagic")
+              78 MAKE_FUNCTION        (No arguments)
+              80 STORE_NAME           (checkmagic)
+              82 LOAD_CONST           (None)
+              84 RETURN_VALUE
+
+
+# Method Name:       _pyi_stream_tables
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  1
+# Stack size:        2
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        249
+# Constants:
+#    0: None
+#    1: <Code3 code object <listcomp> at 0x2743492ed50, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 252
+#    2: '_pyi_stream_tables.<locals>.<listcomp>'
+# Names:
+#    0: _PYI_STREAM_TABLES
+# Varnames:
+#	mask
+# Positional arguments:
+#	mask
+
+251:           0 LOAD_GLOBAL          (_PYI_STREAM_TABLES)
+               2 LOAD_CONST           (None)
+               4 COMPARE_OP           (is)
+               6 POP_JUMP_IF_FALSE    (to 22)
+
+252:           8 LOAD_CONST           (<Code3 code object <listcomp> at 0x2743492ed50, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 252)
+              10 LOAD_CONST           ("_pyi_stream_tables.<locals>.<listcomp>")
+              12 MAKE_FUNCTION        (No arguments)
+              14 LOAD_FAST            (mask)
+              16 GET_ITER
+              18 CALL_FUNCTION        (1 positional argument)
+              20 STORE_GLOBAL         (_PYI_STREAM_TABLES)
+
+253:     >>   22 LOAD_GLOBAL          (_PYI_STREAM_TABLES)
+              24 RETURN_VALUE
+
+
+# Method Name:       _pyi_stream_crypt
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  6
+# Stack size:        6
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        256
+# Constants:
+#    0: None
+# Names:
+#    0: CRYPT_BLOCK_SIZE
+#    1: bytearray
+#    2: len
+#    3: enumerate
+#    4: _pyi_stream_tables
+#    5: _PYI_STREAM_MASK_LEN
+#    6: translate
+#    7: bytes
+# Varnames:
+#	data, mask, payload, result, offset, table
+# Positional arguments:
+#	data, mask
+# Local variables:
+#    2: payload
+#    3: result
+#    4: offset
+#    5: table
+
+257:           0 LOAD_FAST            (data)
+               2 LOAD_GLOBAL          (CRYPT_BLOCK_SIZE)
+               4 LOAD_CONST           (None)
+               6 BUILD_SLICE          2
+               8 BINARY_SUBSCR
+              10 STORE_FAST           (payload)
+
+258:          12 LOAD_GLOBAL          (bytearray)
+              14 LOAD_GLOBAL          (len)
+              16 LOAD_FAST            (payload)
+              18 CALL_FUNCTION        (1 positional argument)
+              20 CALL_FUNCTION        (1 positional argument)
+              22 STORE_FAST           (result)
+
+259:          24 SETUP_LOOP           (to 80)
+              26 LOAD_GLOBAL          (enumerate)
+              28 LOAD_GLOBAL          (_pyi_stream_tables)
+              30 LOAD_FAST            (mask)
+              32 CALL_FUNCTION        (1 positional argument)
+              34 CALL_FUNCTION        (1 positional argument)
+              36 GET_ITER
+         >>   38 FOR_ITER             (to 78)
+              40 UNPACK_SEQUENCE      2
+              42 STORE_FAST           (offset)
+              44 STORE_FAST           (table)
+
+260:          46 LOAD_FAST            (payload)
+              48 LOAD_FAST            (offset)
+              50 LOAD_CONST           (None)
+              52 LOAD_GLOBAL          (_PYI_STREAM_MASK_LEN)
+              54 BUILD_SLICE          3
+              56 BINARY_SUBSCR
+              58 LOAD_METHOD          (translate)
+              60 LOAD_FAST            (table)
+              62 CALL_METHOD          (1 positional argument)
+              64 LOAD_FAST            (result)
+              66 LOAD_FAST            (offset)
+              68 LOAD_CONST           (None)
+              70 LOAD_GLOBAL          (_PYI_STREAM_MASK_LEN)
+              72 BUILD_SLICE          3
+              74 STORE_SUBSCR
+              76 JUMP_ABSOLUTE        (to 38)
+         >>   78 POP_BLOCK
+
+261:     >>   80 LOAD_GLOBAL          (bytes)
+              82 LOAD_FAST            (result)
+              84 CALL_FUNCTION        (1 positional argument)
+              86 RETURN_VALUE
+
+
+# Method Name:       Cipher
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        2
+# Flags:             0x00000040 (NOFREE)
+# First Line:        263
+# Constants:
+#    0: 'Cipher'
+#    1: '\n    This class is used only to decrypt Python modules.\n    '
+#    2: <Code3 code object __init__ at 0x2743492f020, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 267
+#    3: 'Cipher.__init__'
+#    4: <Code3 code object _import_aesmod at 0x2743492f110, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 285
+#    5: 'Cipher._import_aesmod'
+#    6: <Code3 code object __create_cipher at 0x2743492f200, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 324
+#    7: 'Cipher.__create_cipher'
+#    8: <Code3 code object decrypt at 0x2743492f2f0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 330
+#    9: 'Cipher.decrypt'
+#   10: None
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+#    3: __doc__
+#    4: __init__
+#    5: _import_aesmod
+#    6: _Cipher__create_cipher
+#    7: decrypt
+
+263:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("Cipher")
+               6 STORE_NAME           (__qualname__)
+
+266:           8 LOAD_CONST           ("\n    This class is used only to decrypt Python modules.\n    ")
+              10 STORE_NAME           (__doc__)
+
+267:          12 LOAD_CONST           (<Code3 code object __init__ at 0x2743492f020, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 267)
+              14 LOAD_CONST           ("Cipher.__init__")
+              16 MAKE_FUNCTION        (No arguments)
+              18 STORE_NAME           (__init__)
+
+285:          20 LOAD_CONST           (<Code3 code object _import_aesmod at 0x2743492f110, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 285)
+              22 LOAD_CONST           ("Cipher._import_aesmod")
+              24 MAKE_FUNCTION        (No arguments)
+              26 STORE_NAME           (_import_aesmod)
+
+324:          28 LOAD_CONST           (<Code3 code object __create_cipher at 0x2743492f200, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 324)
+              30 LOAD_CONST           ("Cipher.__create_cipher")
+              32 MAKE_FUNCTION        (No arguments)
+              34 STORE_NAME           (_Cipher__create_cipher)
+
+330:          36 LOAD_CONST           (<Code3 code object decrypt at 0x2743492f2f0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 330)
+              38 LOAD_CONST           ("Cipher.decrypt")
+              40 MAKE_FUNCTION        (No arguments)
+              42 STORE_NAME           (decrypt)
+              44 LOAD_CONST           (None)
+              46 RETURN_VALUE
+
+
+# Method Name:       ZlibArchiveReader
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    0
+# Keyword-only arguments: 0
+# Number of locals:  0
+# Stack size:        4
+# Flags:             0x00000000 (0x0)
+# First Line:        334
+# Constants:
+#    0: 'ZlibArchiveReader'
+#    1: '\n    ZlibArchive - an archive with compressed entries. Archive is read\n    from the executable created by PyInstaller.\n\n    This archive is used for bundling python modules inside the executable.\n\n    NOTE: The whole ZlibArchive (PYZ) is compressed so it is not necessary\n          to compress single modules with zlib.\n    '
+#    2: b'PYZ\x00'
+#    3: 8
+#    4: 5
+#    5: None
+#    6: <Code3 code object __init__ at 0x2743492f4d0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 348
+#    7: 'ZlibArchiveReader.__init__'
+#    8: <Code3 code object is_package at 0x2743492f5c0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 371
+#    9: 'ZlibArchiveReader.is_package'
+#   10: <Code3 code object extract at 0x2743492f6b0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 377
+#   11: 'ZlibArchiveReader.extract'
+#   12: (None, None)
+# Names:
+#    0: __name__
+#    1: __module__
+#    2: __qualname__
+#    3: __doc__
+#    4: MAGIC
+#    5: TOCPOS
+#    6: ArchiveReader
+#    7: HDRLEN
+#    8: __init__
+#    9: is_package
+#   10: extract
+#   11: __classcell__
+# Free variables:
+#    0: __class__
+
+334:           0 LOAD_NAME            (__name__)
+               2 STORE_NAME           (__module__)
+               4 LOAD_CONST           ("ZlibArchiveReader")
+               6 STORE_NAME           (__qualname__)
+
+343:           8 LOAD_CONST           ("\n    ZlibArchive - an archive with compressed entries. Archive is read\n    from the executable created by PyInstaller.\n\n    This archive is used for bundling python modules inside the executable.\n\n    NOTE: The whole ZlibArchive (PYZ) is compressed so it is not necessary\n          to compress single modules with zlib.\n    ")
+              10 STORE_NAME           (__doc__)
+
+344:          12 LOAD_CONST           (b'PYZ\x00')
+              14 STORE_NAME           (MAGIC)
+
+345:          16 LOAD_CONST           (8)
+              18 STORE_NAME           (TOCPOS)
+
+346:          20 LOAD_NAME            (ArchiveReader)
+              22 LOAD_ATTR            (HDRLEN)
+              24 LOAD_CONST           (5)
+              26 BINARY_ADD
+              28 STORE_NAME           (HDRLEN)
+
+348:          30 LOAD_CONST           ((None, None))
+              32 LOAD_CLOSURE         (__class__)
+              34 BUILD_TUPLE          1
+              36 LOAD_CONST           (<Code3 code object __init__ at 0x2743492f4d0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 348)
+              38 LOAD_CONST           ("ZlibArchiveReader.__init__")
+              40 MAKE_FUNCTION        (default, closure)
+              42 STORE_NAME           (__init__)
+
+371:          44 LOAD_CONST           (<Code3 code object is_package at 0x2743492f5c0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 371)
+              46 LOAD_CONST           ("ZlibArchiveReader.is_package")
+              48 MAKE_FUNCTION        (No arguments)
+              50 STORE_NAME           (is_package)
+
+377:          52 LOAD_CONST           (<Code3 code object extract at 0x2743492f6b0, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 377)
+              54 LOAD_CONST           ("ZlibArchiveReader.extract")
+              56 MAKE_FUNCTION        (No arguments)
+              58 STORE_NAME           (extract)
+              60 LOAD_CLOSURE         (__class__)
+              62 DUP_TOP
+              64 STORE_NAME           (__classcell__)
+              66 RETURN_VALUE
+
+
+# Method Name:       __init__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  1
+# Stack size:        2
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        51
+# Constants:
+#    0: None
+#    1: 0
+# Names:
+#    0: file
+#    1: pos
+# Varnames:
+#	self
+# Positional arguments:
+#	self
+
+ 53:           0 LOAD_CONST           (None)
+               2 LOAD_FAST            (self)
+               4 STORE_ATTR           (file)
+
+ 55:           6 LOAD_CONST           (0)
+               8 LOAD_FAST            (self)
+              10 STORE_ATTR           (pos)
+              12 LOAD_CONST           (None)
+              14 RETURN_VALUE
+
+
+# Method Name:       __init__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  3
+# Stack size:        2
+# Flags:             0x0000004f (NOFREE | VARKEYWORDS | VARARGS | NEWLOCALS | OPTIMIZED)
+# First Line:        64
+# Constants:
+#    0: None
+# Names:
+#    0: args
+#    1: kwargs
+#    2: _filePos
+# Varnames:
+#	self, args, kwargs
+# Positional arguments:
+#	self
+# Local variables:
+#    1: args
+#    2: kwargs
+
+ 65:           0 LOAD_FAST            (args)
+               2 LOAD_FAST            (self)
+               4 STORE_ATTR           (args)
+
+ 66:           6 LOAD_FAST            (kwargs)
+               8 LOAD_FAST            (self)
+              10 STORE_ATTR           (kwargs)
+
+ 67:          12 BUILD_MAP            0
+              14 LOAD_FAST            (self)
+              16 STORE_ATTR           (_filePos)
+              18 LOAD_CONST           (None)
+              20 RETURN_VALUE
+
+
+# Method Name:       local
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        69
+# Constants:
+#    0: "\n        Return an instance of FilePos for the current thread. This is a crude\n        # re-implementation of threading.local, which isn't a built-in module\n        # and therefore isn't available.\n        "
+# Names:
+#    0: thread
+#    1: get_ident
+#    2: _filePos
+#    3: FilePos
+# Varnames:
+#	self, ti
+# Positional arguments:
+#	self
+# Local variables:
+#    1: ti
+
+ 75:           0 LOAD_GLOBAL          (thread)
+               2 LOAD_METHOD          (get_ident)
+               4 CALL_METHOD          (0 positional arguments)
+               6 STORE_FAST           (ti)
+
+ 76:           8 LOAD_FAST            (ti)
+              10 LOAD_FAST            (self)
+              12 LOAD_ATTR            (_filePos)
+              14 COMPARE_OP           (not-in)
+              16 POP_JUMP_IF_FALSE    (to 30)
+
+ 77:          18 LOAD_GLOBAL          (FilePos)
+              20 CALL_FUNCTION        (0 positional arguments)
+              22 LOAD_FAST            (self)
+              24 LOAD_ATTR            (_filePos)
+              26 LOAD_FAST            (ti)
+              28 STORE_SUBSCR
+
+ 78:     >>   30 LOAD_FAST            (self)
+              32 LOAD_ATTR            (_filePos)
+              34 LOAD_FAST            (ti)
+              36 BINARY_SUBSCR
+              38 RETURN_VALUE
+
+
+# Method Name:       __getattr__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  3
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        80
+# Constants:
+#    0: '\n        Make this class act like a file, by invoking most methods on its\n        underlying file object.\n        '
+# Names:
+#    0: local
+#    1: file
+#    2: AssertionError
+#    3: getattr
+# Varnames:
+#	self, name, file
+# Positional arguments:
+#	self, name
+# Local variables:
+#    2: file
+
+ 85:           0 LOAD_FAST            (self)
+               2 LOAD_METHOD          (local)
+               4 CALL_METHOD          (0 positional arguments)
+               6 LOAD_ATTR            (file)
+               8 STORE_FAST           (file)
+
+ 86:          10 LOAD_FAST            (file)
+              12 POP_JUMP_IF_TRUE     (to 18)
+              14 LOAD_GLOBAL          (AssertionError)
+              16 RAISE_VARARGS        (exception instance)
+
+ 87:     >>   18 LOAD_GLOBAL          (getattr)
+              20 LOAD_FAST            (file)
+              22 LOAD_FAST            (name)
+              24 CALL_FUNCTION        (2 positional arguments)
+              26 RETURN_VALUE
+
+
+# Method Name:       __enter__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        89
+# Constants:
+#    0: '\n        Open file and seek to pos record from last close.\n        '
+#    1: None
+# Names:
+#    0: local
+#    1: file
+#    2: AssertionError
+#    3: open
+#    4: args
+#    5: kwargs
+#    6: seek
+#    7: pos
+# Varnames:
+#	self, fp
+# Positional arguments:
+#	self
+# Local variables:
+#    1: fp
+
+ 94:           0 LOAD_FAST            (self)
+               2 LOAD_METHOD          (local)
+               4 CALL_METHOD          (0 positional arguments)
+               6 STORE_FAST           (fp)
+
+ 95:           8 LOAD_FAST            (fp)
+              10 LOAD_ATTR            (file)
+              12 POP_JUMP_IF_FALSE    (to 18)
+              14 LOAD_GLOBAL          (AssertionError)
+              16 RAISE_VARARGS        (exception instance)
+
+ 97:     >>   18 LOAD_GLOBAL          (open)
+              20 LOAD_FAST            (self)
+              22 LOAD_ATTR            (args)
+              24 LOAD_FAST            (self)
+              26 LOAD_ATTR            (kwargs)
+              28 CALL_FUNCTION_EX     (keyword and positional arguments)
+              30 LOAD_FAST            (fp)
+              32 STORE_ATTR           (file)
+
+ 98:          34 LOAD_FAST            (fp)
+              36 LOAD_ATTR            (file)
+              38 LOAD_METHOD          (seek)
+              40 LOAD_FAST            (fp)
+              42 LOAD_ATTR            (pos)
+              44 CALL_METHOD          (1 positional argument)
+              46 POP_TOP
+              48 LOAD_CONST           (None)
+              50 RETURN_VALUE
+
+
+# Method Name:       __exit__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    4
+# Keyword-only arguments: 0
+# Number of locals:  5
+# Stack size:        2
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        100
+# Constants:
+#    0: '\n        Close file and record pos.\n        '
+#    1: None
+# Names:
+#    0: local
+#    1: file
+#    2: AssertionError
+#    3: tell
+#    4: pos
+#    5: close
+# Varnames:
+#	self, type, value, traceback, fp
+# Positional arguments:
+#	self, type, value, traceback
+# Local variables:
+#    4: fp
+
+105:           0 LOAD_FAST            (self)
+               2 LOAD_METHOD          (local)
+               4 CALL_METHOD          (0 positional arguments)
+               6 STORE_FAST           (fp)
+
+106:           8 LOAD_FAST            (fp)
+              10 LOAD_ATTR            (file)
+              12 POP_JUMP_IF_TRUE     (to 18)
+              14 LOAD_GLOBAL          (AssertionError)
+              16 RAISE_VARARGS        (exception instance)
+
+109:     >>   18 LOAD_FAST            (fp)
+              20 LOAD_ATTR            (file)
+              22 LOAD_METHOD          (tell)
+              24 CALL_METHOD          (0 positional arguments)
+              26 LOAD_FAST            (fp)
+              28 STORE_ATTR           (pos)
+
+110:          30 LOAD_FAST            (fp)
+              32 LOAD_ATTR            (file)
+              34 LOAD_METHOD          (close)
+              36 CALL_METHOD          (0 positional arguments)
+              38 POP_TOP
+
+111:          40 LOAD_CONST           (None)
+              42 LOAD_FAST            (fp)
+              44 STORE_ATTR           (file)
+              46 LOAD_CONST           (None)
+              48 RETURN_VALUE
+
+
+# Method Name:       __init__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    3
+# Keyword-only arguments: 0
+# Number of locals:  5
+# Stack size:        9
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        133
+# Constants:
+#    0: '\n        Initialize an Archive. If path is omitted, it will be an empty Archive.\n        '
+#    1: None
+#    2: 0
+#    3: 2
+#    4: 1
+#    5: 4
+#    6: 'rb'
+# Names:
+#    0: toc
+#    1: path
+#    2: start
+#    3: sys
+#    4: version_info
+#    5: imp
+#    6: get_magic
+#    7: pymagic
+#    8: _frozen_importlib
+#    9: MAGIC_NUMBER
+#   10: _bootstrap_external
+#   11: ArchiveFile
+#   12: lib
+#   13: checkmagic
+#   14: loadtoc
+# Varnames:
+#	self, path, start, imp, _frozen_importlib
+# Positional arguments:
+#	self, path, start
+# Local variables:
+#    3: imp
+#    4: _frozen_importlib
+
+137:           0 LOAD_CONST           (None)
+               2 LOAD_FAST            (self)
+               4 STORE_ATTR           (toc)
+
+138:           6 LOAD_FAST            (path)
+               8 LOAD_FAST            (self)
+              10 STORE_ATTR           (path)
+
+139:          12 LOAD_FAST            (start)
+              14 LOAD_FAST            (self)
+              16 STORE_ATTR           (start)
+
+143:          18 LOAD_GLOBAL          (sys)
+              20 LOAD_ATTR            (version_info)
+              22 LOAD_CONST           (0)
+              24 BINARY_SUBSCR
+              26 LOAD_CONST           (2)
+              28 COMPARE_OP           (==)
+              30 POP_JUMP_IF_FALSE    (to 52)
+
+144:          32 LOAD_CONST           (0)
+              34 LOAD_CONST           (None)
+              36 IMPORT_NAME          (imp)
+              38 STORE_FAST           (imp)
+
+145:          40 LOAD_FAST            (imp)
+              42 LOAD_METHOD          (get_magic)
+              44 CALL_METHOD          (0 positional arguments)
+              46 LOAD_FAST            (self)
+              48 STORE_ATTR           (pymagic)
+              50 JUMP_FORWARD         (to 94)
+
+149:     >>   52 LOAD_CONST           (0)
+              54 LOAD_CONST           (None)
+              56 IMPORT_NAME          (_frozen_importlib)
+              58 STORE_FAST           (_frozen_importlib)
+
+150:          60 LOAD_GLOBAL          (sys)
+              62 LOAD_ATTR            (version_info)
+              64 LOAD_CONST           (1)
+              66 BINARY_SUBSCR
+              68 LOAD_CONST           (4)
+              70 COMPARE_OP           (==)
+              72 POP_JUMP_IF_FALSE    (to 84)
+
+152:          74 LOAD_FAST            (_frozen_importlib)
+              76 LOAD_ATTR            (MAGIC_NUMBER)
+              78 LOAD_FAST            (self)
+              80 STORE_ATTR           (pymagic)
+              82 JUMP_FORWARD         (to 94)
+
+155:     >>   84 LOAD_FAST            (_frozen_importlib)
+              86 LOAD_ATTR            (_bootstrap_external)
+              88 LOAD_ATTR            (MAGIC_NUMBER)
+              90 LOAD_FAST            (self)
+              92 STORE_ATTR           (pymagic)
+
+157:     >>   94 LOAD_FAST            (path)
+              96 LOAD_CONST           (None)
+              98 COMPARE_OP           (is-not)
+             100 POP_JUMP_IF_FALSE    (to 150)
+
+158:         102 LOAD_GLOBAL          (ArchiveFile)
+             104 LOAD_FAST            (self)
+             106 LOAD_ATTR            (path)
+             108 LOAD_CONST           ("rb")
+             110 CALL_FUNCTION        (2 positional arguments)
+             112 LOAD_FAST            (self)
+             114 STORE_ATTR           (lib)
+
+159:         116 LOAD_FAST            (self)
+             118 LOAD_ATTR            (lib)
+             120 SETUP_WITH           (to 144)
+             122 POP_TOP
+
+160:         124 LOAD_FAST            (self)
+             126 LOAD_METHOD          (checkmagic)
+             128 CALL_METHOD          (0 positional arguments)
+             130 POP_TOP
+
+161:         132 LOAD_FAST            (self)
+             134 LOAD_METHOD          (loadtoc)
+             136 CALL_METHOD          (0 positional arguments)
+             138 POP_TOP
+             140 POP_BLOCK
+             142 LOAD_CONST           (None)
+         >>  144 WITH_CLEANUP_START
+             146 WITH_CLEANUP_FINISH
+             148 END_FINALLY
+         >>  150 LOAD_CONST           (None)
+             152 RETURN_VALUE
+
+
+# Method Name:       loadtoc
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        6
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        164
+# Constants:
+#    0: '\n        Overridable.\n        Default: After magic comes an int (4 byte native) giving the\n        position of the TOC within self.lib.\n        Default: The TOC is a marshal-able string.\n        '
+#    1: '!i'
+#    2: 4
+#    3: None
+# Names:
+#    0: lib
+#    1: seek
+#    2: start
+#    3: TOCPOS
+#    4: struct
+#    5: unpack
+#    6: read
+#    7: dict
+#    8: marshal
+#    9: loads
+#   10: toc
+# Varnames:
+#	self, offset
+# Positional arguments:
+#	self
+# Local variables:
+#    1: offset
+
+171:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (lib)
+               4 LOAD_METHOD          (seek)
+               6 LOAD_FAST            (self)
+               8 LOAD_ATTR            (start)
+              10 LOAD_FAST            (self)
+              12 LOAD_ATTR            (TOCPOS)
+              14 BINARY_ADD
+              16 CALL_METHOD          (1 positional argument)
+              18 POP_TOP
+
+172:          20 LOAD_GLOBAL          (struct)
+              22 LOAD_METHOD          (unpack)
+              24 LOAD_CONST           ("!i")
+              26 LOAD_FAST            (self)
+              28 LOAD_ATTR            (lib)
+              30 LOAD_METHOD          (read)
+              32 LOAD_CONST           (4)
+              34 CALL_METHOD          (1 positional argument)
+              36 CALL_METHOD          (2 positional arguments)
+              38 UNPACK_SEQUENCE      1
+              40 STORE_FAST           (offset)
+
+173:          42 LOAD_FAST            (self)
+              44 LOAD_ATTR            (lib)
+              46 LOAD_METHOD          (seek)
+              48 LOAD_FAST            (self)
+              50 LOAD_ATTR            (start)
+              52 LOAD_FAST            (offset)
+              54 BINARY_ADD
+              56 CALL_METHOD          (1 positional argument)
+              58 POP_TOP
+
+176:          60 LOAD_GLOBAL          (dict)
+              62 LOAD_GLOBAL          (marshal)
+              64 LOAD_METHOD          (loads)
+              66 LOAD_FAST            (self)
+              68 LOAD_ATTR            (lib)
+              70 LOAD_METHOD          (read)
+              72 CALL_METHOD          (0 positional arguments)
+              74 CALL_METHOD          (1 positional argument)
+              76 CALL_FUNCTION        (1 positional argument)
+              78 LOAD_FAST            (self)
+              80 STORE_ATTR           (toc)
+              82 LOAD_CONST           (None)
+              84 RETURN_VALUE
+
+
+# Method Name:       is_package
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  4
+# Stack size:        4
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        184
+# Constants:
+#    0: None
+#    1: (0, None)
+# Names:
+#    0: toc
+#    1: get
+#    2: bool
+# Varnames:
+#	self, name, ispkg, pos
+# Positional arguments:
+#	self, name
+# Local variables:
+#    2: ispkg
+#    3: pos
+
+185:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (toc)
+               4 LOAD_METHOD          (get)
+               6 LOAD_FAST            (name)
+               8 LOAD_CONST           ((0, None))
+              10 CALL_METHOD          (2 positional arguments)
+              12 UNPACK_SEQUENCE      2
+              14 STORE_FAST           (ispkg)
+              16 STORE_FAST           (pos)
+
+186:          18 LOAD_FAST            (pos)
+              20 LOAD_CONST           (None)
+              22 COMPARE_OP           (is)
+              24 POP_JUMP_IF_FALSE    (to 30)
+
+187:          26 LOAD_CONST           (None)
+              28 RETURN_VALUE
+
+188:     >>   30 LOAD_GLOBAL          (bool)
+              32 LOAD_FAST            (ispkg)
+              34 CALL_FUNCTION        (1 positional argument)
+              36 RETURN_VALUE
+
+
+# Method Name:       extract
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  5
+# Stack size:        9
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        191
+# Constants:
+#    0: "\n        Get the object corresponding to name, or None.\n        For use with imputil ArchiveImporter, object is a python code object.\n        'name' is the name as specified in an 'import name'.\n        'import a.b' will become:\n        extract('a') (return None because 'a' is not a code object)\n        extract('a.__init__') (return a code object)\n        extract('a.b') (return a code object)\n        Default implementation:\n          self.toc is a dict\n          self.toc[name] is pos\n          self.lib has the code object marshal-ed at pos\n        "
+#    1: (0, None)
+#    2: None
+# Names:
+#    0: toc
+#    1: get
+#    2: lib
+#    3: seek
+#    4: start
+#    5: marshal
+#    6: loads
+#    7: read
+# Varnames:
+#	self, name, ispkg, pos, obj
+# Positional arguments:
+#	self, name
+# Local variables:
+#    2: ispkg
+#    3: pos
+#    4: obj
+
+205:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (toc)
+               4 LOAD_METHOD          (get)
+               6 LOAD_FAST            (name)
+               8 LOAD_CONST           ((0, None))
+              10 CALL_METHOD          (2 positional arguments)
+              12 UNPACK_SEQUENCE      2
+              14 STORE_FAST           (ispkg)
+              16 STORE_FAST           (pos)
+
+206:          18 LOAD_FAST            (pos)
+              20 LOAD_CONST           (None)
+              22 COMPARE_OP           (is)
+              24 POP_JUMP_IF_FALSE    (to 30)
+
+207:          26 LOAD_CONST           (None)
+              28 RETURN_VALUE
+
+208:     >>   30 LOAD_FAST            (self)
+              32 LOAD_ATTR            (lib)
+              34 SETUP_WITH           (to 76)
+              36 POP_TOP
+
+209:          38 LOAD_FAST            (self)
+              40 LOAD_ATTR            (lib)
+              42 LOAD_METHOD          (seek)
+              44 LOAD_FAST            (self)
+              46 LOAD_ATTR            (start)
+              48 LOAD_FAST            (pos)
+              50 BINARY_ADD
+              52 CALL_METHOD          (1 positional argument)
+              54 POP_TOP
+
+211:          56 LOAD_GLOBAL          (marshal)
+              58 LOAD_METHOD          (loads)
+              60 LOAD_FAST            (self)
+              62 LOAD_ATTR            (lib)
+              64 LOAD_METHOD          (read)
+              66 CALL_METHOD          (0 positional arguments)
+              68 CALL_METHOD          (1 positional argument)
+              70 STORE_FAST           (obj)
+              72 POP_BLOCK
+              74 LOAD_CONST           (None)
+         >>   76 WITH_CLEANUP_START
+              78 WITH_CLEANUP_FINISH
+              80 END_FINALLY
+
+212:          82 LOAD_FAST            (ispkg)
+              84 LOAD_FAST            (obj)
+              86 BUILD_TUPLE          2
+              88 RETURN_VALUE
+
+
+# Method Name:       contents
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  1
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        217
+# Constants:
+#    0: '\n        Return a list of the contents\n        Default implementation assumes self.toc is a dict like object.\n        Not required by ArchiveImporter.\n        '
+# Names:
+#    0: list
+#    1: toc
+#    2: keys
+# Varnames:
+#	self
+# Positional arguments:
+#	self
+
+223:           0 LOAD_GLOBAL          (list)
+               2 LOAD_FAST            (self)
+               4 LOAD_ATTR            (toc)
+               6 LOAD_METHOD          (keys)
+               8 CALL_METHOD          (0 positional arguments)
+              10 CALL_FUNCTION        (1 positional argument)
+              12 RETURN_VALUE
+
+
+# Method Name:       checkmagic
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  1
+# Stack size:        4
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        225
+# Constants:
+#    0: '\n        Overridable.\n        Check to see if the file object self.lib actually has a file\n        we understand.\n        '
+#    1: '%s is not a valid %s archive file'
+#    2: '%s has version mismatch to dll'
+#    3: 4
+#    4: None
+# Names:
+#    0: lib
+#    1: seek
+#    2: start
+#    3: read
+#    4: len
+#    5: MAGIC
+#    6: ArchiveReadError
+#    7: path
+#    8: __class__
+#    9: __name__
+#   10: pymagic
+# Varnames:
+#	self
+# Positional arguments:
+#	self
+
+231:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (lib)
+               4 LOAD_METHOD          (seek)
+               6 LOAD_FAST            (self)
+               8 LOAD_ATTR            (start)
+              10 CALL_METHOD          (1 positional argument)
+              12 POP_TOP
+
+233:          14 LOAD_FAST            (self)
+              16 LOAD_ATTR            (lib)
+              18 LOAD_METHOD          (read)
+              20 LOAD_GLOBAL          (len)
+              22 LOAD_FAST            (self)
+              24 LOAD_ATTR            (MAGIC)
+              26 CALL_FUNCTION        (1 positional argument)
+              28 CALL_METHOD          (1 positional argument)
+              30 LOAD_FAST            (self)
+              32 LOAD_ATTR            (MAGIC)
+              34 COMPARE_OP           (!=)
+              36 POP_JUMP_IF_FALSE    (to 60)
+
+234:          38 LOAD_GLOBAL          (ArchiveReadError)
+              40 LOAD_CONST           ("%s is not a valid %s archive file")
+
+235:          42 LOAD_FAST            (self)
+              44 LOAD_ATTR            (path)
+              46 LOAD_FAST            (self)
+              48 LOAD_ATTR            (__class__)
+              50 LOAD_ATTR            (__name__)
+              52 BUILD_TUPLE          2
+              54 BINARY_MODULO
+              56 CALL_FUNCTION        (1 positional argument)
+              58 RAISE_VARARGS        (exception instance)
+
+237:     >>   60 LOAD_FAST            (self)
+              62 LOAD_ATTR            (lib)
+              64 LOAD_METHOD          (read)
+              66 LOAD_GLOBAL          (len)
+              68 LOAD_FAST            (self)
+              70 LOAD_ATTR            (pymagic)
+              72 CALL_FUNCTION        (1 positional argument)
+              74 CALL_METHOD          (1 positional argument)
+              76 LOAD_FAST            (self)
+              78 LOAD_ATTR            (pymagic)
+              80 COMPARE_OP           (!=)
+              82 POP_JUMP_IF_FALSE    (to 98)
+
+238:          84 LOAD_GLOBAL          (ArchiveReadError)
+              86 LOAD_CONST           ("%s has version mismatch to dll")
+
+239:          88 LOAD_FAST            (self)
+              90 LOAD_ATTR            (path)
+              92 BINARY_MODULO
+              94 CALL_FUNCTION        (1 positional argument)
+              96 RAISE_VARARGS        (exception instance)
+
+241:     >>   98 LOAD_FAST            (self)
+             100 LOAD_ATTR            (lib)
+             102 LOAD_METHOD          (read)
+             104 LOAD_CONST           (4)
+             106 CALL_METHOD          (1 positional argument)
+             108 POP_TOP
+             110 LOAD_CONST           (None)
+             112 RETURN_VALUE
+
+
+# Method Name:       <listcomp>
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  1
+# Stack size:        6
+# Flags:             0x00000013 (NESTED | NEWLOCALS | OPTIMIZED)
+# First Line:        252
+# Constants:
+#    0: <Code3 code object <listcomp> at 0x2743492ec60, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 252
+#    1: '_pyi_stream_tables.<locals>.<listcomp>.<listcomp>'
+#    2: 256
+# Names:
+#    0: bytes
+#    1: range
+# Varnames:
+#	.0
+# Positional arguments:
+#	.0
+# Free variables:
+#    0: item
+
+252:           0 BUILD_LIST           0
+               2 LOAD_FAST            (.0)
+         >>    4 FOR_ITER             (to 36)
+
+252:           6 STORE_DEREF          (item)
+               8 LOAD_GLOBAL          (bytes)
+              10 LOAD_CLOSURE         (item)
+              12 BUILD_TUPLE          1
+              14 LOAD_CONST           (<Code3 code object <listcomp> at 0x2743492ec60, file D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py>, line 252)
+              16 LOAD_CONST           ("_pyi_stream_tables.<locals>.<listcomp>.<listcomp>")
+              18 MAKE_FUNCTION        (closure)
+              20 LOAD_GLOBAL          (range)
+              22 LOAD_CONST           (256)
+              24 CALL_FUNCTION        (1 positional argument)
+              26 GET_ITER
+              28 CALL_FUNCTION        (1 positional argument)
+              30 CALL_FUNCTION        (1 positional argument)
+              32 LIST_APPEND          2
+              34 JUMP_ABSOLUTE        (to 4)
+         >>   36 RETURN_VALUE
+
+
+# Method Name:       __init__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  3
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        267
+# Constants:
+#    0: None
+#    1: 0
+#    2: 'XUEWUZHI_KEYMASK'
+# Names:
+#    0: pyimod00_crypto_key
+#    1: get_mask
+#    2: _stream_mask
+#    3: type
+#    4: str
+#    5: AssertionError
+#    6: len
+#    7: CRYPT_BLOCK_SIZE
+#    8: key
+#    9: zfill
+#   10: bytes
+# Varnames:
+#	self, pyimod00_crypto_key, key
+# Positional arguments:
+#	self
+# Local variables:
+#    1: pyimod00_crypto_key
+#    2: key
+
+271:           0 LOAD_CONST           (0)
+               2 LOAD_CONST           (None)
+               4 IMPORT_NAME          (pyimod00_crypto_key)
+               6 STORE_FAST           (pyimod00_crypto_key)
+
+272:           8 LOAD_FAST            (pyimod00_crypto_key)
+              10 LOAD_METHOD          (get_mask)
+              12 CALL_METHOD          (0 positional arguments)
+              14 LOAD_FAST            (self)
+              16 STORE_ATTR           (_stream_mask)
+
+273:          18 LOAD_CONST           ("XUEWUZHI_KEYMASK")
+              20 STORE_FAST           (key)
+
+275:          22 LOAD_GLOBAL          (type)
+              24 LOAD_FAST            (key)
+              26 CALL_FUNCTION        (1 positional argument)
+              28 LOAD_GLOBAL          (str)
+              30 COMPARE_OP           (is)
+              32 POP_JUMP_IF_TRUE     (to 38)
+              34 LOAD_GLOBAL          (AssertionError)
+              36 RAISE_VARARGS        (exception instance)
+
+276:     >>   38 LOAD_GLOBAL          (len)
+              40 LOAD_FAST            (key)
+              42 CALL_FUNCTION        (1 positional argument)
+              44 LOAD_GLOBAL          (CRYPT_BLOCK_SIZE)
+              46 COMPARE_OP           (>)
+              48 POP_JUMP_IF_FALSE    (to 66)
+
+277:          50 LOAD_FAST            (key)
+              52 LOAD_CONST           (0)
+              54 LOAD_GLOBAL          (CRYPT_BLOCK_SIZE)
+              56 BUILD_SLICE          2
+              58 BINARY_SUBSCR
+              60 LOAD_FAST            (self)
+              62 STORE_ATTR           (key)
+              64 JUMP_FORWARD         (to 78)
+
+279:     >>   66 LOAD_FAST            (key)
+              68 LOAD_METHOD          (zfill)
+              70 LOAD_GLOBAL          (CRYPT_BLOCK_SIZE)
+              72 CALL_METHOD          (1 positional argument)
+              74 LOAD_FAST            (self)
+              76 STORE_ATTR           (key)
+
+280:     >>   78 LOAD_GLOBAL          (len)
+              80 LOAD_FAST            (self)
+              82 LOAD_ATTR            (key)
+              84 CALL_FUNCTION        (1 positional argument)
+              86 LOAD_GLOBAL          (CRYPT_BLOCK_SIZE)
+              88 COMPARE_OP           (==)
+              90 POP_JUMP_IF_TRUE     (to 96)
+              92 LOAD_GLOBAL          (AssertionError)
+              94 RAISE_VARARGS        (exception instance)
+
+283:     >>   96 LOAD_GLOBAL          (bytes)
+              98 LOAD_FAST            (self)
+             100 LOAD_ATTR            (_stream_mask)
+             102 CALL_FUNCTION        (1 positional argument)
+             104 LOAD_FAST            (self)
+             106 STORE_ATTR           (_stream_mask)
+             108 LOAD_CONST           (None)
+             110 RETURN_VALUE
+
+
+# Method Name:       _import_aesmod
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  6
+# Stack size:        8
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        285
+# Constants:
+#    0: '\n        Tries to import the AES module from PyCrypto.\n\n        PyCrypto 2.4 and 2.6 uses different name of the AES extension.\n        '
+#    1: 'Crypto.Cipher._AES'
+#    2: 0
+#    3: 2
+#    4: ('CExtensionImporter',)
+#    5: 'Crypto.Cipher.AES'
+#    6: 'Crypto'
+#    7: 'Cipher'
+#    8: ('fromlist',)
+# Names:
+#    0: sys
+#    1: version_info
+#    2: pyimod03_importers
+#    3: CExtensionImporter
+#    4: find_module
+#    5: ImportError
+#    6: load_module
+#    7: dict
+#    8: __import__
+#    9: modules
+# Varnames:
+#	self, modname, CExtensionImporter, importer, mod, kwargs
+# Positional arguments:
+#	self
+# Local variables:
+#    1: modname
+#    2: CExtensionImporter
+#    3: importer
+#    4: mod
+#    5: kwargs
+
+293:           0 LOAD_CONST           ("Crypto.Cipher._AES")
+               2 STORE_FAST           (modname)
+
+295:           4 LOAD_GLOBAL          (sys)
+               6 LOAD_ATTR            (version_info)
+               8 LOAD_CONST           (0)
+              10 BINARY_SUBSCR
+              12 LOAD_CONST           (2)
+              14 COMPARE_OP           (==)
+              16 POP_JUMP_IF_FALSE    (to 88)
+
+298:          18 LOAD_CONST           (0)
+              20 LOAD_CONST           (('CExtensionImporter',))
+              22 IMPORT_NAME          (pyimod03_importers)
+              24 IMPORT_FROM          (CExtensionImporter)
+              26 STORE_FAST           (CExtensionImporter)
+              28 POP_TOP
+
+299:          30 LOAD_FAST            (CExtensionImporter)
+              32 CALL_FUNCTION        (0 positional arguments)
+              34 STORE_FAST           (importer)
+
+301:          36 LOAD_FAST            (importer)
+              38 LOAD_METHOD          (find_module)
+              40 LOAD_FAST            (modname)
+              42 CALL_METHOD          (1 positional argument)
+              44 STORE_FAST           (mod)
+
+303:          46 LOAD_FAST            (mod)
+              48 POP_JUMP_IF_TRUE     (to 76)
+
+304:          50 LOAD_CONST           ("Crypto.Cipher.AES")
+              52 STORE_FAST           (modname)
+
+305:          54 LOAD_FAST            (importer)
+              56 LOAD_METHOD          (find_module)
+              58 LOAD_FAST            (modname)
+              60 CALL_METHOD          (1 positional argument)
+              62 STORE_FAST           (mod)
+
+306:          64 LOAD_FAST            (mod)
+              66 POP_JUMP_IF_TRUE     (to 76)
+
+308:          68 LOAD_GLOBAL          (ImportError)
+              70 LOAD_FAST            (modname)
+              72 CALL_FUNCTION        (1 positional argument)
+              74 RAISE_VARARGS        (exception instance)
+
+309:     >>   76 LOAD_FAST            (mod)
+              78 LOAD_METHOD          (load_module)
+              80 LOAD_FAST            (modname)
+              82 CALL_METHOD          (1 positional argument)
+              84 STORE_FAST           (mod)
+              86 JUMP_FORWARD         (to 156)
+
+311:     >>   88 LOAD_GLOBAL          (dict)
+              90 LOAD_CONST           ("Crypto")
+              92 LOAD_CONST           ("Cipher")
+              94 BUILD_LIST           2
+              96 LOAD_CONST           (('fromlist',))
+              98 CALL_FUNCTION_KW     (1 total positional and keyword args)
+             100 STORE_FAST           (kwargs)
+
+312:         102 SETUP_EXCEPT         (to 120)
+
+313:         104 LOAD_GLOBAL          (__import__)
+             106 LOAD_FAST            (modname)
+             108 BUILD_TUPLE          1
+             110 LOAD_FAST            (kwargs)
+             112 CALL_FUNCTION_EX     (keyword and positional arguments)
+             114 STORE_FAST           (mod)
+             116 POP_BLOCK
+             118 JUMP_FORWARD         (to 156)
+
+314:     >>  120 DUP_TOP
+             122 LOAD_GLOBAL          (ImportError)
+             124 COMPARE_OP           (exception-match)
+             126 POP_JUMP_IF_FALSE    (to 154)
+             128 POP_TOP
+             130 POP_TOP
+             132 POP_TOP
+
+315:         134 LOAD_CONST           ("Crypto.Cipher.AES")
+             136 STORE_FAST           (modname)
+
+316:         138 LOAD_GLOBAL          (__import__)
+             140 LOAD_FAST            (modname)
+             142 BUILD_TUPLE          1
+             144 LOAD_FAST            (kwargs)
+             146 CALL_FUNCTION_EX     (keyword and positional arguments)
+             148 STORE_FAST           (mod)
+             150 POP_EXCEPT
+             152 JUMP_FORWARD         (to 156)
+         >>  154 END_FINALLY
+
+320:     >>  156 LOAD_FAST            (modname)
+             158 LOAD_GLOBAL          (sys)
+             160 LOAD_ATTR            (modules)
+             162 COMPARE_OP           (in)
+             164 POP_JUMP_IF_FALSE    (to 174)
+
+321:         166 LOAD_GLOBAL          (sys)
+             168 LOAD_ATTR            (modules)
+             170 LOAD_FAST            (modname)
+             172 DELETE_SUBSCR
+
+322:     >>  174 LOAD_FAST            (mod)
+             176 RETURN_VALUE
+
+
+# Method Name:       __create_cipher
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        5
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        324
+# Constants:
+#    0: None
+# Names:
+#    0: _aes
+#    1: new
+#    2: key
+#    3: MODE_CFB
+# Varnames:
+#	self, iv
+# Positional arguments:
+#	self, iv
+
+328:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (_aes)
+               4 LOAD_METHOD          (new)
+               6 LOAD_FAST            (self)
+               8 LOAD_ATTR            (key)
+              10 LOAD_FAST            (self)
+              12 LOAD_ATTR            (_aes)
+              14 LOAD_ATTR            (MODE_CFB)
+              16 LOAD_FAST            (iv)
+              18 CALL_METHOD          (3 positional arguments)
+              20 RETURN_VALUE
+
+
+# Method Name:       decrypt
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        3
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        330
+# Constants:
+#    0: None
+# Names:
+#    0: _pyi_stream_crypt
+#    1: _stream_mask
+# Varnames:
+#	self, data
+# Positional arguments:
+#	self, data
+
+331:           0 LOAD_GLOBAL          (_pyi_stream_crypt)
+               2 LOAD_FAST            (data)
+               4 LOAD_FAST            (self)
+               6 LOAD_ATTR            (_stream_mask)
+               8 CALL_FUNCTION        (2 positional arguments)
+              10 RETURN_VALUE
+
+
+# Method Name:       __init__
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    3
+# Keyword-only arguments: 0
+# Number of locals:  4
+# Stack size:        9
+# Flags:             0x00000003 (NEWLOCALS | OPTIMIZED)
+# First Line:        348
+# Constants:
+#    0: None
+#    1: 0
+#    2: 1
+#    3: -1
+#    4: '?'
+# Names:
+#    0: range
+#    1: len
+#    2: int
+#    3: ValueError
+#    4: super
+#    5: ZlibArchiveReader
+#    6: __init__
+#    7: Cipher
+#    8: cipher
+# Varnames:
+#	self, path, offset, i
+# Positional arguments:
+#	self, path, offset
+# Local variables:
+#    3: i
+# Cell variables:
+#    0: __class__
+
+349:           0 LOAD_FAST            (path)
+               2 LOAD_CONST           (None)
+               4 COMPARE_OP           (is)
+               6 POP_JUMP_IF_FALSE    (to 14)
+
+350:           8 LOAD_CONST           (0)
+              10 STORE_FAST           (offset)
+              12 JUMP_FORWARD         (to 130)
+
+351:     >>   14 LOAD_FAST            (offset)
+              16 LOAD_CONST           (None)
+              18 COMPARE_OP           (is)
+              20 POP_JUMP_IF_FALSE    (to 130)
+
+352:          22 SETUP_LOOP           (to 130)
+              24 LOAD_GLOBAL          (range)
+              26 LOAD_GLOBAL          (len)
+              28 LOAD_FAST            (path)
+              30 CALL_FUNCTION        (1 positional argument)
+              32 LOAD_CONST           (1)
+              34 BINARY_SUBTRACT
+              36 LOAD_CONST           (-1)
+              38 LOAD_CONST           (-1)
+              40 CALL_FUNCTION        (3 positional arguments)
+              42 GET_ITER
+         >>   44 FOR_ITER             (to 124)
+              46 STORE_FAST           (i)
+
+353:          48 LOAD_FAST            (path)
+              50 LOAD_FAST            (i)
+              52 BINARY_SUBSCR
+              54 LOAD_CONST           ("?")
+              56 COMPARE_OP           (==)
+              58 POP_JUMP_IF_FALSE    (to 44)
+
+354:          60 SETUP_EXCEPT         (to 86)
+
+355:          62 LOAD_GLOBAL          (int)
+              64 LOAD_FAST            (path)
+              66 LOAD_FAST            (i)
+              68 LOAD_CONST           (1)
+              70 BINARY_ADD
+              72 LOAD_CONST           (None)
+              74 BUILD_SLICE          2
+              76 BINARY_SUBSCR
+              78 CALL_FUNCTION        (1 positional argument)
+              80 STORE_FAST           (offset)
+              82 POP_BLOCK
+              84 JUMP_FORWARD         (to 108)
+
+356:     >>   86 DUP_TOP
+              88 LOAD_GLOBAL          (ValueError)
+              90 COMPARE_OP           (exception-match)
+              92 POP_JUMP_IF_FALSE    (to 106)
+              94 POP_TOP
+              96 POP_TOP
+              98 POP_TOP
+
+359:         100 CONTINUE_LOOP        (to 44)
+             102 POP_EXCEPT
+             104 JUMP_FORWARD         (to 108)
+         >>  106 END_FINALLY
+
+360:     >>  108 LOAD_FAST            (path)
+             110 LOAD_CONST           (None)
+             112 LOAD_FAST            (i)
+             114 BUILD_SLICE          2
+             116 BINARY_SUBSCR
+             118 STORE_FAST           (path)
+
+361:         120 BREAK_LOOP
+             122 JUMP_ABSOLUTE        (to 44)
+         >>  124 POP_BLOCK
+
+363:         126 LOAD_CONST           (0)
+             128 STORE_FAST           (offset)
+
+365:     >>  130 LOAD_GLOBAL          (super)
+             132 LOAD_GLOBAL          (ZlibArchiveReader)
+             134 LOAD_FAST            (self)
+             136 CALL_FUNCTION        (2 positional arguments)
+             138 LOAD_METHOD          (__init__)
+             140 LOAD_FAST            (path)
+             142 LOAD_FAST            (offset)
+             144 CALL_METHOD          (2 positional arguments)
+             146 POP_TOP
+
+369:         148 LOAD_GLOBAL          (Cipher)
+             150 CALL_FUNCTION        (0 positional arguments)
+             152 LOAD_FAST            (self)
+             154 STORE_ATTR           (cipher)
+             156 LOAD_CONST           (None)
+             158 RETURN_VALUE
+
+
+# Method Name:       is_package
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  5
+# Stack size:        4
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        371
+# Constants:
+#    0: None
+#    1: (0, None, 0)
+# Names:
+#    0: toc
+#    1: get
+#    2: PYZ_TYPE_PKG
+# Varnames:
+#	self, name, typ, pos, length
+# Positional arguments:
+#	self, name
+# Local variables:
+#    2: typ
+#    3: pos
+#    4: length
+
+372:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (toc)
+               4 LOAD_METHOD          (get)
+               6 LOAD_FAST            (name)
+               8 LOAD_CONST           ((0, None, 0))
+              10 CALL_METHOD          (2 positional arguments)
+              12 UNPACK_SEQUENCE      3
+              14 STORE_FAST           (typ)
+              16 STORE_FAST           (pos)
+              18 STORE_FAST           (length)
+
+373:          20 LOAD_FAST            (pos)
+              22 LOAD_CONST           (None)
+              24 COMPARE_OP           (is)
+              26 POP_JUMP_IF_FALSE    (to 32)
+
+374:          28 LOAD_CONST           (None)
+              30 RETURN_VALUE
+
+375:     >>   32 LOAD_FAST            (typ)
+              34 LOAD_GLOBAL          (PYZ_TYPE_PKG)
+              36 COMPARE_OP           (==)
+              38 RETURN_VALUE
+
+
+# Method Name:       extract
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    2
+# Keyword-only arguments: 0
+# Number of locals:  6
+# Stack size:        9
+# Flags:             0x00000043 (NOFREE | NEWLOCALS | OPTIMIZED)
+# First Line:        377
+# Constants:
+#    0: None
+#    1: (0, None, 0)
+#    2: "PYZ entry '%s' failed to unmarshal"
+# Names:
+#    0: toc
+#    1: get
+#    2: lib
+#    3: seek
+#    4: start
+#    5: read
+#    6: cipher
+#    7: decrypt
+#    8: zlib
+#    9: decompress
+#   10: PYZ_TYPE_MODULE
+#   11: PYZ_TYPE_PKG
+#   12: marshal
+#   13: loads
+#   14: EOFError
+#   15: ImportError
+# Varnames:
+#	self, name, typ, pos, length, obj
+# Positional arguments:
+#	self, name
+# Local variables:
+#    2: typ
+#    3: pos
+#    4: length
+#    5: obj
+
+378:           0 LOAD_FAST            (self)
+               2 LOAD_ATTR            (toc)
+               4 LOAD_METHOD          (get)
+               6 LOAD_FAST            (name)
+               8 LOAD_CONST           ((0, None, 0))
+              10 CALL_METHOD          (2 positional arguments)
+              12 UNPACK_SEQUENCE      3
+              14 STORE_FAST           (typ)
+              16 STORE_FAST           (pos)
+              18 STORE_FAST           (length)
+
+379:          20 LOAD_FAST            (pos)
+              22 LOAD_CONST           (None)
+              24 COMPARE_OP           (is)
+              26 POP_JUMP_IF_FALSE    (to 32)
+
+380:          28 LOAD_CONST           (None)
+              30 RETURN_VALUE
+
+381:     >>   32 LOAD_FAST            (self)
+              34 LOAD_ATTR            (lib)
+              36 SETUP_WITH           (to 74)
+              38 POP_TOP
+
+382:          40 LOAD_FAST            (self)
+              42 LOAD_ATTR            (lib)
+              44 LOAD_METHOD          (seek)
+              46 LOAD_FAST            (self)
+              48 LOAD_ATTR            (start)
+              50 LOAD_FAST            (pos)
+              52 BINARY_ADD
+              54 CALL_METHOD          (1 positional argument)
+              56 POP_TOP
+
+383:          58 LOAD_FAST            (self)
+              60 LOAD_ATTR            (lib)
+              62 LOAD_METHOD          (read)
+              64 LOAD_FAST            (length)
+              66 CALL_METHOD          (1 positional argument)
+              68 STORE_FAST           (obj)
+              70 POP_BLOCK
+              72 LOAD_CONST           (None)
+         >>   74 WITH_CLEANUP_START
+              76 WITH_CLEANUP_FINISH
+              78 END_FINALLY
+
+384:          80 SETUP_EXCEPT         (to 136)
+
+385:          82 LOAD_FAST            (self)
+              84 LOAD_ATTR            (cipher)
+              86 POP_JUMP_IF_FALSE    (to 100)
+
+386:          88 LOAD_FAST            (self)
+              90 LOAD_ATTR            (cipher)
+              92 LOAD_METHOD          (decrypt)
+              94 LOAD_FAST            (obj)
+              96 CALL_METHOD          (1 positional argument)
+              98 STORE_FAST           (obj)
+
+387:     >>  100 LOAD_GLOBAL          (zlib)
+             102 LOAD_METHOD          (decompress)
+             104 LOAD_FAST            (obj)
+             106 CALL_METHOD          (1 positional argument)
+             108 STORE_FAST           (obj)
+
+388:         110 LOAD_FAST            (typ)
+             112 LOAD_GLOBAL          (PYZ_TYPE_MODULE)
+             114 LOAD_GLOBAL          (PYZ_TYPE_PKG)
+             116 BUILD_TUPLE          2
+             118 COMPARE_OP           (in)
+             120 POP_JUMP_IF_FALSE    (to 132)
+
+389:         122 LOAD_GLOBAL          (marshal)
+             124 LOAD_METHOD          (loads)
+             126 LOAD_FAST            (obj)
+             128 CALL_METHOD          (1 positional argument)
+             130 STORE_FAST           (obj)
+         >>  132 POP_BLOCK
+             134 JUMP_FORWARD         (to 168)
+
+390:     >>  136 DUP_TOP
+             138 LOAD_GLOBAL          (EOFError)
+             140 COMPARE_OP           (exception-match)
+             142 POP_JUMP_IF_FALSE    (to 166)
+             144 POP_TOP
+             146 POP_TOP
+             148 POP_TOP
+
+391:         150 LOAD_GLOBAL          (ImportError)
+             152 LOAD_CONST           ("PYZ entry '%s' failed to unmarshal")
+             154 LOAD_FAST            (name)
+             156 BINARY_MODULO
+             158 CALL_FUNCTION        (1 positional argument)
+             160 RAISE_VARARGS        (exception instance)
+             162 POP_EXCEPT
+             164 JUMP_FORWARD         (to 168)
+         >>  166 END_FINALLY
+
+392:     >>  168 LOAD_FAST            (typ)
+             170 LOAD_FAST            (obj)
+             172 BUILD_TUPLE          2
+             174 RETURN_VALUE
+
+
+# Method Name:       <listcomp>
+# Filename:          D:\codespace\git\self\Xuewuzhi_Downloader_Client\build\Mooc_Release\pyimod02_archive_crypto_bootstrap.py
+# Argument count:    1
+# Keyword-only arguments: 0
+# Number of locals:  2
+# Stack size:        4
+# Flags:             0x00000013 (NESTED | NEWLOCALS | OPTIMIZED)
+# First Line:        252
+# Varnames:
+#	.0, value
+# Positional arguments:
+#	.0
+# Local variables:
+#    1: value
+# Cell variables:
+#    0: item
+
+252:           0 BUILD_LIST           0
+               2 LOAD_FAST            (.0)
+         >>    4 FOR_ITER             (to 18)
+
+252:           6 STORE_FAST           (value)
+               8 LOAD_FAST            (value)
+              10 LOAD_DEREF           (item)
+              12 BINARY_XOR
+              14 LIST_APPEND          2
+              16 JUMP_ABSOLUTE        (to 4)
+         >>   18 RETURN_VALUE
+

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>兴趣岛课程导出</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --line:#e4e7ec; --text:#1f2329;
+    --muted:#8a919e; --brand:#e8543f; --brand-soft:#fdeceb;
+    --ok:#1a9e5c; --warn:#d9822b; --shadow:0 1px 3px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.05);
+    --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh;
+  }
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input[type=checkbox]{cursor:pointer}
+
+  /* ── 顶栏 ── */
+  header{
+    position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);
+    padding:12px 22px;display:flex;align-items:center;gap:18px;
+  }
+  .logo{font-size:17px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+  .logo span{color:var(--brand)}
+  .tabs{display:flex;gap:6px;background:#f2f3f5;padding:4px;border-radius:10px}
+  .tabs button{
+    padding:7px 18px;border-radius:8px;font-size:14px;color:#5a6069;
+    transition:.15s;white-space:nowrap;
+  }
+  .tabs button:hover{color:var(--text)}
+  .tabs button.on{background:#fff;color:var(--brand);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+  .spacer{flex:1}
+  .outdir{
+    font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;
+    max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .outdir b{color:#5a6069;font-weight:500}
+  .btn{
+    padding:8px 16px;border-radius:8px;font-size:13px;border:1px solid var(--line);
+    background:#fff;transition:.15s;white-space:nowrap;
+  }
+  .btn:hover:not(:disabled){border-color:#c8cdd4;background:#fafbfc}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn.primary:hover:not(:disabled){background:#d7442f}
+  .btn.sm{padding:5px 12px;font-size:12px;border-radius:7px}
+
+  /* ── 布局 ── */
+  .wrap{display:flex;gap:18px;padding:18px 22px;align-items:flex-start}
+  .col{display:flex;flex-direction:column;gap:16px;min-width:0}
+  #colCamps{width:330px;flex:none}
+  #colDetail{flex:1}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+         box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{
+    padding:13px 16px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;background:#fcfcfd;
+  }
+  .panel-head h2{font-size:14px;font-weight:650;letter-spacing:.3px}
+  .panel-head .tag{
+    font-size:11px;padding:2px 8px;border-radius:20px;background:var(--brand-soft);
+    color:var(--brand);font-weight:600;
+  }
+  .panel-body{padding:12px}
+
+  /* ── 营列表 ── */
+  .camp{
+    display:flex;align-items:center;gap:12px;padding:12px 13px;border:1px solid var(--line);
+    border-radius:10px;margin-bottom:9px;cursor:pointer;transition:.15s;background:#fff;
+  }
+  .camp:hover{border-color:var(--brand);background:#fffaf9;transform:translateX(2px)}
+  .camp .nm{flex:1;min-width:0;font-weight:600;font-size:13.5px}
+  .camp .nm em{display:block;font-style:normal;font-size:11px;color:var(--muted);
+               font-weight:400;margin-top:1px}
+  .camp .arw{color:#c3c8cf;font-size:15px}
+
+  /* ── 课程列表 ── */
+  .toolbar{
+    padding:12px 16px;border-bottom:1px solid var(--line);display:flex;
+    align-items:center;gap:12px;flex-wrap:wrap;background:#fcfcfd;
+  }
+  .toolbar .title{font-size:16px;font-weight:700}
+  .toolbar .title small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+  .count{font-size:12px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  th{
+    text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:9px 16px;
+    background:#fafbfc;border-bottom:1px solid var(--line);position:sticky;top:0;
+  }
+  td{padding:9px 16px;border-bottom:1px solid #f0f2f4;font-size:13px}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafbfc}
+  tr.sel td{background:#fffaf9}
+  .cb{width:40px;text-align:center}
+  .lesson-title{font-weight:500}
+  .when{color:var(--muted);font-size:12px;white-space:nowrap}
+  .ops{width:130px;text-align:right;white-space:nowrap}
+  .st{font-size:11px;padding:2px 7px;border-radius:20px;background:#f2f3f5;color:var(--muted)}
+  .st.ok{background:#e8f6ee;color:var(--ok)}
+  .st.run{background:#fff3e6;color:var(--warn)}
+
+  /* ── 任务面板 ── */
+  .task{padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:9px;background:#fff}
+  .task .row1{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+  .task .row1 .st2{margin-left:auto;font-weight:500}
+  .bar{height:5px;background:#eef0f3;border-radius:4px;margin:9px 0 6px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--brand);border-radius:4px;transition:width .3s}
+  .task .cur{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task .log{
+    margin-top:8px;font-size:11px;color:#6b7280;background:#fafbfc;border-radius:7px;
+    padding:8px 10px;max-height:132px;overflow:auto;font-family:Consolas,Monaco,monospace;
+    white-space:pre-wrap;line-height:1.55;
+  }
+
+  /* ── 状态栏 ── */
+  .statusbar{
+    position:fixed;right:16px;bottom:16px;z-index:80;background:#23262b;color:#fff;
+    padding:9px 15px;border-radius:9px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.2);
+    display:none;align-items:center;gap:9px;
+  }
+  .statusbar.show{display:flex}
+  .dot{width:7px;height:7px;border-radius:50%;background:#4ade80}
+  .dot.busy{background:#fbbf24;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+
+  .empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:13px}
+  .hint{font-size:12px;color:var(--muted);padding:10px 16px;background:#fafbfc;
+        border-bottom:1px solid var(--line);line-height:1.7}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid #d5d9df;
+        border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;
+        vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">兴趣岛<span>课程导出</span></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="spacer"></div>
+  <div class="outdir" title="">输出到 <b id="outDir">—</b></div>
+  <button class="btn sm" id="btnOpen">打开目录</button>
+  <button class="btn sm" id="btnRefresh">刷新</button>
+</header>
+
+<div class="wrap">
+  <!-- 左：大课程列表 -->
+  <div class="col" id="colCamps">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>大课程</h2>
+        <span class="tag" id="campCount">—</span>
+      </div>
+      <div class="panel-body" id="campList">
+        <div class="empty"><span class="spin"></span>正在读取…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右：课程列表 + 任务 -->
+  <div class="col" id="colDetail">
+    <div class="panel" id="detailPanel" style="display:none">
+      <div class="toolbar">
+        <div class="title" id="dTitle">—<small id="dMeta"></small></div>
+        <div class="spacer"></div>
+        <div class="count" id="dCount"></div>
+        <button class="btn sm" id="btnAll">全选</button>
+        <button class="btn sm" id="btnNone">清空</button>
+        <button class="btn sm" id="btnSweep">绑定链接</button>
+        <button class="btn primary sm" id="btnBatch">批量下载</button>
+      </div>
+      <div class="hint" id="modeHint">
+        「绑定链接」= 逐节播放一次以取得该节的文件地址（约 1 秒/节，仅首次需要）；
+        已绑定的课程可直接点「下载」。
+      </div>
+      <div style="max-height:calc(100vh - 260px);overflow:auto">
+        <table>
+          <thead><tr>
+            <th class="cb"></th><th>课程</th><th style="width:130px">日期</th>
+            <th style="width:90px">状态</th><th class="ops">操作</th>
+          </tr></thead>
+          <tbody id="lessonBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>任务</h2><span class="tag" id="taskCount">0</span></div>
+      <div class="panel-body" id="taskList">
+        <div class="empty">暂无任务</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar" id="statusbar">
+  <span class="dot" id="sdot"></span><span id="stxt"></span>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const TABS = ['全部','正式营','体验营','轻课'];
+let curTab = '全部';
+let curCamp = null;
+let campData = [];
+let lessonData = [];
+let curMode = 'api';
+const sel = new Set();
+
+/* API 模式下无需「绑定链接」：课表一次取全，播放地址现场解析 */
+function applyMode(mode){
+  curMode = mode || 'api';
+  const isApi = curMode === 'api';
+  $('#btnSweep').style.display = isApi ? 'none' : '';
+  $('#modeHint').innerHTML = isApi
+    ? '当前为 <b>API 直连</b>模式：无需模拟器，也无需绑定链接；'
+      + '点击「下载」会现场解析该节播放地址。'
+    : '「绑定链接」= 逐节播放一次以取得该节的文件地址（约 1 秒/节，仅首次需要）；'
+      + '已绑定的课程可直接点「下载」。';
+}
+
+/* ── 网络 ── */
+async function api(path, opts){
+  const r = await fetch(path, opts);
+  const j = await r.json();
+  if (j.error) throw new Error(j.error + (j.trace?('\n'+j.trace):''));
+  return j;
+}
+const post = (p, body) => api(p, {method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body: JSON.stringify(body||{})});
+
+function toast(msg, busy){
+  const sb = $('#statusbar');
+  $('#stxt').textContent = msg;
+  $('#sdot').className = 'dot' + (busy?' busy':'');
+  sb.classList.add('show');
+  clearTimeout(toast._t);
+  if(!busy) toast._t = setTimeout(()=>sb.classList.remove('show'), 3200);
+}
+
+/* ── 标签 ── */
+function renderTabs(){
+  $('#tabs').innerHTML = TABS.map(t =>
+    `<button data-tab="${t}" class="${t===curTab?'on':''}">${t}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b =>
+    b.onclick = () => { curTab = b.dataset.tab; renderTabs(); loadCamps(); });
+}
+
+/* ── 营列表 ── */
+async function loadCamps(){
+  $('#campList').innerHTML = '<div class="empty"><span class="spin"></span>正在读取…</div>';
+  $('#campCount').textContent = '—';
+  try{
+    const j = await api('/api/camps?tab=' + encodeURIComponent(curTab));
+    campData = j.camps || [];
+    if(j.mode) applyMode(j.mode);
+    $('#campCount').textContent = campData.length + ' 个';
+    if(!campData.length){
+      $('#campList').innerHTML = '<div class="empty">该标签下暂无课程</div>';
+      return;
+    }
+    $('#campList').innerHTML = campData.map((c,i) => `
+      <div class="camp" data-i="${i}">
+        <div class="nm">${esc(c.name)}<em>${esc(c.badge || '')}</em></div>
+        <div class="arw">›</div>
+      </div>`).join('');
+    $('#campList').querySelectorAll('.camp').forEach(el =>
+      el.onclick = () => openCamp(campData[+el.dataset.i]));
+  }catch(e){
+    $('#campList').innerHTML = `<div class="empty" style="color:#e8543f">${esc(e.message)}</div>`;
+  }
+}
+
+/* ── 课程列表 ── */
+async function openCamp(c){
+  curCamp = c;
+  sel.clear();
+  $('#detailPanel').style.display = '';
+  $('#dTitle').innerHTML = esc(c.name) + `<small>${esc(c.badge||'')}</small>`;
+  $('#lessonBody').innerHTML = '<tr><td colspan="5" class="empty"><span class="spin"></span>正在读取课表…</td></tr>';
+  try{
+    const j = await api('/api/courses?camp=' + encodeURIComponent(c.name));
+    lessonData = j.items || [];
+    $('#dMeta').textContent = c.badge || (lessonData.length + ' 节');
+    $('#dCount').textContent = '共 ' + lessonData.length + ' 节';
+    renderLessons();
+  }catch(e){
+    $('#lessonBody').innerHTML = `<tr><td colspan="5" class="empty" style="color:#e8543f">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderLessons(){
+  if(!lessonData.length){
+    $('#lessonBody').innerHTML = '<tr><td colspan="5" class="empty">该营暂无课程</td></tr>';
+    return;
+  }
+  $('#lessonBody').innerHTML = lessonData.map(it => {
+    const key = it.index;
+    const on = sel.has(key);
+    let st;
+    if(curMode === 'api'){
+      // API 模式：显示类型与时长
+      const type = it.type === 'INTELLIGENT_LIVE' ? '直播回放'
+                : it.type === 'AUDIO' ? '音频'
+                : it.type === 'VIDEO' ? '视频' : (it.type || '');
+      const dur = it.duration ? Math.round(it.duration/60) + ' 分' : '';
+      st = `<span class="st ok">${esc(type)}</span>`
+         + (dur ? ` <span class="when">${esc(dur)}</span>` : '');
+    }else{
+      st = it.resolved
+        ? '<span class="st ok">已绑定</span>'
+        : '<span class="st">未绑定</span>';
+    }
+    return `<tr class="${on?'sel':''}" data-k="${key}">
+      <td class="cb"><input type="checkbox" ${on?'checked':''} data-k="${key}"></td>
+      <td class="lesson-title">${esc(it.title)}</td>
+      <td class="when">${esc(it.when)}</td>
+      <td>${st}</td>
+      <td class="ops">
+        <button class="btn sm" data-dl="${key}">下载</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('#lessonBody').querySelectorAll('input[type=checkbox]').forEach(cb =>
+    cb.onchange = () => {
+      const k = +cb.dataset.k;
+      cb.checked ? sel.add(k) : sel.delete(k);
+      cb.closest('tr').classList.toggle('sel', cb.checked);
+      updateBatchBtn();
+    });
+  $('#lessonBody').querySelectorAll('[data-dl]').forEach(b =>
+    b.onclick = () => {
+      const k = +b.dataset.dl;
+      sel.clear(); sel.add(k);
+      downloadSel();
+    });
+  updateBatchBtn();
+}
+
+function updateBatchBtn(){
+  $('#btnBatch').textContent = sel.size ? `批量下载 (${sel.size})` : '批量下载';
+  $('#btnBatch').disabled = !sel.size;
+}
+
+/* ── 下载 ── */
+async function downloadSel(){
+  if(!curCamp || !sel.size) return;
+  const items = lessonData.filter(i => sel.has(i.index))
+                           .map(i => ({title:i.title, when:i.when}));
+  try{
+    await post('/api/download', {camp: curCamp.name, items});
+    toast('已提交下载任务（' + items.length + ' 节）', true);
+  }catch(e){ toast('提交失败：' + e.message); }
+}
+
+/* ── 任务 ── */
+async function loadTasks(){
+  let j;
+  try{ j = await api('/api/state'); }
+  catch(e){ return; }
+  const tasks = j.tasks || [];
+  $('#taskCount').textContent = tasks.length;
+  if(!tasks.length){
+    $('#taskList').innerHTML = '<div class="empty">暂无任务</div>';
+    return;
+  }
+  $('#taskList').innerHTML = tasks.map(t => {
+    const pct = Math.round(t.progress || 0);
+    const state = t.state === 'running' ? '进行中'
+                : t.state === 'done' ? '完成' : '出错';
+    const cls = t.state === 'running' ? 'run' : (t.state === 'done' ? 'ok' : '');
+    return `<div class="task">
+      <div class="row1">${esc(t.title)}
+        <span class="st ${cls}">${state}</span>
+        ${t.ok?`<span class="st2">成功 ${t.ok}${t.fail?(' / 失败 '+t.fail):''}</span>`:''}
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="cur">${esc(t.current || t.detail || '')}</div>
+      ${t.log&&t.log.length?`<div class="log">${esc(t.log.slice(-30).join('\n'))}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const busy = tasks.some(t => t.state === 'running');
+  if(busy) toast('任务进行中…', true);
+  $('#outDir').textContent = j.out_root || '—';
+  $('#outDir').parentElement.title = j.out_root || '';
+}
+
+/* ── 事件 ── */
+$('#btnAll').onclick = () => {
+  lessonData.forEach(i => sel.add(i.index));
+  renderLessons();
+};
+$('#btnNone').onclick = () => { sel.clear(); renderLessons(); };
+$('#btnBatch').onclick = downloadSel;
+$('#btnRefresh').onclick = () => { loadCamps(); if(curCamp) openCamp(curCamp); };
+$('#btnOpen').onclick = () => post('/api/open_folder', {path:undefined}).catch(()=>{});
+$('#btnSweep').onclick = async () => {
+  if(!curCamp) return;
+  try{
+    await post('/api/sweep', {camp: curCamp.name});
+    toast('开始绑定链接…', true);
+  }catch(e){ toast('失败：' + e.message); }
+};
+
+/* ── 启动 ── */
+applyMode('api');
+renderTabs();
+loadCamps();
+loadTasks();
+setInterval(loadTasks, 1500);
+</script>
+</body>
+</html>

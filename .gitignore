@@ -1,0 +1,80 @@
+# ── 大体积产物：分析材料 ───────────────────────────────
+cache-analysis/
+exported/
+exported2/
+cache/
+*.mp4
+*.ts
+*.pcap
+*.apk
+*.hls
+*.m3u8
+*.db
+*.db-wal
+*.b64
+*.tar
+*.raw
+
+# ── API 探测的中间产物（端点已提取进 docs/09，无需入库） ──
+_lel/api/webcache/
+_lel/api/dl_test/
+_lel/api/cap.pcap
+_lel/api/api_bundle.js
+_lel/api/course_api_context.txt
+_lel/api/webcache_big.js
+_lel/api/e2e_out.txt
+_lel/api/payload*.json
+_lel/api/*.log
+_lel/api/migrate_dry.txt
+state/pdl_tmp/
+state/_audio_test.mp3
+state/batch_state.json
+
+# ── 运行时缓存 ─────────────────────────────────────────
+.cache/
+__pycache__/
+*.pyc
+server.log
+server_api.log
+sweep_log.txt
+
+# ── 探测过程的临时输出 ─────────────────────────────────
+_learn.xml
+_cl.xml
+_ui*.xml
+_c.json
+_l.json
+p1.png
+
+# ── 本地覆盖配置（保留目录结构） ───────────────────────
+state/*.local.json
+_lel/api/migrate_log.txt
+
+# ── GUI 工具的运行产物 ─────────────────────────────────
+state/gui_shots/
+state/gui_e2e/
+_lel/api/state/
+state/login_test.log
+build/
+dist/
+*.spec
+vendor/
+state/exe_test/
+state/exe_test/
+
+# ── GUI v7 新增的运行产物（下载历史 / 自检截图） ──────────
+state/gui_hist_home/
+state/gui_hist_out/
+state/hist_real/
+state/v7_shot*.png
+state/states_shot.png
+state/v8_shot*.png
+
+# 裁剪/调试用的临时图
+state/z*.png
+
+# ── 推送 GitHub 前排除：凭据 / 运行时数据 / 打包产物 ──
+state/links.json
+*.exe
+*.pyz
+*.bundle
