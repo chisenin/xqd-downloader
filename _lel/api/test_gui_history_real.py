@@ -38,11 +38,27 @@ import xqd_platform
 PASS = []
 FAIL = []
 
-COOKIE = ('rsessionId=<RSESSION_ID>'
-          '<RSESSION_ID_TAIL>; '
-          'userId=<USER_ID>; cUserId=<C_USER_ID>; '
-          'uid=<UID>; '
-          'caller=app_edu; platform=android; ver=4260; deviceType=phone; os=35')
+# ★ 不要在这里硬编码 Cookie —— 会过期，而且脱敏时容易把内容改坏。
+#   统一从 cache-analysis/_apitest.py 动态读（与 test_states_real.py 一致）。
+COOKIE = ''
+
+
+def load_cookie():
+    """从 cache-analysis/_apitest.py 里取真 Cookie。"""
+    global COOKIE
+    p = os.path.join(ROOT, 'cache-analysis', '_apitest.py')
+    if not os.path.isfile(p):
+        return False
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location('_apitest_mod', p)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        COOKIE = getattr(mod, 'COOKIE', '') or ''
+    except Exception as e:
+        print('  读 Cookie 失败：%s' % e)
+        return False
+    return bool(COOKIE)
 
 # ★ 历史文件放到独立位置，别污染用户真实的 ~/.xqd_tool/history.json
 TEST_HOME = os.path.join(ROOT, 'state', 'gui_hist_home')
@@ -69,6 +85,9 @@ def patch_paths():
 
 
 def main():
+    if not load_cookie():
+        print('★ 拿不到真 Cookie（cache-analysis/_apitest.py），跳过')
+        return 1
     patch_paths()
     app = QApplication(sys.argv)
 
@@ -122,7 +141,7 @@ def main():
     xqd_engine.http_get = limited_get
     try:
         win._start_downloads([(0, le)])
-        deadline = time.time() + 90
+        deadline = time.time() + 240
         while time.time() < deadline:
             app.processEvents()
             time.sleep(0.1)

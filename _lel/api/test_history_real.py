@@ -41,11 +41,33 @@ def ok(name, cond, extra=''):
 
 
 # ── 真实 Cookie（来自 cache-analysis/_apitest.py，抓包得到）────────
-COOKIE = ('rsessionId=<RSESSION_ID>'
-          '<RSESSION_ID_TAIL>; '
-          'userId=<USER_ID>; cUserId=<C_USER_ID>; '
-          'uid=<UID>; '
-          'caller=app_edu; platform=android; ver=4260; deviceType=phone; os=35')
+# ★ 不要在这里硬编码 Cookie —— 会过期，而且脱敏时容易把内容改坏。
+#   统一从 cache-analysis/_apitest.py 动态读（与 test_states_real.py 一致）。
+COOKIE = ''
+
+
+def load_cookie():
+    """从 cache-analysis/_apitest.py 里取真 Cookie。
+
+    ★ 那个文件里的 COOKIE 是**多行隐式拼接**的字符串，
+      正则匹配不到 —— 直接 import 它的模块变量最稳。
+    """
+    global COOKIE
+    root = os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))
+    p = os.path.join(root, 'cache-analysis', '_apitest.py')
+    if not os.path.isfile(p):
+        return False
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location('_apitest_mod', p)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        COOKIE = getattr(mod, 'COOKIE', '') or ''
+    except Exception as e:
+        print('  读 Cookie 失败：%s' % e)
+        return False
+    return bool(COOKIE)
 
 
 def patch_cookie():
@@ -85,6 +107,9 @@ def seg_names(seg_dir):
 
 def main():
     keyword = sys.argv[1] if len(sys.argv) > 1 else None
+    if not load_cookie():
+        print('★ 拿不到真 Cookie（cache-analysis/_apitest.py），跳过')
+        return 1
     plat = patch_cookie()
     ok('授权有效（真实 Cookie）', plat.check_auth()[0], plat.check_auth()[1])
 

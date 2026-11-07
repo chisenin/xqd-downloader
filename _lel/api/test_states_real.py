@@ -75,8 +75,9 @@ def patch_cookie():
 
 
 def suffix_of(win, row):
-    it = win.tbl_lessons.item(row, 2)
-    return it.text().strip('[]') if it else ''
+    """课程列表第 row 行**跟在课名后面**的状态词（v1.4.0 起）。"""
+    it = win.tbl_lessons.item(row, 1)
+    return (it.data(xqd_gui.STATE_ROLE) or '') if it else ''
 
 
 def task_state(win, job_id):
