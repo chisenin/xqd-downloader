@@ -33,27 +33,43 @@ import traceback
 
 from PySide6.QtCore import (Qt, QThread, QTimer, Signal, QSettings,
                             QSize, QRect)
-from PySide6.QtGui import (QAction, QColor, QFont, QIcon, QPainter, QPen,
-                         QPalette)
+from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QIcon, QPainter,
+                         QPen, QPalette)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
                                QFileDialog,
                                QFrame, QHBoxLayout, QHeaderView, QLabel,
                                QLineEdit, QListWidget, QListWidgetItem,
                                QMainWindow, QMessageBox, QPlainTextEdit,
                                QProgressBar, QPushButton, QSplitter,
-                               QStackedWidget, QStyle, QStyleOptionViewItem,
-                               QStyledItemDelegate,
+                               QSizePolicy, QStackedWidget, QStyle,
+                               QStyleOptionViewItem, QStyledItemDelegate,
                                QTableWidget, QTableWidgetItem,
                                QTextBrowser, QVBoxLayout, QWidget)
 
 import xqd_auth
+import xqd_creds
 import xqd_dedupe
 import xqd_engine
 import xqd_history
 import xqd_platform
 
 APP_TITLE = '兴趣岛视频下载器'
-APP_VERSION = '1.4.0'
+APP_VERSION = '1.5.1'
+
+# ── 课程列表的列索引（★ 单一事实来源）─────────────────────────
+#   v1.5.0 起共 6 列：勾选框后面第一列就是「标题前缀」（原营内序号）。
+#   界面代码与测试一律引用这些常量，不要再写死 1/2/4 ——
+#   加一列就要把所有硬编码列号改一遍，漏一个就是错位显示。
+COL_CHECK = 0       # 勾选框（表头带「全选」复选框）
+COL_PREFIX = 1      # 标题前缀：该课在**原营**课表里的序号
+COL_TITLE = 2       # 课程：课名 + 跟在课名后面的状态词（自绘委托）
+COL_SUFFIX = 3      # 标题后缀：成品文件名里的 YYYY.MM.DD
+COL_DUR = 4         # 时长
+COL_PROGRESS = 5    # 进度条
+LESSON_COLUMN_COUNT = 6
+
+# 多个营名之间的分隔（中文间隔号「·」，与界面标题风格一致）
+CAMP_SEPARATOR = ' · '
 
 # ── 配置 ─────────────────────────────────────────────────────
 
@@ -162,6 +178,26 @@ MAX_LESSON_WORKERS = 3
 # 每节课内部的分片并发数
 SEGMENT_WORKERS = 12
 
+# ── v1.5.0：封装阶段「流水线」──────────────────────────────────
+# ★ 用户 2026-11-07 指出：一节即将下完、进入「封装」时，网络流量
+#   已经被解放了 —— 拼接分片 / ffmpeg 转封装 / ffprobe 校验全程只读
+#   本地磁盘，不再发一个 HTTP 请求。此时却还占着一个下载并发槽位，
+#   队列里的下一节只能干等，带宽白白空着。
+#
+# 于是把「并发上限」拆成两种资源：
+#   - **网络槽位**（MAX_LESSON_WORKERS=3）：只有 解析/下载 阶段占；
+#   - **本地封装槽位**（MAX_MUX_WORKERS=2）：封装/校验 阶段占。
+# 任务一进「封装」就把网络槽位还回去 → _pump_queue 立刻开下一节，
+# 形成「A 在封装、B/C/D 在下载」的流水线，总耗时大约省下每段封装时间。
+#
+# ★ 为什么还要给封装单独设上限：成品写在 Z 盘（SMB 网络盘，实测
+#   约 10 MB/s），cat 拼接 + ffmpeg 重封装都是连续大文件写入。若 5 节课
+#   同时封装，磁盘互相抢 IO，反而把已下完的课拖慢，还会连累正在下
+#   的分片落盘。2 路是「不空等、也不抢盘」的折中；超过上限的封装任务
+#   暂时继续占着网络槽位，等有封装槽位空出来再释放（见 _release_idle_slots）。
+LOCAL_PHASES = ('封装', '校验')
+MAX_MUX_WORKERS = 2
+
 # ══════════════════════════════════════════════════════════════
 #  状态词表 —— **单一事实来源**
 # ══════════════════════════════════════════════════════════════
@@ -267,6 +303,74 @@ class LessonTitleDelegate(QStyledItemDelegate):
             painter.drawText(QRect(x, rect.top(), sfx_w, rect.height()),
                              Qt.AlignVCenter | Qt.AlignLeft, suffix)
         painter.restore()
+
+
+class MarqueeLabel(QLabel):
+    """课程列表标题里的「营名」：多个营时向左无缝循环滚动。
+
+    ★ 为什么要滚动（用户 2026-11-07 要求）：
+      勾选多个营后，营名串可能长达几十个字，标题栏放不下；
+      截断（elide）只能看到头两个营，其余营名永远看不到。
+      这里把整串画两遍、用定时器持续左移，移过一整串宽度后
+      回到 0 → 视觉上是「一直向左、循环出现」。
+
+    ★ 单营 / 短文本时不启动定时器，走 QLabel 默认绘制，
+      这样 QSS 的配色、字体、对齐都不受影响。
+    """
+
+    STEP = 1          # 每次左移的像素
+    INTERVAL = 35     # 毫秒（约 28px/s，中文两字/秒，看得清）
+    WIDTH = 250       # 标题区固定宽度，避免长营名把按钮挤出窗口
+
+    def __init__(self, parent=None):
+        QLabel.__init__(self, parent)
+        self._loop = ''
+        self._offset = 0
+        self._loop_w = 1
+        self._scroll = False
+        self.setFixedWidth(self.WIDTH)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        self._timer = QTimer(self)
+        self._timer.setInterval(self.INTERVAL)
+        self._timer.timeout.connect(self._tick)
+
+    def set_marquee(self, text, scroll=False, tooltip=''):
+        """设置标题文字。``text()`` 始终返回完整串（测试 / 提示可用）。"""
+        self.setText(text)
+        self.setToolTip(tooltip or text)
+        self._scroll = False
+        self._timer.stop()
+        self._offset = 0
+        if scroll and text:
+            # 末尾补一段分隔，滚到末尾时才能无缝接回开头
+            self._loop = text + CAMP_SEPARATOR
+            self._loop_w = max(
+                1, self.fontMetrics().horizontalAdvance(self._loop))
+            # 短文本能完整显示就不必滚（滚动反而看不清）
+            self._scroll = self._loop_w > self.width()
+            if self._scroll:
+                self._timer.start()
+        self.update()
+
+    def _tick(self):
+        self._offset = (self._offset + self.STEP) % self._loop_w
+        self.update()
+
+    def paintEvent(self, ev):
+        if not self._scroll:
+            QLabel.paintEvent(self, ev)
+            return
+        p = QPainter(self)
+        p.setClipRect(self.rect())
+        p.setFont(self.font())
+        p.setPen(QColor('#2f3d52'))   # 与 QSS ``#SectionTitle`` 同色
+        fm = self.fontMetrics()
+        y = (self.height() - fm.height()) // 2 + fm.ascent()
+        x = -self._offset
+        while x < self.width():
+            p.drawText(int(x), int(y), self._loop)
+            x += self._loop_w
+        p.end()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -710,19 +814,33 @@ def fmt_speed(bps):
 HELP_HTML = """
 <h3>使用说明</h3>
 
-<p><b>1. 授权</b><br>
-顶栏显示「授权：…」。首次使用会自动拉起 MuMu 模拟器与安卓设备，
-从兴趣岛 App 的 WebView 里读取登录凭据（rsessionId / userId），
-读完自动关闭模拟器。<br>
-若显示「未登录」，请先在模拟器里打开兴趣岛并登录，再点顶栏「重试授权」。</p>
+<p><b>1. 授权（平时不用开模拟器）</b><br>
+顶栏显示「授权：…」。<b>平时启动工具直接使用本机保存的授权</b>，
+不会拉起 MuMu 模拟器，也不必等它启动 / 关闭。<br>
+只有<b>首次使用</b>（本机还没保存过授权），或你点顶栏<b>「重新授权」</b>时，
+才会拉起 MuMu 与安卓设备，从兴趣岛 App 的 WebView 读取登录凭据
+（rsessionId / userId），读完自动关闭模拟器并把新凭据保存到本机。<br>
+授权过期、营列表加载不出来时，点一次「重新授权」即可刷新。<br>
+凭据只存在本机私有文件 <code>%USERPROFILE%\\.xqd_tool\\cookie.txt</code>
+（不在程序目录、不进仓库），也可用环境变量 <code>XQD_COOKIE</code> 临时覆盖。<br>
+若显示「未登录」，请先在模拟器里打开兴趣岛并登录，再点「重新授权」。</p>
 
 <p><b>2. 选择营</b><br>
-左栏「营列表」列出你已订阅的营。用营列表右上角的下拉框切换
-「正式营 / 体验营」，点某个营即可载入它的课表。</p>
+左栏「营列表」列出你已订阅的营。用右上角下拉框切换「正式营 / 体验营」。<br>
+<b>点营名前面的方框可勾选多个营</b>，标题栏的「全选」可一次勾上全部；
+勾选的营，其课程会<b>合并进右侧同一张课程列表</b>，每节课仍存到自己营的
+同名文件夹里。多个营名在标题里用「·」分隔并<b>向左循环滚动</b>
+（鼠标悬停可看完整名单）。<br>
+不勾任何营时，仍按老办法显示当前高亮的那一个营。</p>
 
 <p><b>3. 勾选课程</b><br>
-右上「课程列表」里勾选要下载的课；点表头左侧的方框可全选 / 全不选，
-也可用「全选」「清空」按钮。<br>
+「课程列表」第一列「标题前缀」是该课在<b>原营</b>课表里的序号 ——
+多营合并也不会重新编号，和成品文件名的前缀完全对应；
+「标题后缀」列是成品文件名里的日期。<br>
+「进度」列显示的是这节课<b>实际的下载进度</b>：已下完 100%，
+没下完按下载历史 / 可续传的分片缓存显示百分比，正在下载的任务实时刷新，
+重新载入课表也不会变空。<br>
+勾选要下载的课；点表头左侧的方框可全选 / 全不选，也可用「全选」「清空」按钮。<br>
 已完整下载过的课会自动标记并跳过（不重复消耗流量）；
 残缺文件会被清除并用规范名重下。</p>
 
@@ -748,13 +866,22 @@ HELP_HTML = """
 其余状态：<code>已存在</code>（目录里已有成品）、
 <code>排队中</code>、<code>已暂停</code>、<code>失败</code>、<code>需重下</code>。</p>
 
-<p><b>5.2 「标题后缀」列是什么</b><br>
-课程列表的第 3 列「标题后缀」，显示的是<b>成品文件名里标题后面那段日期</b> ——
+<p><b>5.2 「标题前缀 / 标题后缀」列是什么</b><br>
+「标题前缀」= 该课在<b>原营</b>课表里的序号（1、2、3…），多营合并不重排；<br>
+「标题后缀」= <b>成品文件名里标题后面那段日期</b> ——
 文件名规则是 <code>&lt;序号&gt;.&lt;课名&gt;.&lt;YYYY.MM.DD&gt;.mp4</code>，
 所以这一列就是那个 <code>YYYY.MM.DD</code>，
 例如 <code>1.【复训营课程1】养正十三式复习.2026.04.18.mp4</code>
 对应这一列显示 <code>2026.04.18</code>。
 它和实际落盘的文件名同源，可以拿它核对文件。</p>
+
+<p><b>5.3 进入封装时自动接上下一节</b><br>
+一节分片下完、状态变成「封装中」之后，就<b>不再需要网络</b>了 ——
+拼接分片、转封装 MP4、校验时长都只读写本地磁盘。工具会在这一刻
+<b>把网络让给队列里的下一节</b>，不必等封装结束，带宽不空转。<br>
+因此最多会有 3 节课同时下载、另有最多 2 节在封装；
+限住封装路数是为了不抢网络盘（Z 盘）的写入带宽。
+「下载管理」标题旁会显示 <code>N 下载 / M 封装</code> 的拆分。</p>
 
 <p><b>6. 输出结构</b><br>
 <code>&lt;营名&gt;\\&lt;序号&gt;.&lt;课名&gt;.&lt;YYYY.MM.DD&gt;.mp4</code><br>
@@ -915,30 +1042,67 @@ class ScanWorker(QThread):
     done = Signal(object)     # list of (lesson, ok, state)
     finished_all = Signal()
 
-    def __init__(self, checker, folder, lessons, alt_folders=None, parent=None):
+    def __init__(self, checker, folder=None, lessons=None, alt_folders=None,
+                 groups=None, parent=None):
         QThread.__init__(self, parent)
         self.checker = checker
-        self.folder = folder
-        self.lessons = lessons
-        self.alt_folders = alt_folders or []
+        # ★ v1.5.0：多营合并时每个营有自己的输出目录，扫描要按营分组。
+        #   groups = [(folder, lessons, alt_folders), ...]；
+        #   旧的单营调用 (checker, folder, lessons, alt) 仍然兼容。
+        self.groups = groups or [(folder, lessons, alt_folders or [])]
         self.result = []
 
     def run(self):
         try:
-            for i, le in enumerate(self.lessons):
-                stem = xqd_platform.lesson_stem(le)
-                st = self.checker.check_group(self.folder, stem, le.duration,
-                                              alt_folders=self.alt_folders)
-                if st['status'] != 'missing':
-                    self.result.append((le, st['status'] == 'ok', st))
-                # 每 10 节发一次，避免一次构造大 list
-                if i % 10 == 9:
-                    self.done.emit(list(self.result))
+            n = 0
+            for folder, lessons, alt in self.groups:
+                for le in (lessons or []):
+                    stem = xqd_platform.lesson_stem(le)
+                    st = self.checker.check_group(folder, stem, le.duration,
+                                                  alt_folders=alt)
+                    if st['status'] != 'missing':
+                        self.result.append((le, st['status'] == 'ok', st))
+                    # 每 10 节发一次，避免一次构造大 list
+                    n += 1
+                    if n % 10 == 9:
+                        self.done.emit(list(self.result))
             self.done.emit(list(self.result))
         except Exception:
             pass
         finally:
             self.finished_all.emit()
+
+
+class CatalogWorker(QThread):
+    """后台批量拉「多个营」的课表（v1.5.0 营多选）。
+
+    ★ 为什么必须后台：全选 9 个营最多要 9 次网关请求，网络不稳时
+      一次可能十几秒；放 UI 线程会把窗口整个冻住。
+    ★ 为什么逐营 emit：边加载边往课程表里追加，用户不必等全部完成。
+    ★ ``gen`` 是作废标记：用户改了勾选后，上一批线程的结果必须丢弃，
+      否则会把旧营的课混进新表格。
+    ★ 课表本身由 platform._catalogs 缓存，重复勾选不会重复发请求。
+    """
+
+    loaded = Signal(int, object, object)   # gen, camp, lessons
+    failed = Signal(int, object, str)      # gen, camp, 原因
+    finished_all = Signal(int)             # gen
+
+    def __init__(self, platform, camps, gen, parent=None):
+        QThread.__init__(self, parent)
+        self.platform = platform
+        self.camps = list(camps)
+        self.gen = gen
+
+    def run(self):
+        for camp in self.camps:
+            try:
+                cat = list(self.platform.camp_catalog(camp) or [])
+            except Exception as e:
+                self.failed.emit(self.gen, camp, str(e))
+                continue
+            self.loaded.emit(self.gen, camp, cat)
+        self.finished_all.emit(self.gen)
 
 
 class HtmlDialog(QDialog):
@@ -1082,10 +1246,24 @@ class MainWindow(QMainWindow):
         self.camps = []
         self.lessons = []
         self.row_of_lesson = {}     # lesson -> row
-        self.lesson_of_row = {}
+        self.lesson_of_row = {}     # row -> lesson
+        # ★ v1.5.0：多营合并后行号不再是「营内序号」，每行都要记住自己
+        #   属于哪个营（输出目录、已下载检测、下载任务都按这个营算）。
+        self.camp_of_row = {}       # row -> Camp
+        self._lesson_groups = []    # 当前表格内容：[(camp, lessons), ...]
+        self._checked_lesson_keys = set()   # 重建表格时保留课程勾选
+        self._camp_updating = False         # 防止营勾选联动递归
+        self._rebuild_scheduled = False     # 勾选事件的防抖标志
+        self._catalog_gen = 0               # 旧课表加载线程的作废标记
+        self._catalog_workers = []          # ★ QThread 运行期间必须保活
+        self._camp_target = []              # 本次要显示的营（用于判重）
         self.active_threads = []
         self.pending_queue = []      # 待下载：(job_id, lesson, camp, out_path, quality)
-        self.running_workers = set()  # 正在下载的 job_id
+        self.running_workers = set()  # 所有在跑的 job_id（含封装/校验）
+        # ★ 已进入本地阶段、把网络槽位还回去的 job_id。
+        #   running_workers - network_released = 真正占着带宽的任务。
+        #   见文件头 LOCAL_PHASES / MAX_MUX_WORKERS 的说明。
+        self.network_released = set()
         self.jobs = {}               # job_id -> dict(row, lesson, camp, out_path)
         self._task_row_of_job = {}    # job_id -> 下载管理表里的行号
         self._job_seq = 0
@@ -1124,7 +1302,11 @@ class MainWindow(QMainWindow):
         self._eta_timer.timeout.connect(self._tick_eta)
         self._eta_timer.start()
 
-        QTimer.singleShot(300, self.auto_check_auth)
+        # ★ 自检/取证模式（XQD_SCREENSHOT）只为看界面渲染，别为了截个图
+        #   就把 MuMu 模拟器拉起来 —— 那会连带启动安卓设备、改系统状态。
+        #   正常启动仍自动检查授权（优先用本机保存的，不碰模拟器）。
+        if not os.environ.get('XQD_SCREENSHOT'):
+            QTimer.singleShot(300, self.auto_check_auth)
 
     def _tick_eta(self):
         """定时刷新剩余时间估算。"""
@@ -1256,12 +1438,15 @@ class MainWindow(QMainWindow):
         self.chk_autolaunch = QCheckBox('自动启动 MuMu')
         self.chk_autolaunch.setChecked(True)
         self.chk_autolaunch.setToolTip(
-            '未运行 MuMu / 安卓设备时，自动拉起它们以获取授权')
+            '仅在「本机还没有保存授权」或点「重新授权」时才生效：\n'
+            '未运行 MuMu / 安卓设备时，自动拉起它们以获取授权。\n'
+            '平时启动工具直接用已保存的授权，不会启动模拟器。')
         lay.addWidget(self.chk_autolaunch)
 
         self.chk_autoclose = QCheckBox('授权后自动关闭')
         self.chk_autoclose.setChecked(True)
         self.chk_autoclose.setToolTip(
+            '仅在真正走了模拟器授权时生效：\n'
             '拿到授权后自动关闭兴趣岛 App 与安卓设备（省内存）')
         lay.addWidget(self.chk_autoclose)
 
@@ -1269,8 +1454,14 @@ class MainWindow(QMainWindow):
         self.lbl_auth.setObjectName('BrandSub')
         lay.addWidget(self.lbl_auth)
 
-        self.btn_retry = QPushButton('重试授权')
-        self.btn_retry.clicked.connect(self.auto_check_auth)
+        self.btn_retry = QPushButton('重新授权')
+        self.btn_retry.setToolTip(
+            '从 MuMu 模拟器重新读取兴趣岛登录态，并刷新本机保存的授权。\n'
+            '平时启动工具直接用已保存的授权，不会启动模拟器。')
+        # ★ 点按钮 = 强制走模拟器刷新。不能沿用缓存，否则 Cookie 过期时
+        #   永远刷不掉（缓存分支只在自动检查时生效）。
+        self.btn_retry.clicked.connect(
+            lambda _checked=False: self.auto_check_auth(force_mumu=True))
         lay.addWidget(self.btn_retry)
 
         return bar
@@ -1327,6 +1518,13 @@ class MainWindow(QMainWindow):
         title.setObjectName('SectionTitle')
         head.addWidget(title)
         head.addStretch(1)
+        # ★ v1.5.0：营也能勾选 / 全选 —— 勾中的营，其课表全部并入课程列表
+        self.chk_all_camps = QCheckBox('全选')
+        self.chk_all_camps.setTristate(True)
+        self.chk_all_camps.setToolTip(
+            '勾选全部营，把它们的课程一起加进课程列表；再点一次取消全部')
+        self.chk_all_camps.stateChanged.connect(self._on_all_camps_changed)
+        head.addWidget(self.chk_all_camps)
         self.cmb_kind = QComboBox()
         head.addWidget(self.cmb_kind)
         lay.addLayout(head)
@@ -1335,6 +1533,10 @@ class MainWindow(QMainWindow):
         self.lst_camps.setWordWrap(False)
         self.lst_camps.setSpacing(1)
         self.lst_camps.currentRowChanged.connect(self._on_camp_selected)
+        self.lst_camps.itemChanged.connect(self._on_camp_item_changed)
+        # ★ 点营名文字 = 勾上这个营（只增不减）；点前面的方框才是切换。
+        #   两种点击都交给 _on_camp_clicked 按击中点区分。
+        self.lst_camps.itemClicked.connect(self._on_camp_clicked)
         lay.addWidget(self.lst_camps, 1)
 
         row = QHBoxLayout()
@@ -1356,7 +1558,11 @@ class MainWindow(QMainWindow):
         lay.setSpacing(8)
 
         head = QHBoxLayout()
-        self.lbl_lessons = QLabel('课程列表')
+        fixed_title = QLabel('课程列表 ·')
+        fixed_title.setObjectName('SectionTitle')
+        head.addWidget(fixed_title)
+        # ★ 多营时营名向左循环滚动（中文间隔号「·」分隔），单营静止
+        self.lbl_lessons = MarqueeLabel()
         self.lbl_lessons.setObjectName('SectionTitle')
         head.addWidget(self.lbl_lessons)
         head.addStretch(1)
@@ -1404,14 +1610,16 @@ class MainWindow(QMainWindow):
 
         lay.addLayout(head)
 
-        self.tbl_lessons = QTableWidget(0, 5)
-        # ★ 第 1 列「课程」= 序号 + 课名 + **紧跟课名的状态词**
-        #   （状态词由 LessonTitleDelegate 自绘，单独配色）。
-        #   第 2 列「标题后缀」= 成品文件名里标题后面那段日期
-        #   （`1.【复训营课程1】养正十三式复习.2026.04.18.mp4` 里的
-        #    `2026.04.18`），与实际落盘的文件名同源。
+        self.tbl_lessons = QTableWidget(0, LESSON_COLUMN_COUNT)
+        # ★ v1.5.0 列结构（用户 2026-11-07 要求）：
+        #   第 1 列「标题前缀」= 该课在**原营**课表里的序号（成品文件名的
+        #     `<序号>.` 前缀），多营合并时也**不重新编号**；
+        #   第 2 列「课程」= 纯课名 + 紧跟课名的状态词（自绘委托）；
+        #   第 3 列「标题后缀」= 成品文件名里标题后面那段日期
+        #     （`1.【复训营课程1】养正十三式复习.2026.04.18.mp4` 里的
+        #      `2026.04.18`），与实际落盘的文件名同源。
         self.tbl_lessons.setHorizontalHeaderLabels(
-            ['', '课程', '标题后缀', '时长', '进度'])
+            ['', '标题前缀', '课程', '标题后缀', '时长', '进度'])
         self.hdr_lessons = CheckHeaderView(self.tbl_lessons)
         self.hdr_lessons.toggled.connect(self._on_header_toggled)
         self.tbl_lessons.setHorizontalHeader(self.hdr_lessons)
@@ -1421,17 +1629,16 @@ class MainWindow(QMainWindow):
         self.tbl_lessons.setEditTriggers(QTableWidget.NoEditTriggers)
         # ★ 状态词跟着课名走 → 用自绘委托，课名和状态词分别着色
         self.tbl_lessons.setItemDelegateForColumn(
-            1, LessonTitleDelegate(self.tbl_lessons))
+            COL_TITLE, LessonTitleDelegate(self.tbl_lessons))
         hh = self.tbl_lessons.horizontalHeader()
-        hh.setSectionResizeMode(0, QHeaderView.Fixed)
-        hh.setSectionResizeMode(1, QHeaderView.Stretch)
-        hh.setSectionResizeMode(2, QHeaderView.Fixed)
-        hh.setSectionResizeMode(3, QHeaderView.Fixed)
-        hh.setSectionResizeMode(4, QHeaderView.Fixed)
-        self.tbl_lessons.setColumnWidth(0, 34)
-        self.tbl_lessons.setColumnWidth(2, 96)
-        self.tbl_lessons.setColumnWidth(3, 76)
-        self.tbl_lessons.setColumnWidth(4, 150)
+        for c in (COL_CHECK, COL_PREFIX, COL_SUFFIX, COL_DUR, COL_PROGRESS):
+            hh.setSectionResizeMode(c, QHeaderView.Fixed)
+        hh.setSectionResizeMode(COL_TITLE, QHeaderView.Stretch)
+        self.tbl_lessons.setColumnWidth(COL_CHECK, 34)
+        self.tbl_lessons.setColumnWidth(COL_PREFIX, 74)
+        self.tbl_lessons.setColumnWidth(COL_SUFFIX, 96)
+        self.tbl_lessons.setColumnWidth(COL_DUR, 76)
+        self.tbl_lessons.setColumnWidth(COL_PROGRESS, 150)
         self.tbl_lessons.verticalHeader().setDefaultSectionSize(26)
         self.tbl_lessons.cellDoubleClicked.connect(self._on_row_double_click)
         self.tbl_lessons.itemChanged.connect(self._on_lesson_item_changed)
@@ -1548,9 +1755,40 @@ class MainWindow(QMainWindow):
             self.platform = None
 
     # ── 授权 ───────────────────────────────────────────────
-    def auto_check_auth(self):
+    def auto_check_auth(self, force_mumu=False):
+        """授权入口。
+
+        ★ v1.5.1 起默认**先用本机保存的授权**，一个 MuMuManager 都不调。
+          只有两种情况才会启动模拟器：
+            1. 本机没有保存过授权（首次使用）
+            2. 用户点「重新授权」主动刷新（force_mumu=True）
+          这样从根上避开「MuMu 的 Qt5 程序继承了本工具 Qt6 的
+          QT_PLUGIN_PATH → 弹出 no Qt platform plugin could be initialized」。
+          真要调用 MuMu 时，xqd_proc 也已做环境隔离（见该模块注释）。
+        """
         if self.auth_worker and self.auth_worker.isRunning():
             return
+
+        if not force_mumu:
+            cached = ''
+            try:
+                cached = xqd_creds.load_cookie()
+            except Exception:
+                cached = ''
+            if cached:
+                self.cookie = cached
+                if self.platform:
+                    self.platform.cookie = cached
+                self.lbl_auth.setText('授权：已就绪（本机保存）')
+                self.banner.setObjectName('BannerOk')
+                self.banner.setText(
+                    '已使用本机保存的授权，未启动 MuMu 模拟器。'
+                    '若授权过期，点右上「重新授权」刷新。')
+                self.banner.setVisible(True)
+                self.log('使用本机保存的授权（未启动模拟器）。')
+                self.load_camps()
+                return
+
         self.btn_retry.setEnabled(False)
         self.lbl_auth.setText('授权：检查中…')
         self.banner.setVisible(False)
@@ -1579,7 +1817,15 @@ class MainWindow(QMainWindow):
         self.banner.setText(
             '授权成功。工具已可独立运行，模拟器和 App 可以关闭。')
         self.banner.setVisible(True)
-        self.log('授权成功。')
+        # ★ 落盘供下次启动复用：之后启动完全不必再碰 MuMuManager。
+        #   xqd_creds.save_cookie 自带测试隔离，不会覆盖真实凭据文件。
+        saved = False
+        try:
+            saved = xqd_creds.save_cookie(cookie)
+        except Exception:
+            saved = False
+        self.log('授权成功。' +
+                 ('已保存到本机私有文件，下次启动无需模拟器。' if saved else ''))
         self.load_camps()
 
     def _on_auth_closed(self, text):
@@ -1596,7 +1842,7 @@ class MainWindow(QMainWindow):
         self.banner.setVisible(True)
         self.log('授权未就绪：%s' % reason.splitlines()[0])
 
-    # ── 营 ────────────────────────────────────────────────
+    # ── 营（v1.5.0：勾选 / 全选 / 多营合并）──────────────────
     def load_camps(self):
         if not self.platform:
             self.log('没有可用平台。')
@@ -1605,7 +1851,14 @@ class MainWindow(QMainWindow):
             self.log('尚未获得授权，无法加载营列表。')
             return
         kind = self.cmb_kind.currentText() or self.platform.camp_kinds[0]
-        self.lst_camps.clear()
+        # ★ 刷新 / 切标签后，同名营的勾选状态要保留
+        prev = set()
+        for i in range(self.lst_camps.count()):
+            it = self.lst_camps.item(i)
+            if (it is not None and it.checkState() == Qt.Checked
+                    and i < len(self.camps)):
+                prev.add(getattr(self.camps[i], 'camp_id', '')
+                         or getattr(self.camps[i], 'name', ''))
         self.lbl_camp_hint.setText('加载中…')
         self.log('加载%s列表…' % kind)
         try:
@@ -1613,140 +1866,458 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.lbl_camp_hint.setText('加载失败')
             self.log('加载营列表失败：%s' % e)
+            # ★ 用缓存授权时最常见的失败就是 Cookie 过期 ——
+            #   明确告诉用户去哪刷新，别让他以为工具坏了。
+            self.banner.setObjectName('BannerErr')
+            self.banner.setText(
+                '加载营列表失败，可能是本机保存的授权已过期或网络不稳定。'
+                '请点右上「重新授权」从模拟器刷新。')
+            self.banner.setVisible(True)
             return
         self.camps = camps
+        self.lst_camps.blockSignals(True)
+        self.lst_camps.clear()
         for c in camps:
             # 单行显示，避免两行文本被裁切
             item = QListWidgetItem('%s    %s' % (c.name, c.badge))
-            item.setToolTip('%s（%s）' % (c.name, c.badge))
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable
+                          | Qt.ItemIsEnabled)
+            key = getattr(c, 'camp_id', '') or c.name
+            item.setCheckState(Qt.Checked if key in prev else Qt.Unchecked)
+            item.setToolTip('%s（%s）\n点营名文字 = 加入课程列表；'
+                            '点前面的方框 = 勾选 / 取消' % (c.name, c.badge))
             self.lst_camps.addItem(item)
-        self.lbl_camp_hint.setText('%d 个营' % len(camps))
+        self.lst_camps.blockSignals(False)
+        self._sync_all_camps_checkbox()
         self.log('%s：%d 个' % (kind, len(camps)))
         if camps:
+            self.current_camp = camps[0]
             self.lst_camps.setCurrentRow(0)
+            self._schedule_lesson_rebuild()
+
+    # ── 营勾选 ─────────────────────────────────────────────
+    def _checked_camps(self):
+        """当前勾选的营（按营列表顺序）。"""
+        out = []
+        for i in range(self.lst_camps.count()):
+            it = self.lst_camps.item(i)
+            if (it is not None and it.checkState() == Qt.Checked
+                    and i < len(self.camps)):
+                out.append(self.camps[i])
+        return out
+
+    def _sync_all_camps_checkbox(self):
+        """把「全选」复选框同步成三态，并更新左下角计数。"""
+        n = self.lst_camps.count()
+        k = len(self._checked_camps())
+        if k == 0:
+            st = Qt.Unchecked
+        elif k == n and n > 0:
+            st = Qt.Checked
+        else:
+            st = Qt.PartiallyChecked
+        self.chk_all_camps.blockSignals(True)
+        self.chk_all_camps.setCheckState(st)
+        self.chk_all_camps.blockSignals(False)
+        self.lbl_camp_hint.setText(
+            '%d 个营%s' % (len(self.camps),
+                          (' · 已勾选 %d 个' % k) if k else ''))
+
+    def _on_all_camps_changed(self, state):
+        """点「全选」→ 勾上全部营 / 取消全部营。"""
+        if self._camp_updating:
+            return
+        want = state != Qt.Unchecked
+        self._camp_updating = True
+        self.lst_camps.blockSignals(True)
+        for i in range(self.lst_camps.count()):
+            self.lst_camps.item(i).setCheckState(
+                Qt.Checked if want else Qt.Unchecked)
+        self.lst_camps.blockSignals(False)
+        self._camp_updating = False
+        self._sync_all_camps_checkbox()
+        self._schedule_lesson_rebuild()
+
+    def _on_camp_item_changed(self, item):
+        """方框状态变化 → 重建课程列表。"""
+        if self._camp_updating:
+            return
+        self._sync_all_camps_checkbox()
+        self._schedule_lesson_rebuild()
+
+    def _on_camp_clicked(self, item):
+        """点营名文字 = 把这个营加进课程列表（只增不减）。
+
+        ★ 必须按击中点区分：点在左侧方框上时，Qt 也会发出 itemClicked，
+          但那次的勾选切换已经由 itemChanged 处理了 —— 这里若再勾一次，
+          用户「取消勾选」会被立刻改回去。
+        """
+        pos = self.lst_camps.viewport().mapFromGlobal(QCursor.pos())
+        rect = self.lst_camps.visualItemRect(item)
+        if pos.x() <= rect.left() + 24:
+            return                      # 点在方框里，交给 itemChanged
+        if item.checkState() != Qt.Checked:
+            self._camp_updating = True
+            item.setCheckState(Qt.Checked)   # 需要触发 itemChanged → 重建
+            self._camp_updating = False
+            self._sync_all_camps_checkbox()
+            self._schedule_lesson_rebuild()
 
     def _on_camp_selected(self, row):
+        """高亮行变化：只更新「当前营」。
+
+        没有任何营被勾选时，课程列表显示当前高亮营（旧行为）；
+        一旦有勾选，课程列表就由勾选的营决定，点文字不该把它换掉。
+        """
         if row < 0 or row >= len(self.camps):
             return
         self.current_camp = self.camps[row]
-        self.load_lessons()
+        if not self._checked_camps():
+            self._schedule_lesson_rebuild()
 
+    def _schedule_lesson_rebuild(self):
+        """勾选事件防抖：一次点击可能同时触发 itemChanged + rowChanged。"""
+        if self._rebuild_scheduled:
+            return
+        self._rebuild_scheduled = True
+        QTimer.singleShot(0, self._rebuild_lessons_from_camps)
+
+    def _rebuild_lessons_from_camps(self):
+        self._rebuild_scheduled = False
+        picked = self._checked_camps()
+        if not picked and self.current_camp:
+            picked = [self.current_camp]
+        keys = [getattr(c, 'camp_id', '') or getattr(c, 'name', str(c))
+                for c in picked]
+        old = [getattr(c, 'camp_id', '') or getattr(c, 'name', str(c))
+               for c in self._camp_target]
+        if keys == old and self.tbl_lessons.rowCount():
+            return                      # 营没变 → 不重复拉课表 / 扫描
+        self._camp_target = list(picked)
+        self._load_camps_lessons(list(picked))
+
+    # ── 课表加载（单营同步 / 多营后台）────────────────────────
     def load_lessons(self):
+        """兼容入口：同步加载当前高亮营（旧调用与回归测试依赖）。"""
         if not self.current_camp or not self.platform:
             return
-        camp = self.current_camp
-        self.lbl_lesson_hint.setText('加载中…')
-        self.lbl_exist.setText('')
-        self.tbl_lessons.setRowCount(0)
-        self.log('加载课程：%s' % camp.name)
-        try:
-            lessons = self.platform.camp_catalog(camp)
-        except Exception as e:
-            self.lbl_lesson_hint.setText('加载失败：%s' % e)
-            self.log('加载课表失败：%s' % e)
-            return
+        self._camp_target = [self.current_camp]
+        self._load_camps_lessons([self.current_camp], sync=True)
 
-        self.lessons = lessons
+    def _load_camps_lessons(self, camps, sync=False):
+        """把若干营的课表合并成一张课程表。
+
+        ★ 单营走同步（最多一次请求，且 platform 有内存缓存）；
+          多营走后台线程，边加载边追加行，UI 不会被 9 次网关请求冻住。
+        """
+        self._snapshot_lesson_checks()
+        self._catalog_gen += 1
+        gen = self._catalog_gen
+        self._lesson_groups = []
+        self.lessons = []
         self.row_of_lesson = {}
         self.lesson_of_row = {}
+        self.camp_of_row = {}
+        self._scan_counts = (0, 0)
+        self.tbl_lessons.setRowCount(0)
+        self.lbl_exist.setText('')
+        self._update_lesson_title(camps, 0)
+        self._update_lesson_header(0)
+        if not camps or not self.platform:
+            self.lbl_lesson_hint.setText('选择左侧营查看课程')
+            return
 
+        if sync or len(camps) == 1:
+            for camp in camps:
+                try:
+                    cat = list(self.platform.camp_catalog(camp) or [])
+                except Exception as e:
+                    self._on_catalog_failed(gen, camp, str(e))
+                    continue
+                self._on_catalog_loaded(gen, camp, cat)
+            self._on_catalog_finished(gen)
+            return
+
+        worker = CatalogWorker(self.platform, camps, gen)
+        worker.loaded.connect(self._on_catalog_loaded)
+        worker.failed.connect(self._on_catalog_failed)
+        worker.finished_all.connect(self._on_catalog_finished)
+        worker.finished.connect(self._prune_catalog_workers)
+        # ★ 运行中的 QThread 必须保活，被 GC 析构会让 Qt 直接 abort
+        self._catalog_workers.append(worker)
+        self.lbl_lesson_hint.setText('正在加载 %d 个营的课表…' % len(camps))
+        worker.start()
+
+    def _prune_catalog_workers(self):
+        self._catalog_workers = [w for w in self._catalog_workers
+                                 if w.isRunning()]
+
+    def _on_catalog_loaded(self, gen, camp, lessons):
+        if gen != self._catalog_gen:
+            return                      # 用户已改勾选 → 丢弃旧结果
+        self._lesson_groups.append((camp, lessons))
+        self._append_lesson_rows(camp, lessons)
+        self._update_lesson_title([c for c, _ in self._lesson_groups],
+                                  self.tbl_lessons.rowCount())
+        self._update_lesson_header(0)
+        n = self.tbl_lessons.rowCount()
+        if len(self._lesson_groups) == 1:
+            self.lbl_lesson_hint.setText(
+                '共 %d 节 · 目录：%s'
+                % (n, os.path.join(self.out_dir, self._camp_folder(camp))))
+        else:
+            self.lbl_lesson_hint.setText(
+                '共 %d 节 · %d 个营 · 各自存到下载目录下的同名文件夹'
+                % (n, len(self._lesson_groups)))
+
+    def _on_catalog_failed(self, gen, camp, reason):
+        if gen != self._catalog_gen:
+            return
+        self.log('加载课表失败：%s —— %s'
+                 % (getattr(camp, 'name', str(camp)), reason))
+
+    def _on_catalog_finished(self, gen):
+        if gen != self._catalog_gen:
+            return
+        if not self._lesson_groups:
+            self.lbl_lesson_hint.setText('课表加载失败，请检查网络后点「刷新」')
+            return
+        self._scan_existing(self._lesson_groups)
+
+    def _update_lesson_title(self, camps, total=0):
+        """课程列表标题：多营名用中文间隔号分隔、向左循环滚动。"""
+        names = [getattr(c, 'name', str(c)) for c in camps]
+        if not names:
+            self.lbl_lessons.set_marquee('（0 节）', False)
+            return
+        if len(names) == 1:
+            self.lbl_lessons.set_marquee(
+                '%s（%d 节）' % (names[0], total), False,
+                '当前显示：%s' % names[0])
+            return
+        text = (CAMP_SEPARATOR.join(names)
+                + CAMP_SEPARATOR + '共 %d 节' % total)
+        tip = ('已勾选 %d 个营（标题会向左循环滚动）：\n%s'
+               % (len(names), '\n'.join(names)))
+        self.lbl_lessons.set_marquee(text, True, tip)
+
+    # ── 课程行 ─────────────────────────────────────────────
+    @staticmethod
+    def _lesson_key(le, camp):
+        """跨「重建表格」稳定标识一节课（用来恢复勾选）。"""
+        cname = getattr(camp, 'name', str(camp)) if camp else ''
+        return (cname, repr(getattr(le, 'key', '')),
+                getattr(le, 'title', ''), getattr(le, 'index', 0))
+
+    def _snapshot_lesson_checks(self):
+        keys = set()
+        for row in range(self.tbl_lessons.rowCount()):
+            cb = self.tbl_lessons.item(row, COL_CHECK)
+            le = self.lesson_of_row.get(row)
+            if cb is not None and le is not None \
+                    and cb.checkState() == Qt.Checked:
+                keys.add(self._lesson_key(le, self.camp_of_row.get(row)))
+        self._checked_lesson_keys = keys
+
+    def _append_lesson_rows(self, camp, lessons):
+        """把「一个营」的整份课表追加到课程表末尾。"""
+        cname = getattr(camp, 'name', str(camp))
         self.tbl_lessons.blockSignals(True)
-        self.tbl_lessons.setRowCount(len(lessons))
         for i, le in enumerate(lessons):
-            self.row_of_lesson[le.key] = i
-            self.lesson_of_row[i] = le
+            row = self.tbl_lessons.rowCount()
+            self.tbl_lessons.insertRow(row)
+            # ★ 键里必须带营：两个营的第 1 节 key 相同，
+            #   直接拿 le.key 当键会互相覆盖（多营合并才会暴露）。
+            self.row_of_lesson[self._lesson_key(le, camp)] = row
+            self.lesson_of_row[row] = le
+            self.camp_of_row[row] = camp   # ★ 每行记住自己的营
+            self.lessons.append(le)
 
             cb = QTableWidgetItem('')
             cb.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
                         | Qt.ItemIsSelectable)
-            cb.setCheckState(Qt.Unchecked)
-            self.tbl_lessons.setItem(i, 0, cb)
+            key = self._lesson_key(le, camp)
+            cb.setCheckState(Qt.Checked if key in self._checked_lesson_keys
+                             else Qt.Unchecked)
+            self.tbl_lessons.setItem(row, COL_CHECK, cb)
 
-            title_item = QTableWidgetItem('%02d  %s' % (i + 1, le.title))
-            title_item.setToolTip('%s\n时间：%s\n类型：%s\n时长：%s'
-                                  % (le.title, le.when or '-', le.type or '-',
-                                     _fmt_dur(le.duration)))
+            # ★ 标题前缀 = 该课在**原营**课表里的序号（1 起）。
+            #   多营合并时**不重新编号**，所以不同营会看到重复的 01/02…
+            #   这与成品文件名 `<序号>.<课名>.<日期>.mp4` 完全对应。
+            seq = i + 1
+            pref = QTableWidgetItem('%02d' % seq)
+            pref.setTextAlignment(Qt.AlignCenter)
+            pref.setToolTip('「%s」里的第 %d 节\n成品文件名前缀：%d.'
+                            % (cname, seq, seq))
+            self.tbl_lessons.setItem(row, COL_PREFIX, pref)
+
+            title_item = QTableWidgetItem(le.title)
+            title_item.setToolTip(
+                '%s\n营：%s\n时间：%s\n类型：%s\n时长：%s'
+                % (le.title, cname, le.when or '-', le.type or '-',
+                   _fmt_dur(le.duration)))
             # ★ 状态词存在 STATE_ROLE 上，由 LessonTitleDelegate
             #   画在课名后面（单独配色）。
             title_item.setData(STATE_ROLE, '')
-            self.tbl_lessons.setItem(i, 1, title_item)
+            self.tbl_lessons.setItem(row, COL_TITLE, title_item)
 
-            # ★ 第 2 列 = 标题后缀 = 成品文件名里标题后面那段日期
-            #   （`1.【复训营课程1】养正十三式复习.2026.04.18.mp4`
-            #    里的 `2026.04.18`）—— 与实际落盘的文件名同源。
-            #   用 getattr 兜底：测试的假 Lesson 可能没这些字段。
+            # ★ 标题后缀 = 成品文件名里标题后面那段日期
             when_date = getattr(le, 'when_date', '') or ''
             suf = QTableWidgetItem(when_date)
-            stem = ''
             try:
                 stem = xqd_platform.lesson_stem(le)
             except Exception:
-                stem = '%s.%s' % (i + 1, le.title)
+                stem = '%d.%s' % (seq, le.title)
             suf.setToolTip('成品文件名里标题后面那段日期：\n'
                            '%s\n\n'
-                           '★ 状态词不在这列 —— 它跟在课程名的后面，\n'
-                           '与「下载管理」表的状态列、运行日志用的是\n'
-                           '同一套词，三处一一对应。'
+                           '★ 状态词不在这列 —— 它跟在课程名的后面。'
                            % (stem or '（无）'))
-            self.tbl_lessons.setItem(i, 2, suf)
+            self.tbl_lessons.setItem(row, COL_SUFFIX, suf)
 
-            self.tbl_lessons.setItem(i, 3,
-                                     QTableWidgetItem(_fmt_dur(le.duration)))
+            self.tbl_lessons.setItem(
+                row, COL_DUR, QTableWidgetItem(_fmt_dur(le.duration)))
 
+            # ★ 进度列不留空：重新加载时按历史 / 分片缓存 / 活动任务
+            #   恢复这一节**实际的下载进度**（已存在 → 100%）。
+            pct, tip = self._initial_progress(le, camp)
             bar = CellProgressBar()
-            bar.setValue(0)
-            self.tbl_lessons.setCellWidget(i, 4, bar)
+            bar.setValue(pct)
+            if tip:
+                bar.setToolTip(tip)
+            self.tbl_lessons.setCellWidget(row, COL_PROGRESS, bar)
         self.tbl_lessons.blockSignals(False)
-        self.hdr_lessons.set_state('none')
+        self.hdr_lessons.set_state(self._calc_check_state(self.tbl_lessons))
 
-        self.lbl_lessons.setText('课程列表 · %s（%d 节）'
-                                 % (camp.name, len(lessons)))
-        # ★ 表头立即显示「课程 (0/N)」—— 扫描是异步的，
-        #   等扫描完才显示数字的话，用户会有一段时间看不到计数。
-        self._update_lesson_header(0)
-        self.lbl_lesson_hint.setText(
-            '共 %d 节 · 目录：%s' % (len(lessons),
-                                    os.path.join(self.out_dir,
-                                                 self._camp_folder(camp))))
+    # ── 进度列的「实际进度」恢复 ───────────────────────────────
+    @staticmethod
+    def _job_percent(job):
+        """按任务当前量纲算百分比（分片视频用时长，直链音频用字节）。"""
+        if job.get('finished'):
+            return 100
+        unit = job.get('unit') or 'dur'
+        if unit == 'dur' and float(job.get('total_dur') or 0) > 0:
+            return max(0, min(100, int(float(job.get('done_dur') or 0)
+                                       * 100 / float(job['total_dur']))))
+        if int(job.get('total') or 0) > 0:
+            return max(0, min(100, int(int(job.get('down') or 0)
+                                       * 100 / int(job['total']))))
+        return 0
 
-        self._scan_existing(camp, lessons)
+    def _initial_progress(self, le, camp):
+        """课程列表（重新）加载时，这一节课**实际的下载进度**。
+
+        优先级：正在下载的任务 > 下载历史 / 分片缓存 > 磁盘成品 > 0。
+        ★ 用户 2026-11-07 指出：再次加载课表时「进度」一列全是空条，
+          连已经下载完的课都看不出来 —— 必须把真实进度带回来。
+        """
+        # ① 还在跑 / 排队（切营再回来时进度条不能归零）
+        for job in self.jobs.values():
+            if job.get('lesson') is le:
+                pct = self._job_percent(job)
+                if pct:
+                    return pct, '下载进度：%d%%' % pct
+        try:
+            out_path = self._out_path_for(camp, le)
+        except Exception:
+            return 0, ''            # 测试用的假 Lesson 没有 index 字段
+
+        # ② 历史记录（跨会话记忆）+ 分片缓存（续传的本钱）
+        rec = self.history.get(out_path)
+        if rec is None:
+            try:
+                norm = os.path.normcase(os.path.abspath(out_path))
+                for path, r in self.history.items():
+                    if os.path.normcase(os.path.abspath(path)) == norm:
+                        rec = r
+                        break
+            except Exception:
+                rec = None
+        if rec:
+            if rec.get('state') == '已完成':
+                return 100, '已完成（100%）'
+            pct = 0
+            td = float(rec.get('total_dur') or 0)
+            dd = float(rec.get('done_dur') or 0)
+            if td > 0 and dd > 0:
+                pct = int(dd * 100 / td)
+            total = int(rec.get('total') or 0)
+            down = int(rec.get('down') or 0)
+            if total > 0 and down > 0 and not pct:
+                pct = int(down * 100 / total)
+            cached, nseg, _ = xqd_history.parts_progress(
+                xqd_history.parts_dir_for(out_path))
+            if cached and total > 0:
+                pct = max(pct, int(cached * 100 / total))
+            pct = max(pct, int(getattr(le, 'progress', 0) or 0))
+            pct = max(0, min(99, pct))   # 未完成不许显示满格
+            if pct:
+                return pct, ('未完成（可续传）：%d%%%s'
+                             % (pct, ('，缓存分片 %d 个' % nseg)
+                                if nseg else ''))
+        # ③ 目录里已有成品但历史没记上（手工拷入 / 旧版本下的）
+        try:
+            if os.path.isfile(out_path) \
+                    and os.path.getsize(out_path) > 10240:
+                return 100, '已存在成品（100%）'
+        except OSError:
+            pass
+        return 0, ''
+
+    def _set_row_progress(self, row, pct, tip=''):
+        """写课程列表「进度」列的进度条。"""
+        bar = self.tbl_lessons.cellWidget(row, COL_PROGRESS)
+        if bar is None:
+            return
+        bar.setValue(max(0, min(100, int(pct))))
+        if tip:
+            bar.setToolTip(tip)
 
     # ── 已下载检测 ───────────────────────────────────────────
     def rescan_existing(self):
-        """手动重新扫描下载目录。"""
-        if not self.current_camp:
+        """手动重新扫描下载目录（多营时按当前表格里的营分组重扫）。"""
+        groups = self._lesson_groups or (
+            [(self.current_camp, self.lessons)] if self.current_camp else [])
+        if not groups:
             QMessageBox.information(self, '提示', '请先选择一个营。')
             return
         self.checker.invalidate()
-        self._scan_existing(self.current_camp, self.lessons)
+        self._scan_existing(groups)
 
-    def _scan_existing(self, camp, lessons):
+    def _scan_existing(self, groups, lessons=None):
         """扫描下载目录，标出哪些课已经下过了（后台线程）。
+
+        ★ v1.5.0：``groups = [(camp, lessons), ...]`` —— 多营合并后
+          每个营有自己的输出目录，必须按营分别扫，不能共用一个 folder。
+          仍兼容旧的两参数调用 ``_scan_existing(camp, lessons)``。
 
         比较维度：**文件名主键 + 时长**（见 xqd_dedupe 模块头的说明）。
         不查哈希（要全量读盘）、不联网查大小（违背「少请求」约束）。
         """
+        if lessons is not None:
+            groups = [(groups, lessons)]
+        groups = list(groups or [])
         out_root = self.ed_out.text().strip() or default_out_dir()
-        folder = os.path.join(out_root, self._camp_folder(camp))
         self.checker.out_root = out_root
-        self.checker.invalidate(folder)
-        # 兼容旧目录名（`_Camp xxx (N节)_`），避免重复下载已有成品
-        alt = xqd_dedupe.legacy_camp_folders(
-            out_root, camp.name, getattr(camp, 'count', None))
+        scan_groups = []
+        for camp, cat in groups:
+            folder = os.path.join(out_root, self._camp_folder(camp))
+            self.checker.invalidate(folder)
+            # 兼容旧目录名（`_Camp xxx (N节)_`），避免重复下载已有成品
+            alt = xqd_dedupe.legacy_camp_folders(
+                out_root, getattr(camp, 'name', str(camp)),
+                getattr(camp, 'count', None))
+            scan_groups.append((folder, cat, alt))
+        if not scan_groups:
+            return
 
         # ★ 旧扫描线程可能还在跑（ffprobe 在 SMB 网络盘上很慢）。
         #   **不能**直接 `self.scan_worker = 新对象` —— 旧对象引用一丢，
         #   Python GC 就会把它析构，而它还在运行 → Qt 检测到
-        #   「QThread 在运行中被销毁」→ qFatal abort，进程直接消失，
-        #   连 Python traceback 都没有。
-        #   办法：每个 worker 都存进 _scan_workers 保活，只摘掉已结束的。
-        old_worker = self.scan_worker
-        if old_worker is not None and old_worker.isRunning():
-            old_worker.wait(5000)
+        #   「QThread 在运行中被销毁」→ qFatal abort，进程直接消失。
+        #   这里不 wait（会冻 UI），旧结果靠 _on_scan_done 的 sender 守卫丢弃。
         self._prune_scan_workers()
 
-        worker = ScanWorker(self.checker, folder, lessons,
-                            alt_folders=alt)
+        worker = ScanWorker(self.checker, groups=scan_groups)
         worker.done.connect(self._on_scan_done)
         worker.finished_all.connect(self._on_scan_finished)
         self._scan_workers.append(worker)
@@ -1763,7 +2334,12 @@ class MainWindow(QMainWindow):
 
         ★ 按 **lesson 引用** 定位行，不按行号 —— 切营后表格重建，
         行号含义已变，按行号回传会把新营的行标成旧营的判定。
+        ★ v1.5.0：多营切换时旧扫描线程可能还在跑，结果必须丢弃
+          （sender 不是当前 worker），否则计数与状态会串台。
         """
+        who = self.sender()
+        if who is not None and who is not self.scan_worker:
+            return
         exist = 0
         broken = 0
         for le, ok, st in result:
@@ -1790,6 +2366,9 @@ class MainWindow(QMainWindow):
         return None
 
     def _on_scan_finished(self):
+        who = self.sender()
+        if who is not None and who is not self.scan_worker:
+            return
         exist, broken = getattr(self, '_scan_counts', (0, 0))
         # ★ 表头「课程」后面用括号显示「已下载课程数/全部课程数」
         self._update_lesson_header(exist)
@@ -1809,12 +2388,12 @@ class MainWindow(QMainWindow):
         ★ 用户要求：课程表头后面用括号标明「已下载课程数/全部课程数」，
           让人一眼看出这个营还剩多少没下。
         """
-        total = len(self.lessons) if self.lessons else 0
+        total = self.tbl_lessons.rowCount()
         if not total:
             return
-        self.tbl_lessons.horizontalHeaderItem(1).setText(
+        self.tbl_lessons.horizontalHeaderItem(COL_TITLE).setText(
             '课程 (%d/%d)' % (exist, total))
-        self.tbl_lessons.horizontalHeaderItem(1).setToolTip(
+        self.tbl_lessons.horizontalHeaderItem(COL_TITLE).setToolTip(
             '已下载课程数 / 全部课程数')
 
     def _mark_existing(self, row, ok, st):
@@ -1842,11 +2421,11 @@ class MainWindow(QMainWindow):
         le.state = 'exists' if ok else 'needs_redl'
         le.out_path = st.get('path') or ''
 
-        item = self.tbl_lessons.item(row, 1)
+        item = self.tbl_lessons.item(row, COL_TITLE)
         if not item:
             return
-        base = '%02d  %s' % (row + 1, le.title)
-        item.setText(base)
+        # ★ v1.5.0：序号已独立成「标题前缀」列，课名列只放纯课名
+        item.setText(le.title)
         # ★ 状态词跟在**课名后面**（STATE_ROLE，委托自绘并单独着色）
         if ok:
             item.setData(STATE_ROLE, '已存在')
@@ -1855,11 +2434,19 @@ class MainWindow(QMainWindow):
                             % (le.title, st.get('path'), mb,
                                ('\n时长：%s' % _fmt_dur(st['duration']))
                                if st.get('duration') else ''))
+            # ★「进度」列显示实际进度：已存在的成品 = 100%，不留空条
+            self._set_row_progress(row, 100, '已存在成品（100%）')
         else:
             item.setData(STATE_ROLE, '需重下')
             item.setToolTip('%s\n%s' % (le.title, st.get('reason') or ''))
+            # 残缺文件：保留历史 / 分片缓存里的真实部分进度
+            bar = self.tbl_lessons.cellWidget(row, COL_PROGRESS)
+            cur = bar.value() if bar is not None else 0
+            if cur >= 100:
+                cur = 0      # 之前乐观按「文件存在」置满，扫描证明是残缺
+            self._set_row_progress(row, cur, '文件不完整，需要重下')
 
-        cb = self.tbl_lessons.item(row, 0)
+        cb = self.tbl_lessons.item(row, COL_CHECK)
         if cb:
             # 已存在 → 取消勾选（不用再下）；残缺 → 勾上（需要重下）
             cb.setCheckState(Qt.Unchecked if ok else Qt.Checked)
@@ -1914,7 +2501,7 @@ class MainWindow(QMainWindow):
     def _select_all(self, checked):
         state = Qt.Checked if checked else Qt.Unchecked
         for i in range(self.tbl_lessons.rowCount()):
-            item = self.tbl_lessons.item(i, 0)
+            item = self.tbl_lessons.item(i, COL_CHECK)
             if item:
                 item.setCheckState(state)
         self.hdr_lessons.set_state(
@@ -1923,7 +2510,7 @@ class MainWindow(QMainWindow):
     def _checked_lessons(self):
         out = []
         for i in range(self.tbl_lessons.rowCount()):
-            item = self.tbl_lessons.item(i, 0)
+            item = self.tbl_lessons.item(i, COL_CHECK)
             if item and item.checkState() == Qt.Checked:
                 le = self.lesson_of_row.get(i)
                 if le:
@@ -1990,21 +2577,35 @@ class MainWindow(QMainWindow):
                                      '无法创建目录：%s\n%s' % (out_root, e))
                 return
 
-        camp = self.current_camp
         quality = self.cmb_quality.currentData() or 'max'
-        folder = os.path.join(out_root, self._camp_folder(camp))
 
         # 若后台扫描还在跑，先等它结束（否则会漏判「已存在」）
         if self.scan_worker and self.scan_worker.isRunning():
             self.scan_worker.wait(5000)
 
-        alt = xqd_dedupe.legacy_camp_folders(
-            out_root, camp.name, getattr(camp, 'count', None))
+        # ★ v1.5.0：多营合并后每行属于不同的营 —— 输出目录、已下载检测、
+        #   历史记录、下载任务都必须用**这一行自己的营**，不能用 current_camp。
+        #   按营缓存 folder / alt，避免同一营的课反复扫根目录。
+        folder_of = {}
+        alt_of = {}
+
+        def _for_camp(c):
+            key = getattr(c, 'name', str(c))
+            if key not in folder_of:
+                folder_of[key] = os.path.join(out_root, self._camp_folder(c))
+                alt_of[key] = xqd_dedupe.legacy_camp_folders(
+                    out_root, key, getattr(c, 'count', None))
+            return folder_of[key], alt_of[key]
 
         started = 0
         skipped = 0
         redownload = 0
-        for row, le in picked:
+        for entry in picked:
+            row, le = entry[0], entry[1]
+            # 兼容旧调用 ``(row, lesson)``；新调用可带第三个元素 camp
+            camp = entry[2] if len(entry) > 2 else (
+                self.camp_of_row.get(row) or self.current_camp)
+            folder, alt = _for_camp(camp)
             # ★ 已下载检测：整组判定（主名 + -N 重名后缀）
             #   ok      → 已有完整成品，跳过（只记日志，不弹窗）
             #   broken  → 有残缺文件，删掉后用规范名重新下载
@@ -2066,7 +2667,7 @@ class MainWindow(QMainWindow):
             # ★ 入队即勾选 —— 复选框要反映「这节课在下载流程里」。
             #   之前只靠用户手勾，「下载此课」/ 双击触发的下载就一直是
             #   空框，看上去像没在下载。
-            cb = self.tbl_lessons.item(row, 0)
+            cb = self.tbl_lessons.item(row, COL_CHECK)
             if cb:
                 cb.setCheckState(Qt.Checked)
             started += 1
@@ -2079,18 +2680,53 @@ class MainWindow(QMainWindow):
             msg += '，重下 %d 个（原文件残缺）' % redownload
         self.log(msg + '。')
 
-        # 真正开跑（受 MAX_LESSON_WORKERS 限制）
+        # 真正开跑（受网络并发上限限制；封装阶段会提前归还槽位）
         self._pump_queue()
 
-    # ── 下载队列（限流）────────────────────────────────────
-    def _pump_queue(self):
-        """从队列里取任务开跑，直到达到并发上限。
+    # ── 下载队列（限流 / 封装流水线）────────────────────────
+    def _net_active(self):
+        """当前真正占着带宽的任务数（不含已进入封装/校验的）。"""
+        return sum(1 for jid in self.running_workers
+                   if jid not in self.network_released)
 
-        每个 DownloadWorker 结束时会回调 _on_download_completed，
-        那里会再次调用本方法，把排队中的下一节放出来。
+    def _release_idle_slots(self):
+        """把已进入「封装/校验」的任务从网络槽位里摘出来。
+
+        返回本次**新释放**的 job_id 集合（调用方据此在日志里标注）。
+        受 MAX_MUX_WORKERS 限制：本地封装太多会抢网络盘的写 IO，
+        没抢到槽位的任务暂时继续占着网络槽位，等下一个封装结束再释放。
+        """
+        # 清掉已结束任务的残留（正常在 _on_download_completed 里清，
+        # 这里兜底，防止某条异常路径留下幽灵槽位把并发数卡死）。
+        self.network_released.intersection_update(self.running_workers)
+        freed = set()
+        for jid in list(self.running_workers):
+            if len(self.network_released) >= MAX_MUX_WORKERS:
+                break
+            if jid in self.network_released:
+                continue
+            job = self.jobs.get(jid)
+            if not job or job.get('phase') not in LOCAL_PHASES:
+                continue
+            self.network_released.add(jid)
+            freed.add(jid)
+        return freed
+
+    def _pump_queue(self):
+        """从队列里取任务开跑，直到**网络**并发达到上限。
+
+        ★ v1.5.0 流水线：占槽位的是「还没下完分片」的任务，不是
+          「线程还活着」的任务。进入封装/校验的线程已经不联网了，
+          它的槽位由 _on_phase 里的 _release_idle_slots 提前归还。
+          所以「3 个在下载 + 最多 2 个在封装」是允许且期望的状态。
+
+        放行时机有三处：启动下载、阶段切到封装、任务完成回调。
         """
         while (self.pending_queue
-               and len(self.running_workers) < MAX_LESSON_WORKERS):
+               and self._net_active() < MAX_LESSON_WORKERS
+               # 硬上限：网络槽 + 封装槽，防止异常情况下无限起线程
+               and len(self.running_workers)
+               < MAX_LESSON_WORKERS + MAX_MUX_WORKERS):
             # ★ 暂停期间不启动新的下载任务 —— 否则「暂停」只是暂停了
             #   已在跑的那几节，队列里的会继续开新连接。
             if self.control is not None and self.control.is_paused():
@@ -2199,13 +2835,16 @@ class MainWindow(QMainWindow):
                 duration=(le.duration if le else 0) or 0)
             self._flush_history()
 
+        # ★ 同时把百分比记在 Lesson 上 —— 重新加载课程表时
+        #   _initial_progress 能立刻带回来（历史落盘有 3 秒节流）。
+        le = job.get('lesson')
+        if le is not None:
+            le.progress = pct
         # 只有当这一行还属于当前显示的营时才更新进度条
         row = self._row_of_lesson_obj(job['lesson'])
         if row is None:
             return
-        bar = self.tbl_lessons.cellWidget(row, 4)
-        if bar:
-            bar.setValue(pct)
+        self._set_row_progress(row, pct, '下载进度：%d%%' % pct)
 
     def _compute_eta(self, job):
         """按当前速率算剩余秒数。
@@ -2249,6 +2888,15 @@ class MainWindow(QMainWindow):
         elif phase == '校验':
             # 只剩 ffprobe 校验了，几秒的事
             job['eta_fixed'] = 3.0
+
+        # ★ 流水线：一进入封装/校验就把网络槽位还回去，立刻放行下一节。
+        #   放在暂停判断之前 —— 暂停只禁止「开新任务」，槽位记账仍要正确；
+        #   _pump_queue 内部会自己检查暂停状态。
+        freed = (self._release_idle_slots()
+                 if phase in LOCAL_PHASES else set())
+        if freed:
+            self._pump_queue()
+
         self._refresh_task_row(job_id)
 
         word = PHASE_TEXT.get(phase, phase)
@@ -2262,7 +2910,9 @@ class MainWindow(QMainWindow):
         if word != PHASE_TEXT.get(old, old):
             le = job.get('lesson')
             title = le.title if le else ''
-            self.log_state('%s：%s' % (word, title))
+            note = ('（网络已释放，可并行下一节）'
+                    if job_id in freed else '')
+            self.log_state('%s：%s%s' % (word, title, note))
 
     def _estimate_mux_seconds(self, job):
         """估算「转封装 + 校验」还要多久。
@@ -2408,6 +3058,9 @@ class MainWindow(QMainWindow):
         #   不是字节速率 —— 排队任务折算的是「内容还要多久下完」。
         rates = []
         for job_id in self.running_workers:
+            # 封装中的任务不再产生下载速率，别把它算进平均带宽
+            if job_id in self.network_released:
+                continue
             job = self.jobs.get(job_id)
             if not job:
                 continue
@@ -2421,9 +3074,13 @@ class MainWindow(QMainWindow):
         if not n_run and not n_wait:
             self.lbl_task_eta.setText('')
             return
+        # ★ 把「在跑」拆成下载 / 封装两部分：用户能直接看出流水线在跑，
+        #   而不是误以为并发上限被突破或某节课卡住了。
+        n_local = len(self.network_released & self.running_workers)
         self.lbl_task_eta.setText(
-            '剩余约 %s · %d 个在跑 / %d 个排队'
-            % (fmt_dur(total_eta), n_run, n_wait))
+            '剩余约 %s · %d 个在跑（%d 下载 / %d 封装）/ %d 个排队'
+            % (fmt_dur(total_eta), n_run, n_run - n_local, n_local,
+               n_wait))
 
     def _on_download_completed(self, job_id, ok, msg, out_path):
         """下载完成（成功或失败都走这里）—— 唯一的完成入口。
@@ -2432,8 +3089,13 @@ class MainWindow(QMainWindow):
         下载可能持续好几分钟，期间用户随时可能切营；行号一旦失效，
         完成状态就会写到别的课的行上。
         """
-        # 先释放并发槽位，让队列里的下一节开跑
+        # 先释放槽位，让队列里的下一节开跑。
+        # ★ 完成的是封装任务时，会空出一个「本地封装槽位」——
+        #   之前因 MAX_MUX_WORKERS 没抢到槽位、仍占着网络槽位的任务
+        #   这时就能把带宽还回去，于是可能连续放行两节。
         self.running_workers.discard(job_id)
+        self.network_released.discard(job_id)
+        self._release_idle_slots()
         self._pump_queue()
         self._sync_pause_button()
 
@@ -2453,9 +3115,7 @@ class MainWindow(QMainWindow):
             self._set_both_states(job_id, '已完成', msg, force=True)
             row = self._row_of_lesson_obj(le)
             if row is not None:
-                bar = self.tbl_lessons.cellWidget(row, 4)
-                if bar:
-                    bar.setValue(100)
+                self._set_row_progress(row, 100, '已完成（100%）')
             self._update_task(job_id, '已完成', msg)
             # 下载完让目录缓存失效，下次扫描能认到新文件
             if le.out_path:
@@ -2468,7 +3128,7 @@ class MainWindow(QMainWindow):
             row = self._row_of_lesson_obj(le)
             if row is not None:
                 # 失败后自动重新勾选，方便「再勾选 → 重复批量下载」
-                item = self.tbl_lessons.item(row, 0)
+                item = self.tbl_lessons.item(row, COL_CHECK)
                 if item:
                     item.setCheckState(Qt.Checked)
             self._update_task(job_id, '失败', msg)
@@ -2585,6 +3245,9 @@ class MainWindow(QMainWindow):
             # ★ 恢复后回到各任务**真实的阶段**，不能一律写「下载中…」——
             #   暂停时可能正处在封装/校验，笼统写「下载中」会对不上号。
             self._resume_states()
+            # ★ 暂停期间若有任务结束（失败/中止），队列没被放行；
+            #   继续时立刻补上，避免带宽空着却不开新任务。
+            self._pump_queue()
         self._apply_style()
 
     def _resume_states(self):
@@ -2659,11 +3322,12 @@ class MainWindow(QMainWindow):
     def _set_row_state(self, row, state, msg):
         if row < 0 or self.tbl_lessons.rowCount() <= row:
             return
-        item = self.tbl_lessons.item(row, 1)
+        item = self.tbl_lessons.item(row, COL_TITLE)
         if not item:
             return
         le = self.lesson_of_row.get(row)
-        base = '%02d  %s' % (row + 1, le.title if le else '')
+        # ★ 序号在「标题前缀」列，课名列只放纯课名（不按合并行号重编号）
+        base = le.title if le else ''
         item.setText(base)
         # ★ 状态词跟在**课名后面**（不是单独一列）——
         #   用户 2026-11-07 指出：状态词本来就是跟着标题的，
@@ -2887,16 +3551,22 @@ class MainWindow(QMainWindow):
         save_config({'out_dir': self.out_dir,
                      'quality': self.quality,
                      'platform': self.platform_id})
-        if self.current_camp:
-            self.lbl_lesson_hint.setText(
-                '共 %d 节 · 目录：%s'
-                % (len(self.lessons),
-                   os.path.join(self.out_dir,
-                                self._camp_folder(self.current_camp))))
-            # 下载目录变了 → 已下载判定要重来
+        groups = self._lesson_groups or (
+            [(self.current_camp, self.lessons)] if self.current_camp else [])
+        if groups:
+            n = self.tbl_lessons.rowCount() or len(self.lessons)
+            if len(groups) == 1:
+                hint = ('共 %d 节 · 目录：%s'
+                        % (n, os.path.join(self.out_dir,
+                                          self._camp_folder(groups[0][0]))))
+            else:
+                hint = ('共 %d 节 · %d 个营 · 各自存到下载目录下的同名文件夹'
+                        % (n, len(groups)))
+            self.lbl_lesson_hint.setText(hint)
+            # 下载目录变了 → 已下载判定要重来（按当前表格里的营分组）
             if changed:
                 self.checker.invalidate()
-                self._scan_existing(self.current_camp, self.lessons)
+                self._scan_existing(groups)
 
     # ── 日志 ───────────────────────────────────────────────
     def log(self, text):

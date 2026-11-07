@@ -100,7 +100,7 @@ def suffix_of(win, row):
     ★ v1.4.0 起状态词不再单独占一列，而是存在课名 item 的
       STATE_ROLE 上（由 LessonTitleDelegate 画在课名后面）。
     """
-    it = win.tbl_lessons.item(row, 1)
+    it = win.tbl_lessons.item(row, xqd_gui.COL_TITLE)
     if it is None:
         return ''
     return it.data(xqd_gui.STATE_ROLE) or ''

@@ -76,6 +76,43 @@ def load_cookie(required=False):
     return cookie
 
 
+def save_cookie(cookie, path=None):
+    """把新授权写进本机私有凭据文件，供下次启动直接复用。
+
+    ★ 为什么需要：GUI 拿到新 Cookie 后落盘，之后启动就**完全不必**
+      启动 MuMu / 调 MuMuManager（那正是 Qt 插件弹窗的触发源）。
+
+    ★ 测试隔离：设了 ``XQD_TEST_HOME`` 且未显式给 ``path`` 时拒绝写入，
+      避免离线回归覆盖用户真实凭据。**读取不受影响** —— 真网络测试
+      照常从真实文件读授权。测试要验证写入请显式传 ``path``。
+
+    写入用「临时文件 + os.replace」，避免写一半留下截断的凭据。
+    """
+    cookie = (cookie or '').strip()
+    if not cookie:
+        return False
+    if path is None:
+        if os.environ.get('XQD_TEST_HOME'):
+            return False
+        path = CRED_FILE
+    tmp = path + '.tmp'
+    try:
+        folder = os.path.dirname(path)
+        if folder:
+            os.makedirs(folder, exist_ok=True)
+        with open(tmp, 'w', encoding='utf-8') as f:
+            f.write(cookie + '\n')
+        os.replace(tmp, path)
+        return True
+    except OSError:
+        try:
+            if os.path.isfile(tmp):
+                os.remove(tmp)
+        except OSError:
+            pass
+        return False
+
+
 if __name__ == '__main__':
     c = load_cookie()
     # 只打印是否可用 + 长度，绝不打印内容

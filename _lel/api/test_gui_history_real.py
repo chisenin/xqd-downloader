@@ -106,11 +106,12 @@ def main():
     n_lessons = len(win.lessons)
     ok('课表加载成功', n_lessons > 0, '%d 节' % n_lessons)
 
-    hdr = win.tbl_lessons.horizontalHeaderItem(1)
+    hdr = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_TITLE)
     ok('表头带计数', hdr is not None and '(' in hdr.text(),
        hdr.text() if hdr else '')
-    hdr2 = win.tbl_lessons.horizontalHeaderItem(2)
-    ok('第 3 列是「标题后缀」', hdr2 is not None and '标题后缀' in hdr2.text(),
+    hdr2 = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_SUFFIX)
+    ok('「标题后缀」列在标题前缀之后',
+       hdr2 is not None and '标题后缀' in hdr2.text(),
        hdr2.text() if hdr2 else '')
 
     # ══ 场景 2：开始下载（中途失败）════════════════════════════

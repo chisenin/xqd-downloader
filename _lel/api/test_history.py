@@ -268,26 +268,36 @@ def test_lesson_columns(app):
 
     win = build_gui(app)
 
-    hdr = win.tbl_lessons.horizontalHeaderItem(1)
-    ok('第 2 列是「课程」', hdr is not None and '课程' in hdr.text(),
+    # ★ v1.5.0：勾选框后面新增「标题前缀」列，课程/后缀各后移一列。
+    #   一律引用 xqd_gui.COL_* 常量，避免加列时断言整体错位。
+    hdr = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_PREFIX)
+    ok('第 2 列是「标题前缀」',
+       hdr is not None and '标题前缀' in hdr.text(),
        hdr.text() if hdr else '')
-    hdr2 = win.tbl_lessons.horizontalHeaderItem(2)
-    ok('第 3 列是「标题后缀」', hdr2 is not None and '标题后缀' in hdr2.text(),
+    hdr2 = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_TITLE)
+    ok('第 3 列是「课程」', hdr2 is not None and '课程' in hdr2.text(),
        hdr2.text() if hdr2 else '')
-    ok('列数仍是 5', win.tbl_lessons.columnCount() == 5,
+    hdr3 = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_SUFFIX)
+    ok('第 4 列是「标题后缀」',
+       hdr3 is not None and '标题后缀' in hdr3.text(),
+       hdr3.text() if hdr3 else '')
+    ok('列数是 6',
+       win.tbl_lessons.columnCount() == xqd_gui.LESSON_COLUMN_COUNT,
        str(win.tbl_lessons.columnCount()))
+    ok('标题前缀 = 原营序号 01',
+       win.tbl_lessons.item(0, xqd_gui.COL_PREFIX).text() == '01')
 
-    # 表头计数
+    # 表头计数（挂在「课程」列上）
     win._update_lesson_header(2)
-    h = win.tbl_lessons.horizontalHeaderItem(1).text()
+    h = win.tbl_lessons.horizontalHeaderItem(xqd_gui.COL_TITLE).text()
     ok('表头带 (已下载/全部) 计数', '(2/3)' in h, h)
 
     # 标题后缀列 = 成品文件名里标题后面那段日期（此处假 Lesson 无日期 → 空）
-    suf = win.tbl_lessons.item(0, 2)
+    suf = win.tbl_lessons.item(0, xqd_gui.COL_SUFFIX)
     ok('标题后缀列显示日期', suf is not None, 'None')
 
     # 课程名里不拼状态文字（状态词单独存 role，由委托画在后面）
-    name = win.tbl_lessons.item(0, 1)
+    name = win.tbl_lessons.item(0, xqd_gui.COL_TITLE)
     ok('课程名不含状态标记',
        name is not None and '【' not in name.text(),
        name.text() if name else '')
@@ -299,10 +309,10 @@ def test_lesson_columns(app):
 
     # ★ 状态词存在课名 item 的 STATE_ROLE 上（跟在标题后面显示）
     win._set_row_state(0, '已完成', '')
-    st = win.tbl_lessons.item(0, 1).data(xqd_gui.STATE_ROLE)
+    st = win.tbl_lessons.item(0, xqd_gui.COL_TITLE).data(xqd_gui.STATE_ROLE)
     ok('状态词跟在标题后面（STATE_ROLE）', st == '已完成', st)
     ok('课程名本身仍不含状态文字',
-       '【' not in win.tbl_lessons.item(0, 1).text())
+       '【' not in win.tbl_lessons.item(0, xqd_gui.COL_TITLE).text())
 
     win.close()
 

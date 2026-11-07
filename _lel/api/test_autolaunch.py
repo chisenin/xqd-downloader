@@ -117,7 +117,9 @@ def main():
         app.quit()
 
     # 用例 A：模拟器未运行时自动拉起
-    QTimer.singleShot(500, lambda: win.auto_check_auth())
+    # ★ v1.5.1 起 auto_check_auth() 默认优先用已保存的授权（不碰 MuMu），
+    #   本用例专门验证「自动启停 MuMu」，必须显式强制走模拟器。
+    QTimer.singleShot(500, lambda: win.auto_check_auth(force_mumu=True))
     timer = QTimer()
     timer.timeout.connect(poll)
     timer.start(2000)

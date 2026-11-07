@@ -67,7 +67,7 @@ def patch_cookie():
 
 def suffix_of(win, row):
     """课程列表第 row 行**跟在课名后面**的状态词（v1.4.0 起）。"""
-    it = win.tbl_lessons.item(row, 1)
+    it = win.tbl_lessons.item(row, xqd_gui.COL_TITLE)
     return (it.data(xqd_gui.STATE_ROLE) or '') if it else ''
 
 

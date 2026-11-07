@@ -324,8 +324,8 @@ def test_gui_pause_button(app):
     ok('点击后进入暂停态', win.control.is_paused())
     ok('按钮文案变为「继续」', win.btn_pause.text() == '继续',
        win.btn_pause.text())
-    # ★ 状态词跟在课名后面（v1.4.0：不再单独占一列）
-    it = win.tbl_lessons.item(0, 1)
+    # ★ 状态词跟在课名后面（v1.5.0：课名列是 COL_TITLE）
+    it = win.tbl_lessons.item(0, xqd_gui.COL_TITLE)
     st = it.data(xqd_gui.STATE_ROLE) if it else ''
     ok('运行中行状态显示「已暂停」', st == '已暂停', st)
 
