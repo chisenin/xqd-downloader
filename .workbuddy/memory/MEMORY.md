@@ -24,7 +24,7 @@
 采集 `xqd.py` / `_lel/api/qianliao.py` → 业务 `xqd_app.py` / `xqd_api.py` →
 `xqd_server.py` + `ui.html`（网页版）/ **`xqd_gui.py`（★ PySide6 桌面工具，用户现在用的
 就是这个）**，配套 `xqd_platform.py`/`xqd_engine.py`/`xqd_auth.py`/`xqd_history.py`/
-`xqd_dedupe.py`；CLI 批处理 `xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
+`xqd_dedupe.py`/`xqd_creds.py`；CLI 批处理 `xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
 两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
 API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签名天然新鲜。
 **课名不靠播放反推**（课表一次拿全）。## ★ 业务 API（已全链路打通，详见 `docs/09`）
@@ -56,13 +56,12 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 1. **两个独立速率计**：字节计→「速度」列，内容时长计→ETA；混用会让 248 倍速显示成 `248B/s`。
 2. **总字节均匀抽样外推**（12 片等距）：取前 3 片外推偏高 37.3%。
 3. **状态词表单一来源** + `_set_both_states()` 成对更新课名后状态词与下载管理状态；
-   状态词存 `item.data(STATE_ROLE)`（`LessonTitleDelegate` 自绘，不占独立列）；
-   终态写入需 `force=True`；`log_state()` 不抢状态栏。
+   状态词存 `item.data(STATE_ROLE)`（`LessonTitleDelegate` 自绘，不占独立列）。
 4. **续传**：引擎清理条件必须 `if own_dir or (ok_result and not keep_parts)`，写反会删本钱。
 5. **Windows 下载目录读注册表 Known Folder GUID**
    `{374DE290-123F-4565-9164-39C4925E467B}` → `D:\user\chisenin\download`。
 6. **测试必须设 `XQD_TEST_HOME`** 隔离配置/历史/分片缓存，否则会改用户下载目录。
-   ⚠️ 凭据文件**不受**它影响（隔离了就拿不到授权）——见 `docs/11` J 节。
+   ⚠️ 凭据文件**不受**它影响（隔离了就拿不到授权）。
 
 ## 合规与进度（见 `docs/12`）
 
@@ -71,5 +70,6 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
   → 复现的 163 内核不能声称 MIT；旧址 `PyJun/Mooc_Downloader` 已 404。
 - 进度：核心能力全就绪（API 全链路、端到端 6/6、GUI v1.4.0 含历史+续传、
   回归 284 项全绿 + 真网络 35 项）。待办：全量 266+6 节、163 适配器实战。
-- 安全：凭据已全面脱敏。`xqd_creds.load_cookie()` 是唯一入口（env `XQD_COOKIE`
-  → `%USERPROFILE%\.xqd_tool\cookie.txt`，仓库外）；**代码里绝不硬编码 Cookie**。
+- 安全：凭据已脱敏。`xqd_creds.load_cookie()` 是唯一入口（env `XQD_COOKIE`
+  → `~/.xqd_tool/cookie.txt`，仓库外）；**绝不硬编码 Cookie**。
+
