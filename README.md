@@ -1,5 +1,10 @@
 # 兴趣岛课程导出工具
 
+> **当前分支是 `csharp-wpf`（C# / WPF 移植版）** —— 请看
+> **[C# 分支 README](README-csharp-wpf.md)**（环境、构建、发布、模块对照、验证结果）。
+> 本文件后半部分保留 `master` 分支的 Python 版说明，仅作对照；
+> 本分支的发行说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)。
+
 把「兴趣岛」App（`com.qlchat.xingqudao`）中**已购买课程**的视频批量导出为通用 MP4，
 用于在本地教学大屏上播放。DRM 课程走同目录下的明文孪生清单，**无需解密**。
 

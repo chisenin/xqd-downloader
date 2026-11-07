@@ -79,6 +79,7 @@ state/v8_shot*.png
 
 # 裁剪/调试用的临时图
 state/z*.png
+_crop_*.png
 
 # ── 推送 GitHub 前排除：凭据 / 运行时数据 / 打包产物 ──
 state/links.json
