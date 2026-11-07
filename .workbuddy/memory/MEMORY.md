@@ -14,7 +14,7 @@
 把「兴趣岛」App（`com.qlchat.xingqudao`）课程视频批量导出为通用 MP4
 （含 DRM 课，走明文孪生**无需解密**）。用户是教师，导到教学大屏用。
 
-- 不用投屏 / HDMI / 录屏 / App 内手工下载（用户明确排除）。
+- 不用投屏 / HDMI / 录屏 / App 内手工下载（用户排除）。
 - 网络极不稳定、流量昂贵 → 少请求、别重复下载。
 - 教学大屏磁盘小 → 导出后及时删。
 - 只需「正式营」「体验营」（付费）；「轻课」确认是空的，**别探**。
@@ -25,10 +25,10 @@
 采集 `xqd.py` / `_lel/api/qianliao.py` → 业务 `xqd_app.py` / `xqd_api.py` →
 `xqd_server.py` + `ui.html`（网页版）/ **`xqd_gui.py`（★ PySide6 桌面工具，
 用户现在用的就是它）**，配套 `xqd_platform.py`/`xqd_engine.py`/`xqd_auth.py`/
-`xqd_history.py`/`xqd_dedupe.py`/`xqd_creds.py`；CLI 批处理
-`xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
-API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签名天然新鲜。
-**课名不靠播放反推**（课表一次拿全）。## ★ 业务 API（已全链路打通，详见 `docs/09`）
+`xqd_history.py`/`xqd_dedupe.py`/`xqd_creds.py`；CLI `xqd_pdl.py`/`xqd_batch.py`，
+打包 `build_exe.py`。两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/
+`adb`（旧路径）。API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 →
+签名天然新鲜。**课名不靠播放反推**（课表一次拿全）。## ★ 业务 API（已全链路打通，详见 `docs/09`）
 
 `POST https://m.qianliao.net/financial/api/transfer/gate/<endpoint>`，Body `{"transferData":{...}}`
 
@@ -57,14 +57,14 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 ## 最易做错的六条（全部细节在 `docs/11`）
 
 1. **两个独立速率计**：字节计→「速度」列，内容时长计→ETA；混用会让 248 倍速显示成 `248B/s`。
-2. **总字节均匀抽样外推**（12 片等距）：取前 3 片外推偏高 37.3%。
+2. **总字节均匀抽样外推**（12 片等距）：取前 3 片偏高 37.3%。
 3. **状态词表单一来源** + `_set_both_states()` 成对更新课名后状态词与下载管理状态；
-   状态词存 `item.data(STATE_ROLE)`（`LessonTitleDelegate` 自绘，不占独立列）。
+   状态词存 `item.data(STATE_ROLE)`（自绘，不占独立列）。
 4. **续传**：引擎清理条件必须 `if own_dir or (ok_result and not keep_parts)`，写反会删本钱。
 5. **Windows 下载目录读注册表 Known Folder GUID**
    `{374DE290-123F-4565-9164-39C4925E467B}` → `D:\user\chisenin\download`。
 6. **测试必须设 `XQD_TEST_HOME`** 隔离配置/历史/分片缓存，否则会改用户下载目录。
-   ⚠️ 凭据文件**不受**它影响（隔离了就拿不到授权）。
+   ⚠️ 凭据文件**不受**它影响。
 
 ## 合规与进度（见 `docs/12`）
 
@@ -72,6 +72,7 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
   `Xue-Wu-Zhi/xuewuzhi-downloader`（MIT、24★），NOTICE 明确**官方客户端不在 MIT 范围**
   → 复现的 163 内核不能声称 MIT；旧址 `PyJun/Mooc_Downloader` 已 404。
 - 进度：核心能力全就绪（API 全链路、端到端 6/6、GUI v1.4.0 含历史+续传、
-  回归 284 项全绿 + 真网络 35 项）。待办：全量 266+6 节、163 适配器实战。
+  回归 288 项全绿）。待办：全量 266+6 节、163 适配器实战。
 - 安全：凭据已脱敏。`xqd_creds.load_cookie()` 是唯一入口（env `XQD_COOKIE`
   → `~/.xqd_tool/cookie.txt`，仓库外）；**绝不硬编码 Cookie**。
+  ⚠️ 脱敏要**全目录扫**，上轮漏了 `_apitest2~4.py`（已删）。
