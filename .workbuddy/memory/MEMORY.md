@@ -1,4 +1,4 @@
-# 项目长期记忆 —— 兴趣岛课程导出
+# 项目长期记忆 —— 兴趣岛视频下载器
 
 项目目录：`D:\.workbuddy\2026-11-06-20-15-25`（**已 git 管理**）
 
@@ -18,14 +18,14 @@
 - 网络极不稳定、流量昂贵 → 少请求、别重复下载。
 - 教学大屏磁盘小 → 导出后及时删除。
 - 只需「正式营」「体验营」（已付费）；「轻课」确认是空的，**别再探**。
-- 成品结构：`Z:\太极营\<营名>\<序号>.<课名>.<日期>.mp4`，全角冒号 `：` 保留。
+- 成品结构见「命名规则」一节；全角冒号 `：` 保留。
 
 ## 代码结构（见 `docs/12`）
 
 采集 `xqd.py` / `_lel/api/qianliao.py` → 业务 `xqd_app.py` / `xqd_api.py` →
 `xqd_server.py` + `ui.html`（网页版）/ **`xqd_gui.py`（★ PySide6 桌面工具，用户现在用的
 就是这个）**，配套 `xqd_platform.py`/`xqd_engine.py`/`xqd_auth.py`/`xqd_history.py`/
-`xqd_dedupe.py`；CLI 全量批处理 `xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
+`xqd_dedupe.py`；CLI 批处理 `xqd_pdl.py`/`xqd_batch.py`，打包 `build_exe.py`。
 两套数据源靠 `--mode` 切换：`api`（默认，**不需要模拟器**）/ `adb`（旧路径）。
 API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签名天然新鲜。
 **课名不靠播放反推**（课表一次拿全）。
@@ -38,7 +38,8 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 - 端点（前缀 `/gate/course/`）：营列表 `myCourseListV2`（`skyType`：`FINANCIAL`→9 正式营、
   `INTENTION`→1 体验营、不传→26 含公开课）、课表 `playListOfCourse`、播放地址
   `getCoursePlayUrl`（`businessType`=`camp`/`OPEN_COURSE`）。
-  ★ Cookie 在 `cache-analysis/_apitest.py` —— 真网络测试靠它取授权，**别删**。
+  ★ Cookie 在 `cache-analysis/_apitest.py` —— 真网络测试靠它取授权，**别删**；
+  测试里**不要硬编码 Cookie**，动态 import 那个文件（会过期）。
 
 ## 授权（免 adbd）与 MuMu 启停 → 全部细节见 `docs/11` A 节
 
@@ -60,7 +61,8 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 
 1. **两个独立速率计**：字节计→「速度」列，内容时长计→ETA；混用会让 248 倍速显示成 `248B/s`。
 2. **总字节均匀抽样外推**（12 片等距）：取前 3 片外推偏高 37.3%。
-3. **状态词表单一来源** + `_set_both_states()` 成对更新课程后缀与下载管理状态；
+3. **状态词表单一来源** + `_set_both_states()` 成对更新课名后状态词与下载管理状态；
+   状态词存 `item.data(STATE_ROLE)`（`LessonTitleDelegate` 自绘，不占独立列）；
    终态写入需 `force=True`；`log_state()` 不抢状态栏。
 4. **续传**：引擎清理条件必须 `if own_dir or (ok_result and not keep_parts)`，写反会删本钱。
 5. **Windows 下载目录读注册表 Known Folder GUID**
@@ -72,5 +74,5 @@ API 模式不需要 sweep，播放地址现场解析，`t` 每次都变 → 签�
 - 学无止：用了 `_lel/` 下部分材料（运行时主链路自建）；官方仓库
   `Xue-Wu-Zhi/xuewuzhi-downloader`（MIT、24★），NOTICE 明确**官方客户端不在 MIT 范围内**
   → 复现的 163 内核不能声称 MIT；旧址 `PyJun/Mooc_Downloader` 已 404。
-- 进度：核心能力全就绪（API 全链路、端到端 6/6、GUI v1.3.1 含历史+续传、
-  回归 284 项全绿 + 真网络 21 项）。待办：全量 266+6 节、163 适配器实战。
+- 进度：核心能力全就绪（API 全链路、端到端 6/6、GUI v1.4.0 含历史+续传、
+  回归 284 项全绿 + 真网络 35 项）。待办：全量 266+6 节、163 适配器实战。
