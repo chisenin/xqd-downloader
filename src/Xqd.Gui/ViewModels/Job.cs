@@ -38,7 +38,7 @@ public sealed class Job
     public SpeedMeter Bmeter { get; } = new SpeedMeter();
     public SpeedMeter Meter { get; } = new SpeedMeter();
 
-    public TaskRow TaskRow { get; set; }
+    // ★ v1.6.0：原来的 TaskRow 引用已删除 —— 合并单表后任务状态直接写回课程行。
     public CancellationTokenSource Cts { get; } = new CancellationTokenSource();
 
     /// <summary>按当前量纲算百分比（分片视频用时长，直链音频用字节）。</summary>

@@ -168,9 +168,9 @@
                 <!-- ── 右栏：课程列表 / 下载管理 / 运行日志 ── -->
                 <Grid Grid.Column="1">
                     <Grid.RowDefinitions>
+                        <!-- ★ v1.6.0：下载管理面板已合并进课程列表，这里只剩表格 + 日志 -->
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="210"/>
-                        <RowDefinition Height="180"/>
+                        <RowDefinition Height="140"/>
                     </Grid.RowDefinitions>
 
                     <!-- 课程列表 -->
@@ -181,12 +181,32 @@
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <DockPanel Grid.Row="0" LastChildFill="False">
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                                     <TextBlock Text="课程列表 ·" Style="{StaticResource SectionTitleStyle}"/>
                                     <ctrl:MarqueeControl x:Name="Marquee" Margin="4,0,0,0"/>
+                                    <!-- ★ v1.6.0：视图切换 5 档。只过滤显示，**不影响下载范围判定**。 -->
+                                    <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                                        <RadioButton x:Name="RbViewAll" GroupName="LessonView"
+                                                     Style="{StaticResource ViewToggleStyle}" Content="全部"
+                                                     Tag="all" IsChecked="True" Checked="RbView_Checked"/>
+                                        <RadioButton x:Name="RbViewPending" GroupName="LessonView"
+                                                     Style="{StaticResource ViewToggleStyle}" Content="待下载"
+                                                     Tag="pending" Checked="RbView_Checked"/>
+                                        <RadioButton x:Name="RbViewRunning" GroupName="LessonView"
+                                                     Style="{StaticResource ViewToggleStyle}" Content="下载中"
+                                                     Tag="running" Checked="RbView_Checked"/>
+                                        <RadioButton x:Name="RbViewDone" GroupName="LessonView"
+                                                     Style="{StaticResource ViewToggleStyle}" Content="已完成"
+                                                     Tag="done" Checked="RbView_Checked"/>
+                                        <RadioButton x:Name="RbViewFailed" GroupName="LessonView"
+                                                     Style="{StaticResource ViewToggleStyle}" Content="失败"
+                                                     Tag="failed" Checked="RbView_Checked"/>
+                                    </StackPanel>
                                 </StackPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                     <ComboBox x:Name="CmbQuality" Width="128" Margin="3,0,0,0"
@@ -195,188 +215,140 @@
                                         <ComboBoxItem Content="最高画质 (1080p)" Tag="max"/>
                                         <ComboBoxItem Content="省流量 (720p)" Tag="720"/>
                                     </ComboBox>
-                                    <Button x:Name="BtnAll" Content="全选" Margin="3,0,0,0"
-                                            Style="{StaticResource ModernButtonStyle}" Click="BtnAll_Click"/>
-                                    <Button x:Name="BtnNone" Content="清空" Margin="3,0,0,0"
-                                            Style="{StaticResource ModernButtonStyle}" Click="BtnNone_Click"/>
                                     <Button x:Name="BtnRescan" Content="重新检测" Margin="3,0,0,0"
                                             Style="{StaticResource ModernButtonStyle}" Click="BtnRescan_Click"
                                             ToolTip="重新扫描下载目录，标记哪些课已经下过了"/>
-                                    <Button x:Name="BtnDownload" Content="下载选中" Margin="3,0,0,0"
-                                            Style="{StaticResource PrimaryButtonStyle}" Click="BtnDownload_Click"/>
-                                    <Button x:Name="BtnPause" Content="暂停" Margin="3,0,0,0"
-                                            Style="{StaticResource PauseButtonStyle}" Click="BtnPause_Click"
-                                            IsEnabled="False"
-                                            ToolTip="暂停所有正在进行的下载（已下好的分片会保留，点「继续」接着下）"/>
-                                    <Button x:Name="BtnDownloadOne" Content="下载此课" Margin="3,0,0,0"
-                                            Style="{StaticResource ModernButtonStyle}" Click="BtnDownloadOne_Click"
-                                            ToolTip="只下载当前选中的一节课"/>
+                                    <!-- ★ v1.6.0：下载 / 暂停合并为一个状态切换按钮。
+                                         空闲=「下载」(蓝) → 运行=「暂停」(琥珀) → 暂停=「继续」(琥珀)。
+                                         文案与配色由代码按引擎队列状态切换，状态单一来源。 -->
+                                    <Button x:Name="BtnRun" Content="下载" Margin="3,0,0,0"
+                                            Style="{StaticResource PrimaryButtonStyle}" Click="BtnRun_Click"
+                                            ToolTip="有选中行则只下选中的；没有选中则下当前视图里所有待下载的课"/>
+                                    <Button x:Name="BtnResetRecords" Content="重置下载记录" Margin="3,0,0,0"
+                                            Style="{StaticResource ModernButtonStyle}" Click="BtnResetRecords_Click"
+                                            ToolTip="清空任务与下载历史、复位状态标记（不动磁盘上的成品文件）"/>
                                 </StackPanel>
                             </DockPanel>
 
                             <Border Grid.Row="1" Margin="0,8,0,0" CornerRadius="8" Background="White"
                                     BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
+                                <!-- ★ v1.6.0：课程列表 + 下载管理合并为单表 8 列。
+                                     SelectionMode=Extended：行选中接替了原来的勾选框
+                                     （有选中 → 只下选中的；无选中 → 下当前视图全部待下载）。 -->
                                 <ListView x:Name="LstLessons" BorderThickness="0" Background="Transparent"
                                           AlternationCount="2"
-                                          ItemContainerStyle="{StaticResource GridListItemStyle}"
-                                          SelectionMode="Single"
+                                          ItemContainerStyle="{StaticResource LessonRowItemStyle}"
+                                          SelectionMode="Extended"
                                           MouseDoubleClick="LstLessons_MouseDoubleClick">
+                                    <ListView.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem x:Name="MiDownloadOne" Header="下载此课" Click="MiDownloadOne_Click"/>
+                                            <MenuItem x:Name="MiRetry" Header="重试此课" Click="MiRetry_Click"/>
+                                            <Separator/>
+                                            <MenuItem x:Name="MiCopyName" Header="复制文件名" Click="MiCopyName_Click"/>
+                                            <MenuItem x:Name="MiOpenFolder" Header="打开所在文件夹" Click="MiOpenFolder_Click"/>
+                                            <MenuItem x:Name="MiDeleteFile" Header="删除成品文件" Click="MiDeleteFile_Click"/>
+                                        </ContextMenu>
+                                    </ListView.ContextMenu>
                                     <ListView.View>
                                         <GridView ColumnHeaderContainerStyle="{StaticResource GridHeaderStyle}">
-                                            <!-- ColCheck -->
-                                            <GridViewColumn Width="34">
-                                                <GridViewColumn.Header>
-                                                    <CheckBox IsThreeState="True" HorizontalAlignment="Center"
-                                                              ToolTip="全选 / 全不选"/>
-                                                </GridViewColumn.Header>
+                                            <!-- ColState：状态胶囊标签（浅底 + 深字 + 描边） -->
+                                            <GridViewColumn Width="92" Header="状态">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                                  HorizontalAlignment="Center"/>
+                                                        <Border Background="{Binding StatePillBg, Converter={StaticResource HexBrushConverter}}"
+                                                                BorderBrush="{Binding StatePillBorder, Converter={StaticResource HexBrushConverter}}"
+                                                                BorderThickness="0.5" CornerRadius="9" Padding="9,2"
+                                                                HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding StateWord}" Value="">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding StateWord}" FontSize="11"
+                                                                       Foreground="{Binding StatePillFg, Converter={StaticResource HexBrushConverter}}"/>
+                                                        </Border>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- ColPrefix -->
-                                            <GridViewColumn Width="74" Header="标题前缀">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Prefix}" HorizontalAlignment="Center"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
-                                            <!-- ColTitle：课名 + 紧跟其后的独立配色状态词 -->
-                                            <GridViewColumn Width="360" Header="课程">
+                                            <!-- ColTitle：课名（+ 历史行的「上次下载」标记） -->
+                                            <GridViewColumn Width="330" Header="课程">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
                                                             <TextBlock Text="{Binding Title}"
                                                                        Foreground="{StaticResource TextDarkBrush}"
                                                                        TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Text="{Binding StateSuffix}"
-                                                                       Foreground="{Binding StateWord, Converter={StaticResource StateColorConverter}}"/>
+                                                            <TextBlock Text="{Binding HistoryHint}" Margin="6,0,0,0"
+                                                                       FontSize="11" Foreground="#9AA6B5"
+                                                                       VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- ColSuffix -->
-                                            <GridViewColumn Width="96" Header="标题后缀">
+                                            <!-- ColCamp：所属营（单营时整列隐藏） -->
+                                            <GridViewColumn Width="120" Header="所属营">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Suffix}" ToolTip="{Binding ToolTip}"/>
+                                                        <TextBlock Text="{Binding CampName}" Foreground="#8494A8"
+                                                                   TextTrimming="CharacterEllipsis"/>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
                                             <!-- ColDur -->
-                                            <GridViewColumn Width="76" Header="时长">
+                                            <GridViewColumn Width="66" Header="时长">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <TextBlock Text="{Binding Duration}" HorizontalAlignment="Center"/>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- ColProgress -->
-                                            <GridViewColumn Width="150" Header="进度">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <ProgressBar Value="{Binding Progress}"
-                                                                     Style="{StaticResource CellProgressStyle}"
-                                                                     ToolTip="{Binding ProgressTip}"/>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
-                                        </GridView>
-                                    </ListView.View>
-                                </ListView>
-                            </Border>
-
-                            <TextBlock x:Name="LblExist" Grid.Row="2" Margin="2,6,0,0"
-                                       Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                            <TextBlock x:Name="LblLessonsHint" Grid.Row="3" Margin="2,2,0,0"
-                                       Style="{StaticResource MutedTextStyle}" Text="选择左侧营查看课程"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- 下载管理 -->
-                    <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,10">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <DockPanel Grid.Row="0" LastChildFill="False">
-                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                                    <TextBlock Text="下载管理" Style="{StaticResource SectionTitleStyle}"/>
-                                    <TextBlock x:Name="LblTaskEta" Margin="14,0,0,0"
-                                               Foreground="{StaticResource PrimaryBrush}"
-                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <Button x:Name="BtnClearList" Content="清除列表" Margin="3,0,0,0"
-                                            Style="{StaticResource ModernButtonStyle}" Click="BtnClearList_Click"
-                                            ToolTip="只清任务表与历史记录，不动已下载的文件"/>
-                                    <Button x:Name="BtnDeleteFiles" Content="删除文件" Margin="3,0,0,0"
-                                            Style="{StaticResource DangerButtonStyle}" Click="BtnDeleteFiles_Click"
-                                            ToolTip="把选中任务对应的成品移到「_已删除」子目录"/>
-                                </StackPanel>
-                            </DockPanel>
-
-                            <Border Grid.Row="1" Margin="0,8,0,0" CornerRadius="8" Background="White"
-                                    BorderBrush="{StaticResource CardBorderBrush}" BorderThickness="1">
-                                <ListView x:Name="LstTasks" BorderThickness="0" Background="Transparent"
-                                          AlternationCount="2" SelectionMode="Extended"
-                                          ItemContainerStyle="{StaticResource GridListItemStyle}">
-                                    <ListView.View>
-                                        <GridView ColumnHeaderContainerStyle="{StaticResource GridHeaderStyle}">
-                                            <!-- TaskColState：状态词独立配色 -->
-                                            <GridViewColumn Width="96" Header="状态">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding StateWord}"
-                                                                   Foreground="{Binding StateWord, Converter={StaticResource StateColorConverter}}"/>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
-                                            <!-- TaskColTitle -->
-                                            <GridViewColumn Width="260" Header="课名">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Title}" ToolTip="{Binding ToolTip}"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
-                                            <!-- TaskColSize -->
+                                            <!-- ColSize -->
                                             <GridViewColumn Width="112" Header="大小">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Size}" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Size}" Style="{StaticResource NumericCellStyle}"/>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- TaskColSpeed -->
+                                            <!-- ColSpeed -->
                                             <GridViewColumn Width="78" Header="速度">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Speed}" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Speed}" Style="{StaticResource NumericCellStyle}"/>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- TaskColEta -->
-                                            <GridViewColumn Width="88" Header="剩余时间">
+                                            <!-- ColEta -->
+                                            <GridViewColumn Width="78" Header="剩余">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Eta}" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Eta}" Style="{StaticResource NumericCellStyle}"/>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <!-- TaskColProgress -->
+                                            <!-- ColProgress：进度条（按状态着色）+ 百分比 -->
                                             <GridViewColumn Width="150" Header="进度">
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <ProgressBar Value="{Binding Progress}"
-                                                                     Style="{StaticResource CellProgressStyle}"/>
+                                                        <Grid VerticalAlignment="Center">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="42"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <ProgressBar Value="{Binding Progress}"
+                                                                         Style="{StaticResource CellProgressStyle}"
+                                                                         Foreground="{Binding ProgressColor, Converter={StaticResource HexBrushConverter}}"
+                                                                         ToolTip="{Binding ProgressTip}" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}"
+                                                                       Margin="6,0,0,0" FontSize="11"
+                                                                       Foreground="#5A6A80" VerticalAlignment="Center"
+                                                                       HorizontalAlignment="Right"/>
+                                                        </Grid>
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
@@ -384,11 +356,118 @@
                                     </ListView.View>
                                 </ListView>
                             </Border>
+
+                            <!-- ★ v1.6.0：提示行挪到表格正下方（原来在最底部，被历史区挡住）。
+                                 课表加载中 / 没选营 / 当前视图没课时，这里会说明原因。 -->
+                            <TextBlock x:Name="LblLessonsHint" Grid.Row="2" Margin="2,6,0,0"
+                                       Style="{StaticResource MutedTextStyle}" Text="选择左侧营查看课程"
+                                       TextTrimming="CharacterEllipsis"/>
+
+                            <!-- ★ v1.6.0：表尾汇总栏。原「下载管理」标题旁的全局汇总移到这里，
+                                 否则这条信息会丢。左侧分类计数，右侧全局 ETA。 -->
+                            <Border Grid.Row="3" Margin="0,4,0,0" CornerRadius="6"
+                                    Background="#F4F6FA" Padding="10,5">
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock x:Name="LblSummary" Style="{StaticResource MutedTextStyle}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LblTaskEta" DockPanel.Dock="Right"
+                                               Foreground="{StaticResource PrimaryBrush}"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"
+                                               Margin="14,0,0,0"/>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- 历史分隔带：上次下载过、但不在当前课表里的课 -->
+                            <Border Grid.Row="4" Visibility="Collapsed" x:Name="HistoryBand"
+                                    Background="#F4F6FA" Padding="10,3" Margin="0,8,0,0">
+                                <TextBlock x:Name="LblHistoryBand" FontSize="11" Foreground="#7D8B9C"
+                                           Text="上次下载 · 不在当前课表中（不可下载）"/>
+                            </Border>
+
+                            <ListView x:Name="LstHistory" Grid.Row="5" MaxHeight="120"
+                                      BorderThickness="0" Background="Transparent"
+                                      SelectionMode="Single"
+                                      ItemContainerStyle="{StaticResource HistoryRowItemStyle}"
+                                      Visibility="Collapsed">
+                                <ListView.View>
+                                    <GridView ColumnHeaderContainerStyle="{StaticResource HiddenHeaderStyle}">
+                                        <GridViewColumn Width="92">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{Binding StatePillBg, Converter={StaticResource HexBrushConverter}}"
+                                                            BorderBrush="{Binding StatePillBorder, Converter={StaticResource HexBrushConverter}}"
+                                                            BorderThickness="0.5" CornerRadius="9" Padding="9,2"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StateWord}" FontSize="11"
+                                                                   Foreground="{Binding StatePillFg, Converter={StaticResource HexBrushConverter}}"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="330">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Title}" Foreground="#7D8B9C"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding ToolTip}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="120">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding CampName}" Foreground="#9AA6B5"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="66">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Duration}" HorizontalAlignment="Center"
+                                                               Foreground="#9AA6B5"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="112">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Size}" Style="{StaticResource NumericCellStyle}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="78">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Speed}" Style="{StaticResource NumericCellStyle}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="78">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Eta}" Style="{StaticResource NumericCellStyle}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="150">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ProgressText}" FontSize="11"
+                                                               Foreground="#9AA6B5" HorizontalAlignment="Right"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+
+
+
                         </Grid>
                     </Border>
 
                     <!-- 运行日志 -->
-                    <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+                    <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

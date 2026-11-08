@@ -12,28 +12,26 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.5.4";   // v1.5.4：无边框窗口 + 自绘窗口按钮
+    public const string AppVersion = "1.6.0";   // v1.6.0：课程列表与下载管理合并为单表 8 列
     /// <summary>产品名基址（不含版本号）。实际 exe 名为 xqd-downloader-vX.Y.Z.exe，
     ///   由 Xqd.Gui.csproj 的 PkgVersion 派生 —— 改版本号不用动这里。</summary>
     public const string ProductExeName = "xqd-downloader";
 
-    // 课程列表 6 列（v1.5.0 起）。界面与测试一律引用这些常量。
-    public const int ColCheck = 0;
-    public const int ColPrefix = 1;
-    public const int ColTitle = 2;
-    public const int ColSuffix = 3;
-    public const int ColDur = 4;
-    public const int ColProgress = 5;
-    public const int LessonColumnCount = 6;
-
-    // 下载管理 6 列
-    public const int TaskColState = 0;
-    public const int TaskColTitle = 1;
-    public const int TaskColSize = 2;
-    public const int TaskColSpeed = 3;
-    public const int TaskColEta = 4;
-    public const int TaskColProgress = 5;
-    public const int TaskColumnCount = 6;
+    // ═══════════════════════════════════════════════════════════
+    // v1.6.0：课程列表与下载管理合并为**单表 8 列**。
+    // 原来的勾选框列 / 标题前缀列 / 标题后缀列 / 课名后状态词全部删除；
+    // 下载管理表的 6 列（TaskCol*）也一并删除 —— 状态与进度并入课程行。
+    // 界面与测试一律引用这些常量，不要写死数字。
+    // ═══════════════════════════════════════════════════════════
+    public const int ColState = 0;      // 状态（胶囊标签）
+    public const int ColTitle = 1;      // 课程（课名，宽度最大）
+    public const int ColCamp = 2;       // 所属营（单营时隐藏）
+    public const int ColDur = 3;        // 时长
+    public const int ColSize = 4;       // 大小（右对齐）
+    public const int ColSpeed = 5;      // 速度（右对齐）
+    public const int ColEta = 6;        // 剩余时间（右对齐）
+    public const int ColProgress = 7;   // 进度条 + 百分比
+    public const int LessonColumnCount = 8;
 
     public const string CampSeparator = " · ";
 
@@ -104,4 +102,121 @@ public static class States
     public const string WordFailed = "失败";
     public const string WordExists = "已存在";
     public const string WordRetry = "需重下";
+
+    // ═══════════════════════════════════════════════════════════
+    // v1.6.0：状态胶囊配色（底 / 字 / 描边）+ 进度条着色
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>历史行的统一降级配色（底 / 字 / 描边）。</summary>
+    public static readonly string[] HistoryPill = { "#F1F3F6", "#7D8B9C", "#DDE2E9" };
+
+    /// <summary>空闲值占位符 —— 明确表示"这一列现在没数"，比一片空白好认。</summary>
+    public const string EmptyDash = "—";
+
+    /// <summary>
+    /// 状态词 → 胶囊三色（底 / 字 / 描边）。
+    /// ★ 单一事实来源：状态列胶囊、进度条着色都从这里取，漏一个词就少一种配色。
+    /// </summary>
+    public static readonly Dictionary<string, string[]> StatePills = new()
+    {
+        ["已完成"] = new[] { "#EAF3DE", "#3B6D11", "#97C459" },
+        ["已存在"] = new[] { "#EAF3DE", "#3B6D11", "#97C459" },
+        ["下载中"] = new[] { "#E6F1FB", "#185FA5", "#378ADD" },
+        ["解析中"] = new[] { "#E6F1FB", "#185FA5", "#378ADD" },
+        ["封装中"] = new[] { "#FAEEDA", "#854F0B", "#BA7517" },
+        ["校验中"] = new[] { "#FAEEDA", "#854F0B", "#BA7517" },
+        ["已暂停"] = new[] { "#FAEEDA", "#854F0B", "#BA7517" },
+        ["排队中"] = new[] { "#EEEDFE", "#534AB7", "#7F77DD" },
+        ["失败"] = new[] { "#FCEBEB", "#A32D2D", "#E24B4A" },
+        ["需重下"] = new[] { "#FCEBEB", "#A32D2D", "#E24B4A" },
+    };
+
+    /// <summary>取状态词的胶囊三色；未登记的词用中性灰。</summary>
+    public static string[] PillOf(string word) =>
+        StatePills.TryGetValue(word ?? "", out var p) ? p : HistoryPill;
+
+    /// <summary>进度条着色：下载中蓝 / 封装中橙 / 完成绿 / 失败红，其余灰蓝。</summary>
+    public static string ProgressColorOf(string word)
+    {
+        switch (word ?? "")
+        {
+            case "下载中":
+            case "解析中":
+                return "#3B6EA5";
+            case "封装中":
+            case "校验中":
+            case "已暂停":
+                return "#C07B2A";
+            case "排队中":
+                return "#8A7AB8";
+            case "已完成":
+                return "#4E9A3E";
+            case "已存在":
+                return "#7D8B9C";
+            case "失败":
+            case "需重下":
+                return "#C0392B";
+            default:
+                return "#B9C4D2";
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // v1.6.0：视图切换（只过滤显示，**不影响下载范围判定**）
+    // ═══════════════════════════════════════════════════════════
+
+    public const string ViewAll = "all";
+    public const string ViewPending = "pending";   // 待下载（空闲）
+    public const string ViewRunning = "running";   // 下载中（含排队 / 解析 / 封装 / 校验 / 暂停）
+    public const string ViewDone = "done";         // 已完成 + 已存在
+    public const string ViewFailed = "failed";     // 失败 + 需重下
+
+    public static readonly string[] Views = { ViewAll, ViewPending, ViewRunning, ViewDone, ViewFailed };
+
+    /// <summary>视图键 → 按钮文案。</summary>
+    public static string ViewLabel(string view) => view switch
+    {
+        ViewPending => "待下载",
+        ViewRunning => "下载中",
+        ViewDone => "已完成",
+        ViewFailed => "失败",
+        _ => "全部",
+    };
+
+    /// <summary>状态词是否算「进行中」（用于「下载中」视图）。</summary>
+    public static bool IsRunningState(string word) =>
+        word is "下载中" or "解析中" or "封装中" or "校验中" or "排队中" or "已暂停";
+
+    /// <summary>状态词是否算「已完成」（含已存在，用于「已完成」视图）。</summary>
+    public static bool IsDoneState(string word) => word is "已完成" or "已存在";
+
+    /// <summary>状态词是否算「失败」（含需重下，用于「失败」视图）。</summary>
+    public static bool IsFailedState(string word) => word is "失败" or "需重下";
+
+    /// <summary>
+    /// 该状态词在指定视图里是否显示。
+    /// ★ 历史行（不在当前课表中）只在「全部」视图出现，且永远不参与下载。
+    /// </summary>
+    public static bool InView(string view, string word, bool isHistory)
+    {
+        if (isHistory) return view == ViewAll;
+        return view switch
+        {
+            ViewRunning => IsRunningState(word),
+            ViewDone => IsDoneState(word),
+            ViewFailed => IsFailedState(word),
+            ViewPending => !IsRunningState(word) && !IsDoneState(word) && !IsFailedState(word),
+            _ => true,
+        };
+    }
+
+    /// <summary>
+    /// 「下载」按钮的默认范围：待下载 + 失败/需重下（自动重排队重下）。
+    /// 已存在 / 已完成 / 进行中 一律跳过。
+    /// </summary>
+    public static bool InDownloadScope(string word, bool isHistory)
+    {
+        if (isHistory) return false;
+        return !IsRunningState(word) && !IsDoneState(word);
+    }
 }

@@ -157,14 +157,19 @@ internal static class Program
         Eq("已完成配色", "#1f7a3d", States.ColorOf("已完成"));
         Eq("未知词兜底色", "#7d8b9c", States.ColorOf("不存在的词"));
 
-        Eq("课程列表 6 列", 6, States.LessonColumnCount);
-        Eq("勾选列", 0, States.ColCheck);
-        Eq("标题前缀列", 1, States.ColPrefix);
-        Eq("课名列", 2, States.ColTitle);
-        Eq("标题后缀列", 3, States.ColSuffix);
-        Eq("时长列", 4, States.ColDur);
-        Eq("进度列", 5, States.ColProgress);
-        Eq("下载管理 6 列", 6, States.TaskColumnCount);
+        // ★ v1.6.0：课程列表与下载管理合并为单表 8 列
+        Eq("单表 8 列", 8, States.LessonColumnCount);
+        Eq("状态列", 0, States.ColState);
+        Eq("课名列", 1, States.ColTitle);
+        Eq("所属营列", 2, States.ColCamp);
+        Eq("时长列", 3, States.ColDur);
+        Eq("大小列", 4, States.ColSize);
+        Eq("速度列", 5, States.ColSpeed);
+        Eq("剩余列", 6, States.ColEta);
+        Eq("进度列", 7, States.ColProgress);
+        Eq("空闲值占位符", "—", States.EmptyDash);
+        foreach (var w in States.StateTexts)
+            True("状态胶囊有配色 " + w, States.StatePills.ContainsKey(w));
         Eq("多营分隔符", " · ", States.CampSeparator);
         Eq("网络槽位", 3, States.MaxLessonWorkers);
         Eq("封装槽位", 2, States.MaxMuxWorkers);
@@ -172,7 +177,7 @@ internal static class Program
         True("本地阶段含封装", States.LocalPhases.Contains("封装"));
         True("本地阶段含校验", States.LocalPhases.Contains("校验"));
         Eq("工具名", "兴趣岛视频下载器", States.AppTitle);
-        Eq("版本", "1.5.4", States.AppVersion);
+        Eq("版本", "1.6.0", States.AppVersion);
         Eq("标签 4 个", 4, States.Tabs.Length);
         Eq("轻课是第 4 个标签", "轻课", States.Tabs[3]);
     }
@@ -573,22 +578,47 @@ internal static class Program
         Eq("★ 全不选也要逐行通知 IsChecked", 9,
             notified.Count(n => n == "IsChecked"));
 
-        // ⑦ 课程表「全选 / 清空」走同一个 ViewModel 机制
+        // ⑦ ★ v1.6.0：课程行不再有勾选框 —— 改为「行选中 + 视图过滤 + 下载范围」
         var camp = new Camp { Name = "道德经诵读", CampId = "c1" };
         var row = new LessonRow(new Lesson { Index = 0, Title = "课一" }, camp, 1);
         string rowEvent = "";
-        int rowCallbacks = 0;
-        row.PropertyChanged += (_, e) => rowEvent = e.PropertyName ?? "";
-        row.CheckChanged = _ => rowCallbacks++;
-        row.SetCheckedSilently(true);
-        True("★ 课程行批量勾选后 IsChecked=true", row.IsChecked);
-        Eq("★ 课程行批量勾选通知 IsChecked", "IsChecked", rowEvent);
-        Eq("★ 课程行批量设置不触发回调", 0, rowCallbacks);
-        row.SetCheckedSilently(false);
-        True("★ 课程行批量清空后 IsChecked=false", !row.IsChecked);
-        Eq("★ 课程行批量清空通知 IsChecked", "IsChecked", rowEvent);
-        row.IsChecked = true;
-        Eq("★ 课程行手动勾选触发一次回调", 1, rowCallbacks);
+        var rowNotified = new List<string>();
+        row.PropertyChanged += (_, e) => { rowEvent = e.PropertyName ?? ""; rowNotified.Add(rowEvent); };
+        row.StateWord = "下载中";
+        True("★ 状态词变化通知状态胶囊底色", rowNotified.Contains("StatePillBg"));
+        True("★ 状态词变化通知状态胶囊字色", rowNotified.Contains("StatePillFg"));
+        True("★ 状态词变化通知进度条颜色", rowNotified.Contains("ProgressColor"));
+        True("★ 状态胶囊三色非空", row.StatePillBg.Length > 0
+            && row.StatePillFg.Length > 0 && row.StatePillBorder.Length > 0);
+        Eq("★ 进度条按状态着色", true, row.ProgressColor == States.ProgressColorOf("下载中"));
+
+        // 视图过滤：只影响显示
+        True("★ 下载中在「下载中」视图", States.InView(States.ViewRunning, "下载中", false));
+        True("★ 下载中不在「待下载」视图", !States.InView(States.ViewPending, "下载中", false));
+        True("★ 失败在「失败」视图", States.InView(States.ViewFailed, "失败", false));
+        True("★ 已存在在「已完成」视图", States.InView(States.ViewDone, "已存在", false));
+        True("★ 空闲在「待下载」视图", States.InView(States.ViewPending, "", false));
+        True("★ 全部视图什么都收", States.InView(States.ViewAll, "", false));
+        True("★ 历史行只在「全部」视图", States.InView(States.ViewAll, "", true)
+            && !States.InView(States.ViewPending, "", true));
+
+        // 下载范围：已存在/进行中跳过，失败自动重试，历史行不参与
+        True("★ 空闲在下载范围", States.InDownloadScope("", false));
+        True("★ 失败在下载范围（自动重试）", States.InDownloadScope("失败", false));
+        True("★ 需重下在下载范围", States.InDownloadScope("需重下", false));
+        True("★ 已存在不在下载范围", !States.InDownloadScope("已存在", false));
+        True("★ 已完成不在下载范围", !States.InDownloadScope("已完成", false));
+        True("★ 进行中不在下载范围", !States.InDownloadScope("下载中", false));
+        True("★ 历史行不在下载范围", !States.InDownloadScope("", true));
+
+        // 空闲值统一成 "—"
+        row.Size = ""; row.Speed = ""; row.Eta = "";
+        Eq("★ 空闲大小", "—", row.Size);
+        Eq("★ 空闲速度", "—", row.Speed);
+        Eq("★ 空闲剩余", "—", row.Eta);
+        row.Speed = "--";
+        Eq("★ 引擎的 -- 也归一成 —", "—", row.Speed);
+
         Eq("课程三态：1 / 1", States.CheckAll, States.CheckAllState(1, 1));
     }
 }

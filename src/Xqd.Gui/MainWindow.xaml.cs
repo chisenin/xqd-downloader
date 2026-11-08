@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -54,8 +56,10 @@ public partial class MainWindow : Window
 
     // ── 表格数据 ────────────────────────────────────────────
     private readonly ObservableCollection<CampItem> _campItems = new();
+    /// <summary>主表：当前课表里的课（+ 视图过滤后的可见集合）。</summary>
     private readonly ObservableCollection<LessonRow> _lessonRows = new();
-    private readonly ObservableCollection<TaskRow> _taskRows = new();
+    /// <summary>历史区：上次下载过、但不在当前课表里的课（表尾灰色，不可下载）。</summary>
+    private readonly ObservableCollection<LessonRow> _historyRows = new();
 
     private Camp _currentCamp;
     private string _selectedTab = States.Tabs[0];
@@ -69,18 +73,20 @@ public partial class MainWindow : Window
     private readonly HashSet<int> _networkReleased = new();
     private int _jobSeq;
 
-    private HashSet<string> _checkedLessonKeys = new(StringComparer.Ordinal);
     private int _catalogGen;
     private int _scanGen;
     private bool _rebuildScheduled;
     private bool _campUpdating;
-    private bool _lessonBulk;
     private bool _paused;
     private bool _authBusy;
     private string _campHeaderState = "none";
-    private string _lessonHeaderState = "none";
     private int _scanExist;
     private int _scanBroken;
+
+    /// <summary>★ v1.6.0：当前视图（全部/待下载/下载中/已完成/失败）。只过滤显示，不影响下载范围。</summary>
+    private string _view = States.ViewAll;
+    /// <summary>★ v1.6.0：主表的 CollectionView —— 视图过滤靠它（勾选框已删，改用行选中）。</summary>
+    private ICollectionView _lessonView;
 
     private readonly DownloadControl _control = new();
     private readonly CancellationTokenSource _appCts = new();
@@ -125,15 +131,19 @@ public partial class MainWindow : Window
         TabList.ItemsSource = States.Tabs;
         TabList.SelectedIndex = 0;
         LstCamps.ItemsSource = _campItems;
-        LstLessons.ItemsSource = _lessonRows;
-        LstTasks.ItemsSource = _taskRows;
 
-        // 表头「全选」三态复选框（放在 GridViewColumn.Header 里，用代码订阅避免模板事件歧义）
-        var lh = LessonsGrid.Columns[States.ColCheck].Header as CheckBox;
-        if (lh != null) lh.Click += ChkLessonAll_Click;
+        // ★ v1.6.0：主表用 CollectionView 做视图过滤（5 档：全部/待下载/下载中/已完成/失败）。
+        //   过滤只影响显示，不影响「下载」按钮的下载范围判定。
+        _lessonView = CollectionViewSource.GetDefaultView(_lessonRows);
+        _lessonView.Filter = o =>
+        {
+            var r = o as LessonRow;
+            return r != null && States.InView(_view, r.StateWord, r.IsHistory);
+        };
+        LstLessons.ItemsSource = _lessonView;
+        LstHistory.ItemsSource = _historyRows;
 
         System.Diagnostics.Debug.Assert(LessonsGrid.Columns.Count == States.LessonColumnCount);
-        System.Diagnostics.Debug.Assert(TasksGrid.Columns.Count == States.TaskColumnCount);
 
         RestoreHistoryTasks();
         try { Services.History.PurgeOrphanParts(_history); }
@@ -150,7 +160,6 @@ public partial class MainWindow : Window
     }
 
     private GridView LessonsGrid => (GridView)LstLessons.View;
-    private GridView TasksGrid => (GridView)LstTasks.View;
 
     private static double Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
 
@@ -359,15 +368,15 @@ public partial class MainWindow : Window
     // ══════════════════════ 课表（多营合并 / 跑马灯） ══════════════════════
     private void LoadCampsLessons(List<Camp> camps)
     {
-        SnapshotLessonChecks();
+        PruneHistoryRows();
         _catalogGen++;
         int gen = _catalogGen;
         _scanGen++;                       // 作废旧扫描结果
         _lessonGroups.Clear();
         _lessonRows.Clear();
-        LblExist.Text = "";
         UpdateLessonTitle(camps, 0);
         UpdateLessonHeader(0);
+        UpdateSummary();
         if (camps.Count == 0 || _platform == null)
         {
             LblLessonsHint.Text = "选择左侧营查看课程";
@@ -399,11 +408,15 @@ public partial class MainWindow : Window
                     UpdateLessonTitle(_lessonGroups.Select(g => g.Camp).ToList(), _lessonRows.Count);
                     UpdateLessonHeader(0);
                     if (_lessonGroups.Count == 1)
+                    {
                         LblLessonsHint.Text = "共 " + _lessonRows.Count + " 节 · 目录：" +
                             Path.Combine(Root, Naming.CampFolder(camp.Name));
+                    }
                     else
+                    {
                         LblLessonsHint.Text = "共 " + _lessonRows.Count + " 节 · " + _lessonGroups.Count +
                             " 个营 · 各自存到下载目录下的同名文件夹";
+                    }
                 });
             }
             Ui(() =>
@@ -420,22 +433,13 @@ public partial class MainWindow : Window
         catch (Exception e) { Ui(() => Log("课表加载异常：" + e.Message)); }
     }
 
-    private void SnapshotLessonChecks()
-    {
-        _checkedLessonKeys = new HashSet<string>(
-            _lessonRows.Where(r => r.IsChecked).Select(r => r.Key), StringComparer.Ordinal);
-    }
-
     private List<LessonRow> AppendLessonRows(Camp camp, List<Lesson> lessons)
     {
         var rows = new List<LessonRow>();
-        _lessonBulk = true;
         foreach (var le in lessons)
         {
             le.CampOfRow = camp;         // ★ 每行绑定所属营（输出/检测/历史都按它算）
             var row = new LessonRow(le, camp, le.Seq);
-            row.CheckChanged = OnLessonRowCheckChanged;
-            row.SetCheckedSilently(_checkedLessonKeys.Contains(row.Key));
             row.OutPath = OutPathFor(camp, le);
             var p = InitialProgress(le, camp);
             row.Progress = p.pct;
@@ -443,15 +447,8 @@ public partial class MainWindow : Window
             _lessonRows.Add(row);
             rows.Add(row);
         }
-        _lessonBulk = false;
-        UpdateLessonHeaderState();
+        ApplyViewFilter();
         return rows;
-    }
-
-    private void OnLessonRowCheckChanged(LessonRow row)
-    {
-        if (_lessonBulk) return;
-        UpdateLessonHeaderState();
     }
 
     private void UpdateLessonTitle(List<Camp> camps, int total)
@@ -468,29 +465,38 @@ public partial class MainWindow : Window
         Marquee.SetText(text, true, tip);
     }
 
-    private void UpdateLessonHeader(int exist)
+    /// <summary>
+    /// ★ v1.6.0：表头不再显示「已存在/总数」—— 那是勾选框时代的产物。
+    /// 计数信息移到**表尾汇总栏**（<see cref="UpdateSummary"/>）。
+    /// </summary>
+    private void UpdateLessonHeader(int exist) { }
+
+    /// <summary>
+    /// 按当前视图过滤主表，并刷新表尾汇总栏。
+    /// ★ 视图切换**只影响显示**，不影响「下载」按钮的下载范围判定。
+    /// </summary>
+    private void ApplyViewFilter()
     {
-        int total = _lessonRows.Count;
-        if (total == 0) return;
-        LessonsGrid.Columns[States.ColTitle].Header = "课程 (" + exist + "/" + total + ")";
+        _lessonView?.Refresh();
+        UpdateSummary();
+        AdjustColumnWidths();
     }
 
-    private void UpdateLessonHeaderState()
+    /// <summary>表尾汇总栏：左侧分类计数（右侧全局 ETA 由 UpdateGlobalEta 写）。</summary>
+    private void UpdateSummary()
     {
+        if (LblSummary == null) return;      // 初始化未完成时可能被调到
         int total = _lessonRows.Count;
-        int k = _lessonRows.Count(r => r.IsChecked);
-        _lessonHeaderState = States.CheckAllState(k, total);
-        var cb = LessonsGrid.Columns[States.ColCheck].Header as CheckBox;
-        if (cb != null)
-            cb.IsChecked = _lessonHeaderState == States.CheckAll ? true
-                : _lessonHeaderState == States.CheckNone ? (bool?)false : null;
-    }
-
-    private void SetAllLessonChecks(bool v)
-    {
-        _lessonBulk = true;
-        foreach (var r in _lessonRows) r.SetCheckedSilently(v);
-        _lessonBulk = false;
+        int pending = 0, running = 0, done = 0, failed = 0;
+        foreach (var r in _lessonRows)
+        {
+            var w = r.StateWord;
+            if (States.IsRunningState(w)) running++;
+            else if (States.IsDoneState(w)) done++;
+            else if (States.IsFailedState(w)) failed++;
+            else pending++;
+        }
+        LblSummary.Text = $"共 {total} 节 · 待下载 {pending} · 下载中 {running} · 已完成 {done} · 失败 {failed}";
     }
 
     // ══════════════════════ 进度恢复（四来源） ══════════════════════
@@ -627,20 +633,15 @@ public partial class MainWindow : Window
         }
         _scanExist = exist;
         _scanBroken = broken;
-        LblExist.Text = "正在检测已下载课程…";
         UpdateLessonHeader(exist);
-        UpdateLessonHeaderState();
+        ApplyViewFilter();
     }
 
     private void OnScanFinished()
     {
         UpdateLessonHeader(_scanExist);
-        LblExist.Text = (_scanExist > 0 || _scanBroken > 0)
-            ? "本目录已有 " + _scanExist + " 节成品，已自动取消勾选并跳过" +
-              (_scanBroken > 0 ? "；另有 " + _scanBroken + " 节文件不完整，将重新下载" : "")
-            : "";
         Log("已下载检测：" + _scanExist + " 节已存在，" + _scanBroken + " 节需重下");
-        UpdateLessonHeaderState();
+        ApplyViewFilter();
     }
 
     private void MarkExisting(LessonRow row, bool ok, ExistingState st)
@@ -666,8 +667,6 @@ public partial class MainWindow : Window
             if (cur >= 100) cur = 0;      // 之前乐观按「文件存在」置满，扫描证明残缺
             SetRowProgress(row, cur, "文件不完整，需要重下");
         }
-        // 已存在 → 取消勾选；残缺 → 勾上（需要重下）
-        row.SetCheckedSilently(!ok);
     }
 
     // ══════════════════════ 下载 ══════════════════════
@@ -678,14 +677,27 @@ public partial class MainWindow : Window
         return Path.Combine(folder, name);
     }
 
-    private List<LessonRow> CheckedLessons() => _lessonRows.Where(r => r.IsChecked).ToList();
+    /// <summary>
+    /// ★ v1.6.0：确定「下载」的范围。
+    /// 有行选中（Ctrl/Shift 多选）→ 只下选中的；没有选中 → 下当前视图里所有待下载的课。
+    /// 已存在 / 已完成 / 进行中 自动跳过；失败 / 需重下 自动包含（重排队重下）。
+    /// 历史行永远不参与。
+    /// </summary>
+    private List<LessonRow> PickedLessons()
+    {
+        var sel = LstLessons.SelectedItems.Cast<LessonRow>()
+            .Where(r => r != null && !r.IsHistory).ToList();
+        if (sel.Count > 0)
+            return sel.Where(r => States.InDownloadScope(r.StateWord, r.IsHistory)).ToList();
+        return _lessonRows.Where(r => States.InDownloadScope(r.StateWord, r.IsHistory)).ToList();
+    }
 
     private void StartDownloadSelected()
     {
-        var picked = CheckedLessons();
+        var picked = PickedLessons();
         if (picked.Count == 0)
         {
-            MessageBox.Show(this, "请先勾选要下载的课程。", "提示");
+            MessageBox.Show(this, "当前视图里没有待下载的课程（已存在 / 已完成的会自动跳过）。", "提示");
             return;
         }
         StartDownloads(picked);
@@ -764,7 +776,6 @@ public partial class MainWindow : Window
             _jobs[job.JobId] = job;
             _pendingQueue.Add(job);
             SetRowState(row, States.WordQueued, null);
-            row.IsChecked = true;       // 入队即自动勾上
             started++;
         }
 
@@ -772,7 +783,7 @@ public partial class MainWindow : Window
         if (skipped > 0) msg += "，跳过 " + skipped + " 个（已存在且完整）";
         if (redownload > 0) msg += "，重下 " + redownload + " 个（原文件残缺）";
         Log(msg + "。");
-        UpdateLessonHeaderState();   // 跳过/入队改过勾选，同步表头三态
+        ApplyViewFilter();   // 入队改变了状态词，视图与汇总要跟着走
         PumpQueue();
     }
 
@@ -846,7 +857,9 @@ public partial class MainWindow : Window
             job.Phase = "解析";
             var row = RowOfLesson(job.Lesson);
             if (row != null) SetRowState(row, States.PhaseWord("下载"), null);
-            EnsureTaskRow(job, States.PhaseWord("下载"));
+            RecordHistory(job.OutPath, job.Lesson?.Title ?? "", job.Camp?.Name ?? "",
+                States.PhaseWord("下载"), duration: (long)(job.Lesson?.Duration ?? 0));
+            FlushHistory();
             _ = RunJobAsync(job, BuildRequest(job), MakeCallbacks(job));
         }
         SyncPauseButton();
@@ -921,7 +934,7 @@ public partial class MainWindow : Window
                 ? (int)Math.Max(0, Math.Min(100, pi.DoneBytes * 100.0 / pi.TotalBytes)) : 0;
         }
         job.Eta = ComputeEta(job);
-        RefreshTaskRow(job);
+        RefreshRowNumbers(job);
 
         // 进度写历史（节流 3 秒）
         double now = Now();
@@ -949,7 +962,7 @@ public partial class MainWindow : Window
         // 一进封装/校验立即归还网络槽位，放行下一节
         var freed = States.LocalPhases.Contains(phase) ? ReleaseIdleSlots() : new HashSet<int>();
         if (freed.Count > 0) PumpQueue();
-        RefreshTaskRow(job);
+        RefreshRowNumbers(job);
 
         string word = States.PhaseWord(phase);
         if (_paused) return;            // 暂停中不改状态（用户操作优先级更高）
@@ -990,10 +1003,10 @@ public partial class MainWindow : Window
         {
             le.State = "failed";
             SetBothStates(job, States.WordFailed, r?.Message, force: true);
-            if (row != null) row.IsChecked = true;   // 失败自动重新勾选
             UpdateTaskFinished(job, States.WordFailed, r?.Message);
+            ApplyViewFilter();   // 失败行进入「失败」视图；点「下载」时会自动重排队
             Log("失败：" + le.Title + " —— " + (r?.Message ?? "") +
-                "（已重新勾选，可再点「下载选中」重试）");
+                "（点「下载」可自动重试，或右键该行「重试此课」）");
         }
     }
 
@@ -1029,33 +1042,33 @@ public partial class MainWindow : Window
         return Math.Max(3.0, secs);
     }
 
-    private void RefreshTaskRow(Job job)
+    /// <summary>
+    /// ★ v1.6.0：把任务的数字（大小 / 速度 / 剩余）写回**课程行** ——
+    /// 合并后没有独立的「下载管理」表了，任务信息就是该行的附加列。
+    /// </summary>
+    private void RefreshRowNumbers(Job job)
     {
-        var tr = job.TaskRow;
-        if (tr == null || job.Finished) return;   // 已结束不覆盖「用时 …」
-        // 阶段守卫白名单 = 全部进行中阶段
-        string pt = States.PhaseWord(job.Phase);
-        if (!string.IsNullOrEmpty(pt) && States.IsRunningWord(tr.StateWord))
-            tr.StateWord = pt;
+        var row = RowOfLesson(job.Lesson);
+        if (row == null || job.Finished) return;   // 已结束不覆盖「用时 …」
         if (job.Total > 0 && (job.Phase == "下载" || job.Phase == "封装" || job.Phase == "校验"))
-            tr.Size = (job.Down / 1048576.0).ToString("0.0") + "/" +
-                      (job.Total / 1048576.0).ToString("0") + " MB";
+            row.Size = (job.Down / 1048576.0).ToString("0.0") + "/" +
+                       (job.Total / 1048576.0).ToString("0") + " MB";
         else if (!string.IsNullOrEmpty(job.OutPath) && File.Exists(job.OutPath))
-            tr.Size = (new FileInfo(job.OutPath).Length / 1048576.0).ToString("0.0") + " MB";
-        tr.Speed = Util.FmtSpeed(job.Speed);
+            row.Size = (new FileInfo(job.OutPath).Length / 1048576.0).ToString("0.0") + " MB";
+        row.Speed = Util.FmtSpeed(job.Speed);
         var (eta, note) = JobEta(job);
-        string txt = eta.HasValue ? Util.FmtDur(eta.Value) : "--";
+        string txt = eta.HasValue ? Util.FmtDur(eta.Value) : "";
         if (!string.IsNullOrEmpty(note)) txt += " " + note;
-        tr.Eta = txt;
-        tr.Progress = job.Percent();
+        row.Eta = txt;
+        row.Progress = job.Percent();
     }
 
-    private void RefreshAllTaskRows()
+    private void RefreshAllRowNumbers()
     {
         foreach (var id in _runningWorkers.ToList())
         {
             var job = GetJob(id);
-            if (job != null) RefreshTaskRow(job);
+            if (job != null) RefreshRowNumbers(job);
         }
     }
 
@@ -1078,7 +1091,7 @@ public partial class MainWindow : Window
                 job.Eta = ComputeEta(job);
             }
         }
-        RefreshAllTaskRows();
+        RefreshAllRowNumbers();
         UpdateGlobalEta();
     }
 
@@ -1129,66 +1142,48 @@ public partial class MainWindow : Window
 
     private void SetBothStates(Job job, string word, string msg = null, bool force = false)
     {
-        var tr = job.TaskRow;
+        var row = RowOfLesson(job.Lesson);
         // ★ 终态守卫：任务已结束且状态列已是终态 → 迟到的阶段信号不许覆盖。
         //   force=True 用于写入终态本身（完成/失败回调）。
-        if (!force && job.Finished && tr != null && !States.IsRunningWord(tr.StateWord)) return;
-        var row = RowOfLesson(job.Lesson);
+        if (!force && job.Finished && row != null && !States.IsRunningWord(row.StateWord)) return;
         if (row != null) SetRowState(row, word, msg);
-        if (tr != null) tr.StateWord = word;
     }
 
-    // ══════════════════════ 下载管理表 ══════════════════════
-    private TaskRow FindTaskRow(string outPath)
-    {
-        if (string.IsNullOrEmpty(outPath)) return null;
-        return _taskRows.FirstOrDefault(t =>
-            string.Equals(t.OutPath, outPath, StringComparison.OrdinalIgnoreCase));
-    }
+    // ═══════════════════════════════════════════════════════════
+    // ★ v1.6.0：原来的「下载管理表」已删除 —— 任务状态直接写回课程行。
+    // ═══════════════════════════════════════════════════════════
 
-    private TaskRow EnsureTaskRow(Job job, string state)
-    {
-        var tr = FindTaskRow(job.OutPath);
-        if (tr == null) { tr = new TaskRow(); _taskRows.Add(tr); }
-        tr.OutPath = job.OutPath;
-        tr.ToolTip = job.OutPath;
-        tr.JobId = job.JobId;
-        tr.Title = job.Lesson?.Title ?? "";
-        tr.StateWord = state;
-        tr.Size = "";
-        tr.Speed = "--";
-        tr.Eta = "--";
-        tr.Progress = 0;
-        job.TaskRow = tr;
-        RecordHistory(job.OutPath, tr.Title, job.Camp?.Name ?? "", state,
-            duration: (long)(job.Lesson?.Duration ?? 0));
-        FlushHistory();
-        return tr;
-    }
-
+    /// <summary>任务结束（成功/失败）→ 写回课程行的终态与成品大小，并落历史。</summary>
     private void UpdateTaskFinished(Job job, string state, string msg)
     {
-        var tr = job.TaskRow;
-        if (tr == null) return;
-        tr.StateWord = state;
+        var row = RowOfLesson(job.Lesson);
         string path = job.Lesson?.OutPath ?? job.OutPath;
         long size = 0;
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
         {
             try { size = new FileInfo(path).Length; } catch { }
-            tr.Size = (size / 1048576.0).ToString("0.0") + " MB";
-            tr.OutPath = path;
-            tr.ToolTip = path;
+            if (row != null)
+            {
+                row.Size = (size / 1048576.0).ToString("0.0") + " MB";
+                row.OutPath = path;
+            }
         }
-        tr.Speed = "--";
-        tr.Eta = "用时 " + Util.FmtDur(Now() - job.T0);
-        if (state == States.WordDone) tr.Progress = 100;
+        if (row != null)
+        {
+            row.Speed = "";
+            row.Eta = "用时 " + Util.FmtDur(Now() - job.T0);
+            if (state == States.WordDone) row.Progress = 100;
+        }
         RecordHistory(path, job.Lesson?.Title ?? "", job.Camp?.Name ?? "", state,
             job.Down, job.Total, job.DoneDur, job.TotalDur,
             (long)(job.Lesson?.Duration ?? 0), size);
         FlushHistory();
     }
 
+    /// <summary>
+    /// 启动时恢复上次下载记录 → **历史区**（表尾灰色区，不可下载）。
+    /// ★ 这些行还没和课表比对：等课表加载完由 <see cref="PruneHistoryRows"/> 剔除重复。
+    /// </summary>
     private void RestoreHistoryTasks()
     {
         if (_history.Count == 0) return;
@@ -1196,34 +1191,47 @@ public partial class MainWindow : Window
         {
             string path = rec.path ?? "";
             if (path.Length == 0) continue;
-            string state = rec.state ?? "";
-            var tr = new TaskRow
-            {
-                OutPath = path,
-                ToolTip = path,
-                Title = string.IsNullOrEmpty(rec.title) ? Path.GetFileName(path) : rec.title,
-                Speed = "--",
-                Eta = "--",
-                Size = "",
-            };
+            var row = LessonRow.FromHistory(rec);
+            // 分片缓存里的实际进度比历史记录更准（可能是上次没写完的续传点）
             var pp = Services.History.PartsProgress(Services.History.PartsDirFor(path));
-            long cached = pp.Bytes;
-            tr.StateWord = state == States.WordDone ? States.WordDone
-                : state == States.WordFailed ? States.WordFailed
-                : cached > 0 ? "未完成（可续传）" : "未完成";
-            long down = rec.down, total = rec.total;
-            if (cached > 0) down = cached;
-            if (total > 0)
+            if (pp.Bytes > 0 && rec.total > 0)
             {
-                tr.Size = (down / 1048576.0).ToString("0.0") + "/" +
-                          (total / 1048576.0).ToString("0") + " MB";
-                tr.Progress = Math.Max(0, Math.Min(100, (int)(down * 100.0 / total)));
+                row.Progress = Math.Max(0, Math.Min(99, (int)(pp.Bytes * 100.0 / rec.total)));
+                row.Size = (pp.Bytes / 1048576.0).ToString("0.0") + "/" +
+                           (rec.total / 1048576.0).ToString("0") + " MB";
             }
-            else if (rec.size > 0)
-                tr.Size = (rec.size / 1048576.0).ToString("0.0") + " MB";
-            _taskRows.Add(tr);    // ★ 恢复的行默认不勾选（无选中项）
+            _historyRows.Add(row);
         }
-        Log("已恢复上次下载列表：" + _taskRows.Count + " 条记录。");
+        UpdateHistoryVisibility();
+        Log("已恢复上次下载列表：" + _historyRows.Count + " 条记录。");
+    }
+
+    /// <summary>
+    /// ★ v1.6.0：课表加载完后，把**与课表行匹配**的历史行从历史区移除 ——
+    /// 那一节已经出现在主表里，状态与进度由主表负责，不该重复出现。
+    /// </summary>
+    private void PruneHistoryRows()
+    {
+        if (_historyRows.Count > 0)
+        {
+            var known = new HashSet<string>(
+                _lessonRows.Where(r => !string.IsNullOrEmpty(r.OutPath)).Select(r => r.OutPath),
+                StringComparer.OrdinalIgnoreCase);
+            for (int i = _historyRows.Count - 1; i >= 0; i--)
+            {
+                var p = _historyRows[i].OutPath;
+                if (!string.IsNullOrEmpty(p) && known.Contains(p)) _historyRows.RemoveAt(i);
+            }
+        }
+        UpdateHistoryVisibility();
+    }
+
+    /// <summary>历史区有内容才显示分隔带与列表。</summary>
+    private void UpdateHistoryVisibility()
+    {
+        bool has = _historyRows.Count > 0 && _view == States.ViewAll;
+        HistoryBand.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+        LstHistory.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // ══════════════════════ 历史 ══════════════════════
@@ -1244,27 +1252,7 @@ public partial class MainWindow : Window
     }
 
     // ══════════════════════ 暂停 / 继续 ══════════════════════
-    private void TogglePause()
-    {
-        _paused = !_paused;
-        _control.Paused = _paused;         // 所有下载线程共用一个控制器（协作式）
-        if (_paused)
-        {
-            BtnPause.Content = "继续";
-            BtnPause.Style = (Style)FindResource("PrimaryButtonStyle");
-            Log("已暂停所有下载（已下好的分片会保留，点「继续」接着下）。");
-            SetAllRunningState(States.WordPaused);
-        }
-        else
-        {
-            BtnPause.Content = "暂停";
-            BtnPause.Style = (Style)FindResource("PauseButtonStyle");
-            Log("已继续下载。");
-            ResumeStates();
-            PumpQueue();
-        }
-    }
-
+    /// <summary>继续下载：把运行中/排队中的行状态从「已暂停」改回正常。</summary>
     private void ResumeStates()
     {
         foreach (var id in _runningWorkers.ToList())
@@ -1275,15 +1263,16 @@ public partial class MainWindow : Window
             if (string.IsNullOrEmpty(word)) word = States.PhaseWord("下载");
             var row = RowOfLesson(job.Lesson);
             if (row != null) SetRowState(row, word, null);
-            if (job.TaskRow != null) job.TaskRow.StateWord = word;
         }
         foreach (var job in _pendingQueue)
         {
             var row = RowOfLesson(job.Lesson);
             if (row != null) SetRowState(row, States.WordQueued, null);
         }
+        ApplyViewFilter();
     }
 
+    /// <summary>批量改所有运行中/排队中行的状态词（暂停时用）。</summary>
     private void SetAllRunningState(string state)
     {
         foreach (var id in _runningWorkers.ToList())
@@ -1292,7 +1281,6 @@ public partial class MainWindow : Window
             if (job == null) continue;
             var row = RowOfLesson(job.Lesson);
             if (row != null) SetRowState(row, state, null);
-            if (job.TaskRow != null) job.TaskRow.StateWord = state;
         }
         string queued = state == States.WordPaused ? States.WordPaused : States.WordQueued;
         foreach (var job in _pendingQueue)
@@ -1300,36 +1288,93 @@ public partial class MainWindow : Window
             var row = RowOfLesson(job.Lesson);
             if (row != null) SetRowState(row, queued, null);
         }
+        ApplyViewFilter();
     }
 
+    /// <summary>暂停 / 继续（引擎里是同一个 pause flag 取反）。</summary>
+    private void TogglePause()
+    {
+        if (_runningWorkers.Count == 0 && _pendingQueue.Count == 0) return;
+        _paused = !_paused;
+        _control.Paused = _paused;
+        if (_paused)
+        {
+            SetAllRunningState(States.WordPaused);
+            Log("已暂停下载（已下好的分片会保留）。");
+        }
+        else
+        {
+            Log("已继续下载。");
+            ResumeStates();
+            PumpQueue();
+        }
+        SyncPauseButton();
+    }
+
+    /// <summary>★ v1.6.0：下载 / 暂停合并成一个按钮 —— 这里是它的**唯一状态来源**。
+    ///   空闲 → 「下载」(蓝)；运行中 → 「暂停」(琥珀)；已暂停 → 「继续」(琥珀)。</summary>
     private void SyncPauseButton()
     {
         bool busy = _runningWorkers.Count > 0 || _pendingQueue.Count > 0;
-        BtnPause.IsEnabled = busy;
         if (!busy && _paused)
         {
             _paused = false;
             _control.Paused = false;
-            BtnPause.Content = "暂停";
-            BtnPause.Style = (Style)FindResource("PauseButtonStyle");
+        }
+        if (!busy)
+        {
+            BtnRun.Content = "下载";
+            BtnRun.Style = (Style)FindResource("PrimaryButtonStyle");
+            BtnRun.ToolTip = "有选中行则只下选中的；没有选中则下当前视图里所有待下载的课";
+        }
+        else if (_paused)
+        {
+            BtnRun.Content = "继续";
+            BtnRun.Style = (Style)FindResource("PauseButtonStyle");
+            BtnRun.ToolTip = "从断点继续下载（已下好的分片会保留）";
+        }
+        else
+        {
+            BtnRun.Content = "暂停";
+            BtnRun.Style = (Style)FindResource("PauseButtonStyle");
+            BtnRun.ToolTip = "暂停所有正在进行的下载（已下好的分片会保留，点「继续」接着下）";
         }
     }
 
     // ══════════════════════ 管理 / 配置 / 日志 ══════════════════════
-    private void ClearTaskList()
+
+    /// <summary>
+    /// ★ v1.6.0：「重置下载记录」= 清任务 + 清历史 + 复位状态标记，
+    /// **不动磁盘上的成品文件**。
+    /// </summary>
+    private void ResetDownloadRecords()
     {
-        _taskRows.Clear();
         _history.Clear();
         FlushHistory();
-        Log("已清除下载列表（文件保留，历史记录已清）。");
+        _historyRows.Clear();
+        UpdateHistoryVisibility();
+        foreach (var r in _lessonRows)
+        {
+            if (States.IsRunningState(r.StateWord)) continue;   // 正在跑的别动
+            r.StateWord = "";
+            r.Size = ""; r.Speed = ""; r.Eta = "";
+            r.Progress = 0;
+        }
+        ApplyViewFilter();
+        Log("已重置下载记录（磁盘文件保留）。");
     }
 
-    private void DeleteTaskFiles()
+    /// <summary>
+    /// ★ v1.6.0：删除成品文件 —— 对象是**行选中**（主表或历史区都行）。
+    /// 文件移到「_已删除」子目录；**失败要报出来，不静默**。
+    /// </summary>
+    private void DeleteTaskFiles(IEnumerable<LessonRow> rows)
     {
-        var sel = LstTasks.SelectedItems.Cast<TaskRow>().ToList();
+        var sel = (rows ?? Enumerable.Empty<LessonRow>())
+            .Where(r => r != null && !string.IsNullOrEmpty(r.OutPath)).ToList();
         if (sel.Count == 0)
         {
-            MessageBox.Show(this, "请先选中要删除的任务。", "提示");
+            MessageBox.Show(this, "请先选中要删除成品的行。", "提示");
             return;
         }
         var ans = MessageBox.Show(this,
@@ -1338,10 +1383,10 @@ public partial class MainWindow : Window
         if (ans != MessageBoxResult.Yes) return;
 
         string trash = Path.Combine(Root, "_已删除");
-        int moved = 0;
-        foreach (var tr in sel)
+        int moved = 0, failed = 0;
+        foreach (var r in sel)
         {
-            string path = tr.OutPath;
+            string path = r.OutPath;
             if (string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
             try
             {
@@ -1356,14 +1401,26 @@ public partial class MainWindow : Window
                 File.Move(path, target);
                 moved++;
             }
-            catch (Exception e) { Log("删除失败 " + path + "：" + e.Message); }
+            catch (Exception e)
+            {
+                failed++;
+                Log("删除失败 " + path + "：" + e.Message);   // ★ 不静默
+            }
         }
-        _taskRows.Clear();
-        _history.Clear();
-        FlushHistory();
-        Log("已移动 " + moved + " 个文件到 " + trash);
-        MessageBox.Show(this, "已移动 " + moved + " 个文件。", "完成",
-            MessageBoxButton.OK, MessageBoxImage.Information);
+        // 状态复位：文件已不在，不再算「已存在 / 已完成」
+        foreach (var r in sel)
+        {
+            if (r.StateWord == States.WordExists || r.StateWord == States.WordDone)
+            {
+                r.StateWord = "";
+                r.Progress = 0;
+            }
+        }
+        ApplyViewFilter();
+        Log("已移动 " + moved + " 个文件到 " + trash + (failed > 0 ? "，失败 " + failed + " 个" : ""));
+        MessageBox.Show(this,
+            "已移动 " + moved + " 个文件。" + (failed > 0 ? "\n有 " + failed + " 个失败，详见运行日志。" : ""),
+            "完成", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void SyncChecker()
@@ -1459,8 +1516,14 @@ public partial class MainWindow : Window
 
     private void AdjustColumnWidths()
     {
+        // ★ v1.6.0：单营时隐藏「所属营」列（多营合并时它必需）
+        var gv = LessonsGrid;
+        if (gv.Columns.Count > States.ColCamp)
+        {
+            bool multi = _lessonRows.Select(r => r.CampName).Distinct().Count() > 1;
+            gv.Columns[States.ColCamp].Width = multi ? 120 : 0;
+        }
         AdjustOne(LstLessons, States.ColTitle);
-        AdjustOne(LstTasks, States.TaskColTitle);
     }
 
     private static void AdjustOne(ListView lv, int titleCol)
@@ -1701,16 +1764,46 @@ public partial class MainWindow : Window
 
     private void BtnRefreshCamps_Click(object sender, RoutedEventArgs e) => _ = LoadCampsAsync();
 
-    private void ChkLessonAll_Click(object sender, RoutedEventArgs e)
+    // ══════════════════════ v1.6.0 事件 ══════════════════════
+
+    /// <summary>视图切换（5 档）。**只过滤显示**，不影响下载范围判定。</summary>
+    private void RbView_Checked(object sender, RoutedEventArgs e)
     {
-        bool want = _lessonRows.Count(r => r.IsChecked) < _lessonRows.Count;
-        SetAllLessonChecks(want);
-        UpdateLessonHeaderState();
+        if (sender is RadioButton rb && rb.Tag is string tag)
+        {
+            _view = tag;
+            // ★ InitializeComponent 期间，XAML 会把 IsChecked=True 的那个按钮触发一次 Checked
+            //   —— 那时汇总栏等控件**还没创建**，直接刷新会 NullReferenceException
+            //   （表现为窗口起不来）。_lessonView 在 InitializeComponent 之后才赋值，
+            //   用它当「初始化是否完成」的判据。
+            if (_lessonView == null) return;
+            ApplyViewFilter();
+            UpdateHistoryVisibility();
+        }
     }
+
+    /// <summary>「下载」/「暂停」/「继续」三态按钮（空闲→下载，运行→暂停，暂停→继续）。</summary>
+    private void BtnRun_Click(object sender, RoutedEventArgs e)
+    {
+        bool busy = _runningWorkers.Count > 0 || _pendingQueue.Count > 0;
+        if (!busy) StartDownloadSelected();
+        else TogglePause();
+    }
+
+    private void BtnResetRecords_Click(object sender, RoutedEventArgs e) => ResetDownloadRecords();
 
     private void LstLessons_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (LstLessons.SelectedItem is LessonRow r) StartDownloads(new List<LessonRow> { r });
+        if (LstLessons.SelectedItem is LessonRow r && !r.IsHistory)
+        {
+            if (!States.InDownloadScope(r.StateWord, r.IsHistory))
+            {
+                MessageBox.Show(this,
+                    "这一节已经下过了（" + (string.IsNullOrEmpty(r.StateWord) ? "已完成" : r.StateWord) + "）。", "提示");
+                return;
+            }
+            StartDownloads(new List<LessonRow> { r });
+        }
     }
 
     private void CmbQuality_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1718,33 +1811,75 @@ public partial class MainWindow : Window
         _quality = CmbQuality.SelectedIndex == 1 ? "720" : "max";
     }
 
-    private void BtnAll_Click(object sender, RoutedEventArgs e)
-    {
-        SetAllLessonChecks(true);
-        UpdateLessonHeaderState();
-    }
-
-    private void BtnNone_Click(object sender, RoutedEventArgs e)
-    {
-        SetAllLessonChecks(false);
-        UpdateLessonHeaderState();
-    }
-
     private void BtnRescan_Click(object sender, RoutedEventArgs e) => RescanExisting();
 
-    private void BtnDownload_Click(object sender, RoutedEventArgs e) => StartDownloadSelected();
+    // ── 右键菜单 ────────────────────────────────────────────
 
-    private void BtnPause_Click(object sender, RoutedEventArgs e) => TogglePause();
-
-    private void BtnDownloadOne_Click(object sender, RoutedEventArgs e)
+    /// <summary>右键菜单作用的目标行（主表优先，其次历史区）。</summary>
+    private LessonRow ContextRow()
     {
-        if (LstLessons.SelectedItem is LessonRow r) StartDownloads(new List<LessonRow> { r });
-        else MessageBox.Show(this, "请先选中一节课。", "提示");
+        if (LstLessons.SelectedItem is LessonRow r) return r;
+        if (LstHistory.SelectedItem is LessonRow h) return h;
+        return null;
     }
 
-    private void BtnClearList_Click(object sender, RoutedEventArgs e) => ClearTaskList();
+    private void MiDownloadOne_Click(object sender, RoutedEventArgs e)
+    {
+        var r = ContextRow();
+        if (r == null) { MessageBox.Show(this, "请先选中一节课。", "提示"); return; }
+        if (!States.InDownloadScope(r.StateWord, r.IsHistory))
+        {
+            MessageBox.Show(this,
+                "这一节不需要下载（" + (string.IsNullOrEmpty(r.StateWord) ? "已完成" : r.StateWord) + "）。", "提示");
+            return;
+        }
+        StartDownloads(new List<LessonRow> { r });
+    }
 
-    private void BtnDeleteFiles_Click(object sender, RoutedEventArgs e) => DeleteTaskFiles();
+    /// <summary>重试此课：失败 / 需重下 → 清掉终态并重新排队。</summary>
+    private void MiRetry_Click(object sender, RoutedEventArgs e)
+    {
+        var r = ContextRow();
+        if (r == null) { MessageBox.Show(this, "请先选中一节课。", "提示"); return; }
+        if (!States.IsFailedState(r.StateWord))
+        {
+            MessageBox.Show(this, "只有「失败 / 需重下」的行才需要重试。", "提示");
+            return;
+        }
+        r.StateWord = "";
+        r.Progress = 0;
+        ApplyViewFilter();
+        StartDownloads(new List<LessonRow> { r });
+    }
+
+    private void MiCopyName_Click(object sender, RoutedEventArgs e)
+    {
+        var r = ContextRow();
+        if (r == null) return;
+        string name = string.IsNullOrEmpty(r.OutPath) ? r.Title : Path.GetFileName(r.OutPath);
+        try { Clipboard.SetText(name); Log("已复制文件名：" + name); }
+        catch (Exception ex) { MessageBox.Show(this, "复制失败：" + ex.Message, "提示"); }
+    }
+
+    private void MiOpenFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var r = ContextRow();
+        if (r == null || string.IsNullOrEmpty(r.OutPath)) return;
+        if (!File.Exists(r.OutPath)) { MessageBox.Show(this, "成品文件不在了。", "提示"); return; }
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                "explorer.exe", "/select,\"" + r.OutPath + "\"") { UseShellExecute = true });
+        }
+        catch (Exception ex) { MessageBox.Show(this, "打不开所在文件夹：" + ex.Message, "提示"); }
+    }
+
+    private void MiDeleteFile_Click(object sender, RoutedEventArgs e)
+    {
+        var r = ContextRow();
+        if (r == null) { MessageBox.Show(this, "请先选中一行。", "提示"); return; }
+        DeleteTaskFiles(new List<LessonRow> { r });
+    }
 
     private void BtnClearLog_Click(object sender, RoutedEventArgs e) => TxtLog.Clear();
 }

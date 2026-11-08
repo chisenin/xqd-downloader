@@ -4,6 +4,9 @@
 
     <!-- ══════════════ 状态词 → 画刷（三处状态共用的独立配色） ══════════════ -->
     <ctrl:StateColorConverter x:Key="StateColorConverter"/>
+    <!-- ★ v1.6.0：十六进制串 → 画刷。状态胶囊三色与进度条着色都用它，
+         配色来源统一是 States.StatePills / States.ProgressColorOf。 -->
+    <ctrl:HexBrushConverter x:Key="HexBrushConverter"/>
 
     <!-- ══════════════ 配色（复刻 xqd_gui.py QSS） ══════════════ -->
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,0">
@@ -214,15 +217,17 @@
         <Setter Property="Padding" Value="8,7"/>
         <Setter Property="BorderBrush" Value="#E0E5EE"/>
         <Setter Property="BorderThickness" Value="0,0,1,1"/>
-        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <!-- ★ v1.6.0：表头文字全部居中 -->
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
     <!-- 用默认 ListViewItem 模板（自带正确的 GridViewRowPresenter + 列绑定），只改配色 -->
     <Style x:Key="GridListItemStyle" TargetType="ListViewItem">
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="4,3"/>
-        <Setter Property="MinHeight" Value="26"/>
+        <Setter Property="Padding" Value="4,4"/>
+        <!-- ★ v1.6.0：行高 30px —— 胶囊标签 20px 高，上下各留 5px 更透气 -->
+        <Setter Property="MinHeight" Value="30"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Background" Value="Transparent"/>
         <Style.Triggers>
@@ -235,6 +240,87 @@
             <Trigger Property="IsSelected" Value="True">
                 <Setter Property="Background" Value="{StaticResource SelectRowBrush}"/>
             </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ══════════════ 视图切换按钮（全部/待下载/下载中/已完成/失败） ══════════════ -->
+    <Style x:Key="ViewToggleStyle" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, Segoe UI, sans-serif"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="#5A6A80"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="9,3"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#E8EFF8"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="White"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#C9D6E8"/>
+                            <Setter Property="Foreground" Value="#2F5D8F"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════ v1.6.0 单表新增样式 ══════════════ -->
+
+    <!-- 课程行：历史行（不在当前课表）整体降级为浅灰 -->
+    <Style x:Key="LessonRowItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource GridListItemStyle}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsHistory}" Value="True">
+                <Setter Property="Background" Value="#F1F3F6"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 历史区行：固定浅灰，不参与斑马纹与悬停高亮 -->
+    <Style x:Key="HistoryRowItemStyle" TargetType="ListViewItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="4,4"/>
+        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#F1F3F6"/>
+        <Setter Property="Foreground" Value="#7D8B9C"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#EAEEF3"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 历史区没有表头：把列头高度压成 0 -->
+    <Style x:Key="HiddenHeaderStyle" TargetType="GridViewColumnHeader">
+        <Setter Property="Visibility" Value="Collapsed"/>
+        <Setter Property="Height" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <!-- 数字列：右对齐；空闲占位符 "—" 用浅灰，正常值深色 -->
+    <Style x:Key="NumericCellStyle" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Foreground" Value="#33415C"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="—">
+                <Setter Property="Foreground" Value="#C3CBD8"/>
+            </DataTrigger>
         </Style.Triggers>
     </Style>
 
