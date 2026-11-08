@@ -55,11 +55,44 @@ xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader-vX.Y.Z.exe + cli/ + README.tx
 到 [GitHub Releases](https://github.com/chisenin/xqd-downloader/releases) 取最新版：
 
 ```
-xqd-downloader-v1.5.4.zip      解压后整目录拷贝，双击 gui/xqd-downloader-v1.5.4.exe
+xqd-downloader-vX.Y.Z.zip      解压后整目录拷贝，双击 gui/xqd-downloader-vX.Y.Z.exe
 ```
 
 > 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
-> 需要 ffmpeg / ffprobe 在 PATH（或引擎的查找路径）。
+
+#### 先装 .NET 8 桌面运行时（约 55 MB，装一次就够）
+
+本工具是 WPF 程序，**不把 .NET 运行时打包进 zip**（那样压缩包会涨到 160 MB）。
+首次使用请先装一次运行时：
+
+| 用途 | 链接 |
+|---|---|
+| 官方下载页（中文） | https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0 |
+| 官方下载页 | https://dotnet.microsoft.com/download/dotnet/8.0 |
+| 官方直链（win-x64，8.0.22） | https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.22/windowsdesktop-runtime-8.0.22-win-x64.exe |
+
+> **装不上或不确定？直接双击 `gui/启动.bat`** —— 它是纯 cmd 写的（不依赖 .NET 就能跑），
+> 会检测运行环境：缺运行时就把下载链接摆出来并引导安装，装好后自动启动工具。
+
+#### ffmpeg / ffprobe 不用手动装
+
+分片转封装与成品时长校验需要 ffmpeg / ffprobe。**首次启动时工具会自动检测**，
+缺失就弹「运行环境检查」窗口，点「立即下载安装」即可：
+
+- **下载源优先走非 GitHub 的国内 CDN**（阿里 npmmirror，实测 ~200 KB/s），
+  失败才退到 ffmpeg 官方构建站，最后才用带代理的 GitHub 源（ghfast.top / gh-proxy.com）。
+- 装到 `%USERPROFILE%\.xqd_tool\ffmpeg\bin` —— **不写系统 PATH、不需要管理员权限**。
+- 已经装在 PATH 或引擎回退目录里的 ffmpeg 会被直接识别，不会重复下载。
+
+顶栏也有「环境检查」按钮，随时可以手动再查一次。
+
+批量部署 / CI 场景可以走命令行模式（无界面，退出码 0 = 成功）：
+
+```bash
+gui/xqd-downloader-vX.Y.Z.exe --install-deps
+```
+
+已装好时直接返回「依赖已齐全」，不会重复下载。
 
 操作流程：授权状态就绪 → 左栏按**真实营名**列出全部营
 （分「已购课程 / 公开课」两组，顶部可搜索营名；标题栏可全选）→
@@ -98,8 +131,8 @@ dotnet cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 --seg-workers 12 \
 
 | 组件 | 用途 | 备注 |
 |---|---|---|
-| .NET 8 SDK / 桌面运行时 | 编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF；SDK 版本由根目录 `global.json` 锁定 8.0.x |
-| ffmpeg / ffprobe | 分片转封装、成品时长校验 | 需在 PATH 或引擎回退目录 |
+| .NET 8 SDK / 桌面运行时 | 编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF；SDK 版本由根目录 `global.json` 锁定 8.0.x。发行包**不含**运行时，需自行安装（见「快速开始」） |
+| ffmpeg / ffprobe | 分片转封装、成品时长校验 | **不必手动安装** —— 工具首次启动自动检测并提供一键下载安装（国内镜像优先） |
 | MuMu 模拟器 | 读取本机登录态以完成授权 | `api` 模式**下载本身不依赖模拟器/ADB** |
 
 ★ 业务网关与 CDN 请求必须 `ProxyHandler({})` **禁用系统代理**，
@@ -249,15 +282,19 @@ dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o dist-csharp/gui -p:PkgVe
 **不要用 `-p:AssemblyName=`** —— 那是 MSBuild 全局属性，会被 NuGet restore
 当成项目名，报 `Ambiguous project name` 直接失败。
 
-★ `PublishSingleFile=true` 需要联网还原 `Microsoft.NET.ILLink.Tasks`，
-故 C# 版采用 **framework-dependent 目录发布**：每个前端约 0.5 MB，共用系统 .NET 8 运行时。
+★ C# 版采用 **framework-dependent 目录发布**：每个前端约 0.5 MB，共用系统 .NET 8 运行时。
+发行包**刻意不打包运行时**（自包含单文件 162 MB、目录发布 162 MB，太大），
+改为在 README / Release 说明页给下载链接，并在 `gui/启动.bat` 里做检测与引导。
+
+★ `NuGet.config` 显式声明 nuget.org：本机默认 NuGet 源会被系统代理吞掉，
+还原 runtime pack 时直接 NU1100 失败；显式声明后恢复正常（2026-11-08 实测）。
 
 ---
 
 ## 测试
 
 ```bash
-# C# 离线回归（253 项，不发网络请求、不启动模拟器）
+# C# 离线回归（280 项，不发网络请求、不启动模拟器）
 dotnet run --project src/Xqd.Tests -c Release
 ```
 

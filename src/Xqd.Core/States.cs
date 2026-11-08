@@ -12,7 +12,7 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.6.2";   // v1.6.2：公开课可下载 + 营列表按真实营名分组
+    public const string AppVersion = "1.6.3";   // v1.6.3：启动时环境检查 + ffmpeg 一键自动安装
     /// <summary>产品名基址（不含版本号）。实际 exe 名为 xqd-downloader-vX.Y.Z.exe，
     ///   由 Xqd.Gui.csproj 的 PkgVersion 派生 —— 改版本号不用动这里。</summary>
     public const string ProductExeName = "xqd-downloader";

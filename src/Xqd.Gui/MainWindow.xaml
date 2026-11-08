@@ -70,6 +70,9 @@
                     <ctrl:WindowButton x:Name="BtnWinClose" ButtonKind="Close" Click="BtnWinClose_Click"/>
                 </StackPanel>
 
+                <Button x:Name="BtnEnv" DockPanel.Dock="Right" Content="环境检查"
+                        Style="{StaticResource ModernButtonStyle}" Click="BtnEnv_Click"
+                        ToolTip="检查 ffmpeg / ffprobe 等运行环境依赖。&#x0a;缺失时可一键自动下载安装（国内镜像优先）。"/>
                 <Button x:Name="BtnRetry" DockPanel.Dock="Right" Content="重新授权"
                         Style="{StaticResource ModernButtonStyle}" Click="BtnRetry_Click"
                         ToolTip="从 MuMu 模拟器重新读取兴趣岛登录态并刷新本机保存的授权。&#x0a;平时启动工具直接用已保存的授权，不会启动模拟器。"/>

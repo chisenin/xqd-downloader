@@ -10,7 +10,7 @@
          States.AppVersion 一致（CI 会校验两者与 tag 一致）。
          ★ 不用 -p:AssemblyName= 传参：那是 MSBuild 全局属性，会被 NuGet
            restore 当成项目名 → "Ambiguous project name" 直接失败。 -->
-    <PkgVersion Condition="'$(PkgVersion)' == ''">1.6.2</PkgVersion>
+    <PkgVersion Condition="'$(PkgVersion)' == ''">1.6.3</PkgVersion>
     <AssemblyName>xqd-downloader-v$(PkgVersion)</AssemblyName>
   </PropertyGroup>
   <ItemGroup>

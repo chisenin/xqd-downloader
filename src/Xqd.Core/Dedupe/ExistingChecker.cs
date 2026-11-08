@@ -364,11 +364,15 @@ public sealed class ExistingChecker : IExistingChecker
         return 0.0;
     }
 
-    /// <summary>定位 ffprobe.exe：PATH（对齐 shutil.which）→ 固定回退目录 → 交给系统。</summary>
+    /// <summary>定位 ffprobe.exe：**工具自装目录**（v1.6.3 自动安装的）
+    ///   → PATH（对齐 shutil.which）→ 固定回退目录 → 交给系统。</summary>
     private string FfprobeExe()
     {
         if (_ffprobe != null) return _ffprobe;
-        var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
+        // ★ v1.6.3：工具自装目录优先
+        string self = Path.Combine(Setup.DependencyCheck.ToolFfmpegDir, "ffprobe.exe");
+        if (File.Exists(self)) { _ffprobe = self; return self; }
+        string pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
         foreach (var dir in pathEnv.Split(Path.PathSeparator))
         {
             if (string.IsNullOrEmpty(dir)) continue;

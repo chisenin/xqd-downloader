@@ -170,6 +170,32 @@ public partial class MainWindow : Window
 
         // ★ 启动优先用本机保存授权（forceMumu:false）—— 平时绝不启动 MuMu。
         _ = AutoCheckAuthAsync(false);
+
+        // ★ v1.6.3：启动后检查运行环境（ffmpeg / ffprobe）。
+        //   缺致命依赖时弹「运行环境检查」窗口，提供一键下载安装。
+        //   延迟一点再弹 —— 别和授权检查抢窗口焦点。
+        Dispatcher.BeginInvoke(new Action(() => CheckEnvironmentOnStartup()),
+                              DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// ★ v1.6.3：首次启动的依赖检查。
+    ///   全齐 → 静默返回，不打扰用户。
+    ///   缺 ffmpeg/ffprobe → 弹「运行环境检查」，可一键自动下载安装。
+    /// </summary>
+    private void CheckEnvironmentOnStartup()
+    {
+        try
+        {
+            var results = Core.Setup.DependencyCheck.CheckAll();
+            if (!Core.Setup.DependencyCheck.HasMissingRequired(results)) return;
+            var dlg = new EnvCheckWindow(this, autoCloseWhenAllOk: true);
+            dlg.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Log("环境检查失败：" + ex.Message);
+        }
     }
 
     private GridView LessonsGrid => (GridView)LstLessons.View;
@@ -1742,6 +1768,13 @@ public partial class MainWindow : Window
     }
 
     private void BtnRetry_Click(object sender, RoutedEventArgs e) => _ = AutoCheckAuthAsync(true);
+
+    /// <summary>★ v1.6.3：手动打开「运行环境检查」（顶栏「环境检查」按钮）。</summary>
+    private void BtnEnv_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new EnvCheckWindow(this, autoCloseWhenAllOk: false);
+        dlg.ShowDialog();
+    }
 
     /// <summary>★ v1.6.2：按营名搜索（留空 = 全部）。</summary>
     private void EdCampSearch_TextChanged(object sender, TextChangedEventArgs e)

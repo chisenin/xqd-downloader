@@ -6,6 +6,17 @@
 *.html  text
 *.ps1   text eol=crlf
 
+# ★ v1.6.3：批处理必须是 CRLF —— LF 下 Windows 的 goto/标签行为会异常。
+#   源文件用 GBK 编码（中文 Windows 原生 ANSI 码页 936），cmd 直接按 ANSI 读。
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.cs    text
+*.xaml  text
+*.yml   text
+*.config text
+*.csproj text
+*.sln   text
+
 # 二进制/大文件
 *.mp4   binary
 *.ts    binary

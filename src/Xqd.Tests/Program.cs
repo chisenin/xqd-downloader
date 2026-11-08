@@ -177,7 +177,7 @@ internal static class Program
         True("本地阶段含封装", States.LocalPhases.Contains("封装"));
         True("本地阶段含校验", States.LocalPhases.Contains("校验"));
         Eq("工具名", "兴趣岛视频下载器", States.AppTitle);
-        Eq("版本", "1.6.2", States.AppVersion);
+        Eq("版本", "1.6.3", States.AppVersion);
         Eq("标签 4 个", 4, States.Tabs.Length);
         // ★ v1.6.2：「轻课」改名「公开课」——公开课营（OPEN_COURSE）能正常下载
         Eq("公开课是第 4 个标签", "公开课", States.Tabs[3]);
@@ -475,6 +475,48 @@ internal static class Program
         True("平台营类型含体验营", p.CampKinds.Contains("体验营"));
         True("平台营类型含公开课", p.CampKinds.Contains("公开课"));
         Eq("api 数据源模式", DataSourceMode.Api, p.Mode);
+
+        // ⑨ ★ v1.6.3：运行环境依赖检查与自动安装
+        var deps = Xqd.Core.Setup.DependencyCheck.CheckAll();
+        Eq("★ 依赖检查返回 3 项", 3, deps.Count);
+        True("★ ffmpeg 是致命依赖", deps.Any(d => d.Id == "ffmpeg" && d.Required));
+        True("★ ffprobe 是致命依赖", deps.Any(d => d.Id == "ffprobe" && d.Required));
+        True("★ MuMu 是可选依赖（不阻塞）",
+            deps.Any(d => d.Id == "mumu" && !d.Required && !d.AutoInstallable));
+        True("★ ffmpeg 可自动安装", deps.Any(d => d.Id == "ffmpeg" && d.AutoInstallable));
+
+        // 下载源顺序：**首选非 GitHub 的国内镜像**，GitHub 代理只作兜底
+        var srcs = Xqd.Core.Setup.DependencyInstaller.FfmpegSources();
+        True("★ 至少 3 个下载源", srcs.Count >= 3);
+        Eq("★ 首选源是 npmmirror（阿里，国内直连）", "npmmirror", srcs[0].Id);
+        True("★ 首选源不走 GitHub",
+            !srcs[0].Url.Contains("github.com") && !srcs[0].Url.Contains("ghfast")
+            && !srcs[0].Url.Contains("gh-proxy"));
+        Eq("★ 首选源格式是 gzip（.NET 原生可解）", "gz", srcs[0].Format);
+        True("★ 首选源 URL 按工具名参数化",
+            srcs[0].Url.Contains("{0}") && srcs[0].Url.Contains("ffmpeg-static"));
+        // GitHub 源必须在最后，且必须带代理前缀
+        var ghSources = srcs.Where(s => s.Url.Contains("github.com")).ToList();
+        True("★ GitHub 源存在但排在后面", ghSources.Count > 0
+            && srcs.IndexOf(ghSources[0]) >= 2);
+        foreach (var g in ghSources)
+            True("★ GitHub 源 " + g.Id + " 带代理前缀",
+                g.Url.Contains("ghfast.top") || g.Url.Contains("gh-proxy.com"));
+
+        // 自装目录：必须是 <工具目录>/ffmpeg/bin（用户目录，不需管理员权限）
+        // ⚠️ 测试环境用 XQD_TEST_HOME 隔离，所以这里不校验字面量 ".xqd_tool"，
+        //    而是校验「挂在工具目录下 + 末两级是 ffmpeg/bin + 不在 Program Files」。
+        string selfDir = Xqd.Core.Setup.DependencyCheck.ToolFfmpegDir;
+        string toolDir = Xqd.Core.Config.ToolDir;
+        True("★ 自装目录挂在工具目录下",
+            selfDir.StartsWith(toolDir, StringComparison.OrdinalIgnoreCase));
+        True("★ 自装目录末两级是 ffmpeg/bin",
+            selfDir.EndsWith(Path.Combine("ffmpeg", "bin"), StringComparison.OrdinalIgnoreCase));
+        True("★ 自装目录不在 Program Files（免管理员权限）",
+            !selfDir.Contains("Program Files"));
+        True("★ 工具目录在用户主目录下（不写系统区）",
+            toolDir.StartsWith(Xqd.Core.Config.HomeDir, StringComparison.OrdinalIgnoreCase)
+            || toolDir == Xqd.Core.Config.TestHome);
         Eq("★ adb 数据源模式", DataSourceMode.Adb,
             Services.CreateDataSource(DataSourceMode.Adb).Mode);
 

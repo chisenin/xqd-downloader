@@ -138,6 +138,9 @@ jobs:
           # ★ 不发布 server/：网页版与 GUI 功能重叠，已定为「需要时从源码跑」。
           dotnet publish src/Xqd.Cli/Xqd.Cli.csproj -c Release -o stage/cli
           if ($LASTEXITCODE -ne 0) { throw 'CLI publish 失败' }
+          # ★ v1.6.3：启动引导脚本（纯 cmd，不需要 .NET 就能跑）。
+          #   别人电脑没装 .NET 8 桌面运行时时，双击这个脚本会检测并给出下载链接。
+          Copy-Item src/Xqd.Gui/启动.bat stage/gui/启动.bat -Force
 
       - name: 打包 zip
         shell: pwsh
@@ -148,13 +151,22 @@ jobs:
           兴趣岛视频下载器 v$env:VERSION · C# / WPF 目录发布版
 
           gui/xqd-downloader-v$env:VERSION.exe   桌面工具（日常使用，双击启动）
+          gui/启动.bat                            启动引导脚本（缺运行时时用它）
           cli/Xqd.Cli.dll                        CLI 全量批处理，用法见 README.md
 
           请整目录解压后一起拷贝，不要只拷单个 exe。
-          运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；
-          ffmpeg / ffprobe 需在 PATH 或引擎回退目录。
 
-          本地网页版（server）与 Python 版不再随包发布，需要时从源码运行。
+          ── 需要先装 .NET 8 桌面运行时（约 55 MB，一次性）─────────────
+          下载页：https://dotnet.microsoft.com/download/dotnet/8.0
+          官方直链：https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.22/windowsdesktop-runtime-8.0.22-win-x64.exe
+          装不上或不确定？双击 gui/启动.bat，它会检测并引导你安装。
+
+          ── ffmpeg / ffprobe 不需要手动装 ────────────────────────────
+          首次启动若检测到缺失，工具会弹「运行环境检查」窗口，
+          点「立即下载安装」即可自动获取（国内镜像优先，约 60 MB，装到
+          %USERPROFILE%\.xqd_tool\ffmpeg\bin，不写系统 PATH、不需管理员权限）。
+
+          本地网页版（server）不再随包发布，需要时从源码运行。
           "@
           $readme | Set-Content -Path stage/README.txt -Encoding utf8
 
@@ -198,12 +210,29 @@ jobs:
             echo "| 包内路径 | 用途 |"
             echo "|---|---|"
             echo "| \`gui/xqd-downloader-v${VERSION}.exe\` | 桌面工具，双击启动（日常使用） |"
+            echo "| \`gui/启动.bat\` | 启动引导脚本 —— 没装 .NET 运行时时用它，会检测并引导安装 |"
             echo "| \`cli/Xqd.Cli.dll\` | CLI 全量批处理，\`dotnet cli/Xqd.Cli.dll --help\` |"
             echo
             echo "解压后**整目录**拷贝，不要只拷单个 exe；同级目录里的 \`Xqd.Core.dll\`、\`*.runtimeconfig.json\` 等是必需的。"
-            echo "运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；ffmpeg / ffprobe 需在 PATH（或引擎查找路径）。"
             echo
-            echo "本地网页版（server）与 Python 版不再随包发布，需要时从源码运行（见 README）。"
+            echo "### 需要先装 .NET 8 桌面运行时（约 55 MB，装一次就够）"
+            echo
+            echo "| 用途 | 链接 |"
+            echo "|---|---|"
+            echo "| 官方下载页（中文） | https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0 |"
+            echo "| 官方下载页 | https://dotnet.microsoft.com/download/dotnet/8.0 |"
+            echo "| 官方直链（win-x64，8.0.22） | https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.22/windowsdesktop-runtime-8.0.22-win-x64.exe |"
+            echo
+            echo "> 装不上或不确定？直接双击 \`gui/启动.bat\` —— 它不依赖 .NET 就能跑，"
+            echo "> 会检测运行环境并引导你装好再自动启动工具。"
+            echo
+            echo "### ffmpeg / ffprobe 不用手动装"
+            echo
+            echo "首次启动若检测到缺失，工具会弹「运行环境检查」窗口，点「立即下载安装」即可自动获取"
+            echo "（**国内镜像优先**，约 60 MB，装到 \`%USERPROFILE%\\.xqd_tool\\ffmpeg\\bin\` —— 不写系统 PATH、不需要管理员权限）。"
+            echo "已装在 PATH 或引擎回退目录里的 ffmpeg 会被直接识别，不会重复下载。"
+            echo
+            echo "本地网页版（server）不再随包发布，需要时从源码运行（见 README）。"
             echo
             echo "### SHA-256"
             echo '```'

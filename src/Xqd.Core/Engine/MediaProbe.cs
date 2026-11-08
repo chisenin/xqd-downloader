@@ -23,7 +23,8 @@ internal sealed class MediaInfo
 /// _find_ffmpeg / probe_duration / probe_info / probe_media / audio_ext_for / swap_ext。
 ///
 /// 所有子进程统一走 Xqd.Core.Proc（无控制台窗口、Qt 环境净化）。
-/// 查找顺序：PATH → D:/user/chisenin/download/Programs/ffmpeg-8.0.1-essentials_build/bin
+/// 查找顺序：**工具自装目录**（~/.xqd_tool/ffmpeg/bin，v1.6.3 自动安装的在这）
+///         → PATH → D:/user/chisenin/download/Programs/ffmpeg-8.0.1-essentials_build/bin
 ///         → C:/LEL/LEL-Downloader/Source/ffmpeg。
 /// </summary>
 internal static class MediaProbe
@@ -36,6 +37,11 @@ internal static class MediaProbe
 
     public static string FindTool(string name)
     {
+        // ★ v1.6.3：工具自装目录优先 —— 自动安装的 ffmpeg 放在
+        //   ~/.xqd_tool/ffmpeg/bin，不写系统 PATH，靠这里接上。
+        string self = Path.Combine(Setup.DependencyCheck.ToolFfmpegDir, name + ".exe");
+        if (File.Exists(self)) return self;
+
         string pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
         foreach (var raw in pathEnv.Split(Path.PathSeparator))
         {
