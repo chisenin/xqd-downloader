@@ -215,9 +215,9 @@ docs/                          设计与验证文档
 四个作业：
 
 1. `prepare`：从 tag（或手动输入）取版本号，校验 `X.Y.Z` 格式。
-2. `build-python`（`windows-2022`）：Python 3.13 + `PySide6==6.12.0` +
-   `pyinstaller==6.22.3`，校验 `APP_VERSION` 与 tag 一致，跑 `build_exe.py`，
-   产出 `xingqudao-downloader-vX.Y.Z.exe`。
+2. `build-python`（`windows-2022`）：Python 3.13 + **`PySide6-Essentials==6.12.0`** +
+   `pyinstaller==6.22.3`，校验 `APP_VERSION` 与 tag 一致、Qt DLL 总量 < 150 MiB，
+   跑 `build_exe.py`，产出 `xingqudao-downloader-vX.Y.Z.exe`。
 3. `build-csharp`（`windows-2022`）：.NET 8 SDK，`dotnet build` 全解决方案 +
    离线回归 `Xqd.Tests`，再 `dotnet publish` 三个前端到 `gui/ server/ cli/`，
    去掉 `.pdb` 后压缩成 `xingqudao-downloader-vX.Y.Z.zip`。
@@ -235,6 +235,9 @@ docs/                          设计与验证文档
 > - C# 离线回归依赖**本机时区**（`startTime` 按本地时间格式化）与 ffmpeg/ffprobe
 >   的 PATH 查找。CI 里把 runner 时区设为 `China Standard Time`，并放两个占位
 >   `ffmpeg.exe` / `ffprobe.exe`（回归只验证查找逻辑，不执行外部工具）。
+> - Python 依赖**只能装 `PySide6-Essentials`**：完整 `PySide6` 元包会带上
+>   QtWebEngine 等 Addons，`build_exe.py` 的 `--add-data` 会把它们全收进 exe，
+>   实测从约 96 MB 膨胀到 330 MB。工作流加了 DLL 总量断言防回归。
 
 发版操作（ maintainer ）：
 
