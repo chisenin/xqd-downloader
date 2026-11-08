@@ -232,6 +232,9 @@ docs/                          设计与验证文档
 >   `MarqueeControl` / `StateColorConverter` 拆到 `Xqd.Controls` 类库，XAML 改为
 >   `;assembly=Xqd.Controls`，从**已编译的引用程序集**解析，彻底绕开 markup compile 的本地类型解析。
 >   根目录 `global.json` 另把 .NET SDK 锁在 8.0.x，避免 runner 上更高版本 SDK 改变编译行为。
+> - C# 离线回归依赖**本机时区**（`startTime` 按本地时间格式化）与 ffmpeg/ffprobe
+>   的 PATH 查找。CI 里把 runner 时区设为 `China Standard Time`，并放两个占位
+>   `ffmpeg.exe` / `ffprobe.exe`（回归只验证查找逻辑，不执行外部工具）。
 
 发版操作（ maintainer ）：
 

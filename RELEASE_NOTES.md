@@ -64,6 +64,7 @@
 - 首次 CI 运行暴露并修复两个「干净构建专属」问题：runner 控制台 cp1252 导致
   `build_exe.py` 打印中文崩溃（→ 强制 UTF-8）；XAML 引用同程序集控件报 MC3074
   （→ 拆出 `Xqd.Controls` 类库，XAML 从引用程序集解析；另加 `global.json` 锁定 SDK 8.0.x）。
+  CI 另需把 runner 设成中国时区、为离线回归提供 ffmpeg/ffprobe 的 PATH 查找桩。
   详见 `docs/11-工具实现要点.md` O 节。
 - ⚠️ **未做真网络全量下载**（网络不稳定、流量昂贵），本次改动不涉及下载链路。
 

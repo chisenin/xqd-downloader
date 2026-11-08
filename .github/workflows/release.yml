@@ -24,6 +24,8 @@ permissions:
 env:
   PYTHONIOENCODING: utf-8
   PYTHONUTF8: "1"
+  # C# 离线回归里有按本机时区格式化的 startTime 断言；课程时间一律按中国时区。
+  TZ: Asia/Shanghai
 
 concurrency:
   group: release-${{ github.ref }}
@@ -125,6 +127,23 @@ jobs:
       - name: 确认 SDK 版本（根目录 global.json 锁定 8.0.x）
         shell: pwsh
         run: dotnet --version
+
+      - name: 准备离线回归环境（中国时区 + ffmpeg/ffprobe 查找桩）
+        shell: pwsh
+        run: |
+          # ① Naming.FmtDate / FmtWhen 用本机时区（与 Python 版 fromtimestamp 一致）。
+          #    runner 默认 UTC，会把 12:00+08:00 显示成 04:00 → 断言失败。
+          tzutil /s "China Standard Time"
+          if ($LASTEXITCODE -ne 0) { throw '设置 runner 时区失败' }
+          tzutil /g
+          # ② 离线回归只验证 MediaProbe.FindTool 的 PATH 查找逻辑（不执行 ffmpeg），
+          #    runner 不带 ffmpeg；放两个占位文件即可，无需联网安装 ~100MB 工具链。
+          $dir = Join-Path $env:RUNNER_TEMP 'xqd-tools'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          New-Item -ItemType File -Force -Path (Join-Path $dir 'ffmpeg.exe')  | Out-Null
+          New-Item -ItemType File -Force -Path (Join-Path $dir 'ffprobe.exe') | Out-Null
+          $dir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "查找桩目录：$dir"
 
       - name: 编译解决方案 + 离线回归
         shell: pwsh
