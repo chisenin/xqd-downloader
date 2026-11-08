@@ -60,3 +60,29 @@ Windows 客户端**（V1.5.0 / V2.19.70）的行为。本仓库中：
 课程内容的权利不因本软件或本仓库的许可而改变。
 使用者请遵守课程提供方的授权要求，**只处理自己有权访问与保存的内容**。
 本工具不提供、也不鼓励用于未购内容的批量获取。
+
+---
+
+## 五、C# / WPF 实现（`src/`）的额外声明
+
+v1.5.3 起 Python 与 C# 两套实现**同在 `master` 分支**（此前 C# 在独立的
+`csharp-wpf` 分支）；上文第一至四节对两套实现同样适用。
+C# 实现的组件与授权：
+
+| 组件 | 授权 | 说明 |
+|---|---|---|
+| .NET 8 SDK / Runtime、Windows Desktop Runtime（含 WPF） | MIT（.NET Foundation / Microsoft） | 使用系统自带运行时，**不随本仓库分发** |
+| `System.Text.Json` / `HttpClient` / `Process` 等 BCL | MIT（.NET） | **零第三方 NuGet 依赖** |
+| FFmpeg / ffprobe | LGPL-2.1+ / GPL | 外部可执行文件，不由本仓库分发；用途与 Python 版相同 |
+| Qt / PySide6 | LGPL-3.0 | **C# 实现不使用**，仅 Python GUI 需要 |
+
+`Xqd.Core/Crypto/Netease163.cs` 是 `_lel/core/netease_mooc.py` 的等价移植，
+**延续上文第二节的边界**：依据第三方客户端行为独立复现，
+不属于 `Xue-Wu-Zhi/xuewuzhi-downloader` 仓库的 MIT 授权范围，不得声称 MIT。
+
+C# 实现同样**不含任何账号凭据**，凭据只在运行时从环境变量或用户私有文件读取。
+
+两套实现的发行二进制均由 `.github/workflows/release.yml` 在 GitHub Actions 的
+Windows runner 上构建，仓库内不存放 exe / zip；其中 PyInstaller 会把 PySide6
+（LGPL-3.0）随 Python 单文件 exe 一起分发，C# 目录发布包只含本项目编译产物，
+运行时依赖由用户系统自行提供。

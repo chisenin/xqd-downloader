@@ -1,0 +1,319 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ctrl="clr-namespace:Xqd.Gui.Controls">
+
+    <!-- ══════════════ 状态词 → 画刷（三处状态共用的独立配色） ══════════════ -->
+    <ctrl:StateColorConverter x:Key="StateColorConverter"/>
+
+    <!-- ══════════════ 配色（复刻 xqd_gui.py QSS） ══════════════ -->
+    <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#3B6EA5" Offset="0"/>
+        <GradientStop Color="#2F5D8F" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="AppBgBrush"       Color="#F4F6FA"/>
+    <SolidColorBrush x:Key="TextDarkBrush"    Color="#2B3445"/>
+    <SolidColorBrush x:Key="MutedBrush"       Color="#8494A8"/>
+    <SolidColorBrush x:Key="SectionTitleBrush" Color="#2F3D52"/>
+    <SolidColorBrush x:Key="CardBorderBrush"  Color="#E0E5EE"/>
+    <SolidColorBrush x:Key="HeaderBgBrush"    Color="#EEF2F8"/>
+    <SolidColorBrush x:Key="HeaderTextBrush"  Color="#4A5A72"/>
+    <SolidColorBrush x:Key="AltRowBrush"      Color="#FAFBFD"/>
+    <SolidColorBrush x:Key="SelectRowBrush"   Color="#E8F0FA"/>
+    <SolidColorBrush x:Key="LogBgBrush"       Color="#1F2733"/>
+    <SolidColorBrush x:Key="LogFgBrush"       Color="#C9D6E5"/>
+    <SolidColorBrush x:Key="PrimaryBrush"     Color="#3B6EA5"/>
+    <SolidColorBrush x:Key="BrandSubBrush"    Color="#C8DCF0"/>
+    <SolidColorBrush x:Key="StatusBgBrush"    Color="#E8EDF5"/>
+
+    <SolidColorBrush x:Key="BannerInfoBg" Color="#FFF8E6"/>
+    <SolidColorBrush x:Key="BannerInfoBd" Color="#F0DFAE"/>
+    <SolidColorBrush x:Key="BannerInfoFg" Color="#8A6D1A"/>
+    <SolidColorBrush x:Key="BannerOkBg" Color="#EAF7EE"/>
+    <SolidColorBrush x:Key="BannerOkBd" Color="#B8E0C4"/>
+    <SolidColorBrush x:Key="BannerOkFg" Color="#1F7A3D"/>
+    <SolidColorBrush x:Key="BannerErrBg" Color="#FDEEEE"/>
+    <SolidColorBrush x:Key="BannerErrBd" Color="#F0C2C2"/>
+    <SolidColorBrush x:Key="BannerErrFg" Color="#B03030"/>
+
+    <!-- ══════════════ 卡片 ══════════════ -->
+    <Style x:Key="CardBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <!-- ══════════════ 圆角按钮（普通 / 主按钮 / 危险 / 暂停） ══════════════ -->
+    <Style x:Key="ModernButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, Segoe UI, sans-serif"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="#33415C"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#D3DAE6"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#EEF3FA"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#9FB6D4"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#DDE8F5"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="#EEF0F4"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#E0E4EA"/>
+                            <Setter Property="Foreground" Value="#A8B2C1"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, Segoe UI, sans-serif"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="#3B6EA5"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="14,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#4A7FB8"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#2F5D8F"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="#A9BDD4"/>
+                            <Setter Property="Foreground" Value="#EEF3F8"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
+        <Setter Property="Foreground" Value="#C0392B"/>
+        <Setter Property="BorderBrush" Value="#E8C4BF"/>
+    </Style>
+
+    <Style x:Key="PauseButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, Segoe UI, sans-serif"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="#9A6A24"/>
+        <Setter Property="Background" Value="#FDF6EC"/>
+        <Setter Property="BorderBrush" Value="#E8D5B8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#F9EAD4"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#D9BD8E"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#F2DFC0"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="#F2F3F5"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#E2E6EC"/>
+                            <Setter Property="Foreground" Value="#B4BCC8"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════ 输入框（圆角 + 聚焦蓝边） ══════════════ -->
+    <Style x:Key="RoundTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, Segoe UI, sans-serif"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="#D3DAE6"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="CaretBrush" Value="#3B6EA5"/>
+        <Setter Property="SelectionBrush" Value="#3B6EA5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6" Padding="4,2">
+                        <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#3B6EA5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════ 文本 ══════════════ -->
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource SectionTitleBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="MutedTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ══════════════ 表格 ══════════════ -->
+    <Style x:Key="GridHeaderStyle" TargetType="GridViewColumnHeader">
+        <Setter Property="Background" Value="{StaticResource HeaderBgBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource HeaderTextBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="8,7"/>
+        <Setter Property="BorderBrush" Value="#E0E5EE"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    </Style>
+
+    <!-- 用默认 ListViewItem 模板（自带正确的 GridViewRowPresenter + 列绑定），只改配色 -->
+    <Style x:Key="GridListItemStyle" TargetType="ListViewItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="4,3"/>
+        <Setter Property="MinHeight" Value="26"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Style.Triggers>
+            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                <Setter Property="Background" Value="{StaticResource AltRowBrush}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#F0F5FB"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource SelectRowBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ══════════════ 营列表项 ══════════════ -->
+    <Style x:Key="CampListItemStyle" TargetType="ListBoxItem">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="9,7"/>
+        <Setter Property="Margin" Value="1,2"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#F0F5FB"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#3B6EA5"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════ 标签（全部/正式营/体验营/轻课） ══════════════ -->
+    <Style x:Key="PillTabItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="#6A7A90"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd" CornerRadius="6" Padding="12,5" Margin="2,0"
+                            Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#F0F5FB"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="White"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#E0E5EE"/>
+                            <Setter Property="Foreground" Value="#2F5D8F"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════ 单元格进度条（用默认模板，保证 PART_Track / PART_Indicator 契约） ══════════════ -->
+    <Style x:Key="CellProgressStyle" TargetType="ProgressBar">
+        <Setter Property="Height" Value="10"/>
+        <Setter Property="Minimum" Value="0"/>
+        <Setter Property="Maximum" Value="100"/>
+        <Setter Property="Foreground" Value="#3B6EA5"/>
+        <Setter Property="Background" Value="#E8ECF3"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <!-- ══════════════ 运行日志 ══════════════ -->
+    <Style x:Key="LogTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{StaticResource LogFgBrush}"/>
+        <Setter Property="Background" Value="{StaticResource LogBgBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+    </Style>
+
+</ResourceDictionary>

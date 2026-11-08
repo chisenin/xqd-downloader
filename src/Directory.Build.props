@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <!-- 本工具只面向 Windows（WPF / MuMu / 注册表 Known Folder），CA1416 平台告警不适用 -->
+    <NoWarn>$(NoWarn);CS0168;CS0219;CS0414;SYSLIB0014;CA1416</NoWarn>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <AssemblyName Condition="'$(MSBuildProjectName)' != ''">$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,82 @@
+# 兴趣岛视频下载器 v1.5.3 发行说明
+
+> **v1.5.3 是一次工程结构变更，功能代码无改动。**
+> Python 与 C# / WPF 两套实现合并到同一个 `master` 分支，
+> 打包与编译改由 GitHub Actions 完成，本机不再产出二进制。
+>
+> ⚠️ 仅供个人将**自己已购**的课程备份到**自有设备**使用；导出后请及时删除。
+
+## 本版本改了什么
+
+| 项 | v1.5.2 及以前 | v1.5.3 |
+|---|---|---|
+| 分支 | `master`（Python）/ `csharp-wpf`（C#）分开维护 | **合并到 `master`**，两套源码同仓 |
+| 发版 | 两个独立 Release：`v1.5.2`、`v1.5.2-csharp-wpf` | **一个 Release `v1.5.3` 挂两个附件** |
+| 构建 | 本机 PyInstaller 打包 + 本机 `dotnet publish` | **GitHub Actions（Windows runner）** |
+| 二进制 | 手工 `gh release upload` | 工作流自动上传，仓库不含 exe / zip |
+
+旧分支与 v1.5.2 两个 Release **保留作历史**，不再更新。
+版本号统一到 `1.5.3`：`xqd_gui.APP_VERSION`、`States.AppVersion`，
+以及两处离线回归的版本断言。
+
+## 下载与校验
+
+| 附件 | 实现 | 说明 |
+|---|---|---|
+| `xingqudao-downloader-v1.5.3.exe` | Python / PySide6 | PyInstaller 单文件，约 96 MB，双击即用、绿色免安装 |
+| `xingqudao-downloader-v1.5.3.zip` | C# / WPF（.NET 8） | 目录发布，**解压后整目录拷贝**，双击 `gui/xingqudao-downloader.exe` |
+
+两个附件的 **SHA-256 由工作流在上传时自动写进 Release 正文**（见
+`.github/workflows/release.yml` 的 `release` 作业），本地不再手工记录哈希。
+
+运行依赖：
+
+- 两个版本都需要 `ffmpeg` / `ffprobe`（PATH 或引擎回退目录）。
+- C# 版需要系统已安装 **.NET 8 桌面运行时**（`Microsoft.WindowsDesktop.App 8.x`），
+  不随 zip 分发；不要只拷单个 exe，`Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
+- 凭据只在运行时从 `XQD_COOKIE` / `%USERPROFILE%\.xqd_tool\cookie.txt` 读取，
+  **仓库与发行包都不含任何账号信息**。
+
+## GitHub Actions 工作流
+
+文件：`.github/workflows/release.yml`。推送 tag `vX.Y.Z` 触发，四个作业：
+
+1. `prepare` — 解析并校验版本号 `X.Y.Z`。
+2. `build-python` — `windows-2022`，Python 3.13 + `PySide6==6.12.0` +
+   `pyinstaller==6.22.3`；先校验 `APP_VERSION` 与 tag 一致，再跑 `build_exe.py`。
+3. `build-csharp` — `windows-2022`，.NET 8 SDK；`dotnet build` 全解决方案 +
+   离线回归 `Xqd.Tests`，再 `dotnet publish` 三个前端（`gui/` `server/` `cli/`），
+   去掉 `.pdb` 后压缩成 zip。
+4. `release` — 汇总两个附件，生成含 SHA-256 的发行说明，用 `GITHUB_TOKEN`
+   （`permissions: contents: write`）创建 / 更新单个 Release。
+
+也支持 `workflow_dispatch` 手动填版本号重跑；Release 已存在时覆盖附件并更新说明。
+
+发版步骤：改两处版本号 → 提交并推 `master` → `git tag vX.Y.Z && git push origin vX.Y.Z`。
+详见根目录 `README.md`「GitHub Actions 发版」。
+
+## 验证
+
+- 合并后 `master` 同时保留全部 Python 源码（`xqd_*.py`、`_lel/`、`ui.html`）
+  与全部 C# 源码（`src/Xqd.sln` 五项目、约 1.1 万行）。
+- C# 离线回归版本断言同步到 1.5.3；Python 离线回归版本断言同步到 1.5.3。
+- 工作流 YAML 语法已解析校验；实际构建结果以 GitHub Actions 运行记录为准。
+- ⚠️ **未做真网络全量下载**（网络不稳定、流量昂贵），本次改动不涉及下载链路。
+
+## 已知取舍
+
+- `PublishSingleFile=true` 需要联网还原 `Microsoft.NET.ILLink.Tasks`，
+  故 C# 版仍采用 **framework-dependent 目录发布**：三个前端各约 0.5 MB，
+  共用系统 .NET 8 运行时；换来体积远小于 Python 单文件 exe。
+- exe 约 96.5 MB 已贴近 GitHub 单文件 100 MB 上限；PyInstaller 内部已压缩，
+  实测再套 deflate 只省 0.6%，所以二进制只走 Release 附件、不进仓库。
+- 163 解密内核按第三方客户端行为独立复现，**不属于**学无止仓库的 MIT 授权范围，
+  本工具整体不声明 MIT。
+
+## 许可与合规
+
+- 运行时主链路独立编写，不含账号体系、加密服务或商业客户端代码，也不含任何账号凭据。
+- 组件：.NET 8 / WPF（MIT）· PySide6（LGPL-3.0）· FFmpeg（LGPL-2.1+ / GPL，不随仓库分发）
+  · 学无止（参考，MIT）；完整声明见仓库 `NOTICE.md` 第五节。
+- 课程内容的权利不因本软件改变。请**只处理自己已购买、有权访问与保存的内容**，
+  本工具不提供、也不鼓励用于未购内容的批量获取。

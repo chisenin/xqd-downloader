@@ -54,7 +54,7 @@ import xqd_history
 import xqd_platform
 
 APP_TITLE = '兴趣岛视频下载器'
-APP_VERSION = '1.5.2'
+APP_VERSION = '1.5.3'
 
 # ── 课程列表的列索引（★ 单一事实来源）─────────────────────────
 #   v1.5.0 起共 6 列：勾选框后面第一列就是「标题前缀」（原营内序号）。

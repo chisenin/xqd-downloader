@@ -50,16 +50,30 @@ p1.png
 state/*.local.json
 _lel/api/migrate_log.txt
 
+# ── 构建产物（Python / C# 两套实现都适用） ───────────────
+#   v1.5.3 起两个实现同在 master；打包/编译一律由 GitHub Actions 完成，
+#   本地产物不进仓库（exe ≈ 96 MB，zip 为目录发布包）。
+build/
+dist/
+dist-csharp/
+stage/
+*.spec
+*.exe
+*.pyz
+*.bundle
+*.user
+*.suo
+.vs/
+src/**/bin/
+src/**/obj/
+xingqudao-downloader-v*.zip
+vendor/
+
 # ── GUI 工具的运行产物 ─────────────────────────────────
 state/gui_shots/
 state/gui_e2e/
 _lel/api/state/
 state/login_test.log
-build/
-dist/
-*.spec
-vendor/
-state/exe_test/
 state/exe_test/
 
 # ── GUI v7 新增的运行产物（下载历史 / 自检截图） ──────────
@@ -68,31 +82,18 @@ state/gui_hist_out/
 state/hist_real/
 state/v7_shot*.png
 state/states_shot.png
-
-# ── master 分支上不跟踪 C# / WPF 分支的产物 ─────────────────
-#   切分支时 src/ 的 bin/obj 残留会变成未跟踪文件，dist-csharp/ 是交付物；
-#   显式忽略，避免 `git add -A` 把 500MB 产物收进 master 提交。
-dist-csharp/
-src/**/bin/
-src/**/obj/
-_crop_*.png
 state/v8_shot*.png
 
 # 裁剪/调试用的临时图
 state/z*.png
+_crop_*.png
 
-# ── 推送 GitHub 前排除：凭据 / 运行时数据 / 打包产物 ──
+# ── 推送 GitHub 前排除：凭据 / 运行时数据 ────────────────
 state/links.json
-*.exe
-*.pyz
-*.bundle
 
 # ── 抓包/逆向的临时工作区（含明文凭据，绝不入库） ──────────
-cache-analysis/
 webcache/
 dl_drm/
-*.hls
-*.m3u8
 
 # ── 凭据文件（仓库之外，这里兜底防止误拷进来） ──────────────
 cookie.txt

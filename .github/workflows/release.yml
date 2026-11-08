@@ -1,0 +1,228 @@
+name: 构建并发布双版本
+
+# v1.5.3 起：master 一个分支同时存放 Python 与 C# 两套实现，
+# 打包 / 编译**只在本工作流所在的 GitHub Actions runner 上执行**，本机不产出二进制。
+# 推送 tag vX.Y.Z → 生成同一个 Release 下的两个附件：
+#   xingqudao-downloader-vX.Y.Z.exe  （Python / PySide6，PyInstaller 单文件）
+#   xingqudao-downloader-vX.Y.Z.zip  （C# / WPF，dotnet publish 目录发布）
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（不含 v，例如 1.5.3）；用于手动重跑发版'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: 解析版本号
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - name: 从 tag / 输入取版本号
+        id: meta
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            V="$INPUT_VERSION"
+          else
+            V="${REF_NAME#v}"
+          fi
+          V="${V#v}"
+          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "版本号不合法（需要 X.Y.Z）：$V" >&2
+            exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+          echo "发版版本：$V"
+
+  build-python:
+    name: PyInstaller 单文件 exe
+    needs: prepare
+    runs-on: windows-2022
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 安装打包依赖（与本机已验证组合一致）
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "PySide6==6.12.0" "pyinstaller==6.22.3"
+          python -c "import PySide6, PyInstaller; print('PySide6', PySide6.__version__, '/ PyInstaller', PyInstaller.__version__)"
+
+      - name: 校验源码版本号与 tag 一致
+        shell: pwsh
+        run: |
+          $src = Get-Content xqd_gui.py -Raw
+          $m = [regex]::Match($src, "(?m)^APP_VERSION\s*=\s*'([^']+)'")
+          if (-not $m.Success) { throw 'xqd_gui.py 里找不到 APP_VERSION' }
+          if ($m.Groups[1].Value -ne $env:VERSION) {
+            throw "APP_VERSION=$($m.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
+          }
+          "APP_VERSION = $($m.Groups[1].Value)"
+
+      - name: PyInstaller 打包
+        shell: pwsh
+        run: python build_exe.py
+
+      - name: 核对产物
+        shell: pwsh
+        run: |
+          $exe = "dist/xingqudao-downloader-v$env:VERSION.exe"
+          if (-not (Test-Path $exe)) { throw "缺少产物 $exe" }
+          Get-Item $exe | Select-Object Name, Length | Format-Table -AutoSize
+          "SHA256 = $((Get-FileHash $exe -Algorithm SHA256).Hash)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-exe
+          path: dist/xingqudao-downloader-v${{ needs.prepare.outputs.version }}.exe
+          if-no-files-found: error
+          retention-days: 7
+
+  build-csharp:
+    name: dotnet publish 目录发布 zip
+    needs: prepare
+    runs-on: windows-2022
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 编译解决方案 + 离线回归
+        shell: pwsh
+        run: |
+          dotnet build src/Xqd.sln -c Release
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet build 失败' }
+          dotnet run --project src/Xqd.Tests/Xqd.Tests.csproj -c Release --no-build
+          if ($LASTEXITCODE -ne 0) { throw 'C# 离线回归失败' }
+
+      - name: 目录发布三个前端
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force stage -ErrorAction SilentlyContinue
+          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj       -c Release -o stage/gui
+          if ($LASTEXITCODE -ne 0) { throw 'GUI publish 失败' }
+          dotnet publish src/Xqd.Server/Xqd.Server.csproj -c Release -o stage/server
+          if ($LASTEXITCODE -ne 0) { throw 'Server publish 失败' }
+          dotnet publish src/Xqd.Cli/Xqd.Cli.csproj       -c Release -o stage/cli
+          if ($LASTEXITCODE -ne 0) { throw 'CLI publish 失败' }
+
+      - name: 打包 zip
+        shell: pwsh
+        run: |
+          # 调试符号不随发行包分发，减小体积
+          Get-ChildItem stage -Recurse -Filter *.pdb | Remove-Item -Force
+          $readme = @"
+          兴趣岛视频下载器 v$env:VERSION · C# / WPF 目录发布版
+
+          gui/xingqudao-downloader.exe     桌面工具（日常使用，双击启动）
+          server/Xqd.Server.dll           本地网页版，用法见 README.md
+          cli/Xqd.Cli.dll                 CLI 全量批处理，用法见 README.md
+
+          请整目录解压后一起拷贝，不要只拷单个 exe。
+          运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；
+          ffmpeg / ffprobe 需在 PATH 或引擎回退目录。
+          "@
+          $readme | Set-Content -Path stage/README.txt -Encoding utf8
+
+          $zip = "xingqudao-downloader-v$env:VERSION.zip"
+          Compress-Archive -Path stage/* -DestinationPath $zip -Force
+          Get-Item $zip | Select-Object Name, Length | Format-Table -AutoSize
+          "SHA256 = $((Get-FileHash $zip -Algorithm SHA256).Hash)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csharp-zip
+          path: xingqudao-downloader-v${{ needs.prepare.outputs.version }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: 发布 GitHub Release
+    needs: [prepare, build-python, build-csharp]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: 生成发行说明（含 SHA-256）
+        working-directory: artifacts
+        shell: bash
+        run: |
+          EXE="xingqudao-downloader-v${VERSION}.exe"
+          ZIP="xingqudao-downloader-v${VERSION}.zip"
+          test -f "$EXE" || { echo "缺少 $EXE" >&2; exit 1; }
+          test -f "$ZIP" || { echo "缺少 $ZIP" >&2; exit 1; }
+          {
+            echo "## 兴趣岛视频下载器 v${VERSION}"
+            echo
+            echo "同一个 Release 提供两套功能对齐的实现，按需二选一，不必同时安装。"
+            echo "二进制由 GitHub Actions 在 Windows runner 上构建，仓库不含 exe / zip。"
+            echo
+            echo "| 附件 | 实现 | 运行方式 |"
+            echo "|---|---|---|"
+            echo "| \`$EXE\` | Python / PySide6，PyInstaller 单文件 | 双击即用，绿色免安装，约 96 MB |"
+            echo "| \`$ZIP\` | C# / WPF（.NET 8），目录发布 | 解压后整目录拷贝，双击 \`gui/xingqudao-downloader.exe\`；需系统已装 .NET 8 桌面运行时 |"
+            echo
+            echo "两个版本都需要 ffmpeg / ffprobe 用于转封装与时长校验；凭据只在运行时从本机读取，仓库不含任何账号信息。"
+            echo
+            echo "### SHA-256"
+            echo '```'
+            sha256sum "$EXE" "$ZIP"
+            echo '```'
+            echo
+            echo "> 只处理自己已购买、有权访问与保存的内容；导出到教学大屏后请及时删除。"
+          } > notes.md
+          cat notes.md
+
+      - name: 创建或更新 Release 附件
+        working-directory: artifacts
+        shell: bash
+        run: |
+          EXE="xingqudao-downloader-v${VERSION}.exe"
+          ZIP="xingqudao-downloader-v${VERSION}.zip"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$EXE" "$ZIP" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit   "$TAG" --notes-file notes.md --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "$EXE" "$ZIP" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "兴趣岛视频下载器 v${VERSION}" \
+              --notes-file notes.md
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,assets
