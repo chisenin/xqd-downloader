@@ -89,6 +89,16 @@ jobs:
           }
           "AppVersion = $($m.Groups[1].Value)"
 
+          # ★ exe 名里的版本号来自 csproj 的 PkgVersion（派生成 AssemblyName）。
+          #   它必须与 tag 一致，否则 zip 里的 exe 会挂着上一个版本的号。
+          $proj = Get-Content src/Xqd.Gui/Xqd.Gui.csproj -Raw
+          $pm = [regex]::Match($proj, '<PkgVersion[^>]*>([^<]+)</PkgVersion>')
+          if (-not $pm.Success) { throw 'Xqd.Gui.csproj 里找不到 PkgVersion' }
+          if ($pm.Groups[1].Value -ne $env:VERSION) {
+            throw "csproj PkgVersion=$($pm.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
+          }
+          "PkgVersion = $($pm.Groups[1].Value)"
+
       - name: 准备离线回归环境（中国时区 + ffmpeg/ffprobe 查找桩）
         shell: pwsh
         run: |
@@ -118,7 +128,12 @@ jobs:
         shell: pwsh
         run: |
           Remove-Item -Recurse -Force stage -ErrorAction SilentlyContinue
-          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o stage/gui
+          # ★ GUI 用带版本号的程序集名 → 产物 gui/xqd-downloader-vX.Y.Z.exe
+          #   （.dll / .deps.json / .runtimeconfig.json 同步带版本号，自洽）。
+          #   ★ 不要在 publish 之后再改名 exe：apphost 与 runtimeconfig.json 的
+          #   配对关系一旦断掉，程序会直接起不来。让 MSBuild 统一改名最稳。
+          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o stage/gui `
+            -p:PkgVersion=$env:VERSION
           if ($LASTEXITCODE -ne 0) { throw 'GUI publish 失败' }
           # ★ 不发布 server/：网页版与 GUI 功能重叠，已定为「需要时从源码跑」。
           dotnet publish src/Xqd.Cli/Xqd.Cli.csproj -c Release -o stage/cli
@@ -132,8 +147,8 @@ jobs:
           $readme = @"
           兴趣岛视频下载器 v$env:VERSION · C# / WPF 目录发布版
 
-          gui/xqd-downloader.exe    桌面工具（日常使用，双击启动）
-          cli/Xqd.Cli.dll           CLI 全量批处理，用法见 README.md
+          gui/xqd-downloader-v$env:VERSION.exe   桌面工具（日常使用，双击启动）
+          cli/Xqd.Cli.dll                        CLI 全量批处理，用法见 README.md
 
           请整目录解压后一起拷贝，不要只拷单个 exe。
           运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；
@@ -182,7 +197,7 @@ jobs:
             echo
             echo "| 包内路径 | 用途 |"
             echo "|---|---|"
-            echo "| \`gui/xqd-downloader.exe\` | 桌面工具，双击启动（日常使用） |"
+            echo "| \`gui/xqd-downloader-v${VERSION}.exe\` | 桌面工具，双击启动（日常使用） |"
             echo "| \`cli/Xqd.Cli.dll\` | CLI 全量批处理，\`dotnet cli/Xqd.Cli.dll --help\` |"
             echo
             echo "解压后**整目录**拷贝，不要只拷单个 exe；同级目录里的 \`Xqd.Core.dll\`、\`*.runtimeconfig.json\` 等是必需的。"

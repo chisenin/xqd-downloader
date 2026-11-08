@@ -22,7 +22,7 @@ Python 源码将在 v1.6.1 删除。
 推送 tag `vX.Y.Z` 会自动生成**一个** Release 和**一个**附件（版本号与 tag 一致）：
 
 ```
-xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader.exe + cli/ + README.txt
+xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader-vX.Y.Z.exe + cli/ + README.txt
 ```
 
 `server/`（本地网页版）不再随包发布，需要时从源码运行。详见下文「GitHub Actions 发版」。
@@ -52,7 +52,7 @@ xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader.exe + cli/ + README.txt
 到 [GitHub Releases](https://github.com/chisenin/xqd-downloader/releases) 取最新版：
 
 ```
-xqd-downloader-v1.5.4.zip      解压后整目录拷贝，双击 gui/xqd-downloader.exe
+xqd-downloader-v1.5.4.zip      解压后整目录拷贝，双击 gui/xqd-downloader-v1.5.4.exe
 ```
 
 > 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
@@ -214,7 +214,8 @@ docs/                          设计与验证文档
 1. `prepare`：从 tag（或手动输入）取版本号，校验 `X.Y.Z` 格式。
 2. `build-csharp`（`windows-2022`）：.NET 8 SDK，校验 `States.AppVersion` 与 tag 一致，
    `dotnet build` 全解决方案 + 离线回归 `Xqd.Tests`，再 `dotnet publish` 两个前端到
-   `gui/ cli/`，去掉 `.pdb`、附 `README.txt` 后压缩成 `xqd-downloader-vX.Y.Z.zip`。
+   `gui/ cli/`（GUI 用 `-p:PkgVersion` 让 exe 带版本号），
+   去掉 `.pdb`、附 `README.txt` 后压缩成 `xqd-downloader-vX.Y.Z.zip`。
 3. `release`：自动生成含 SHA-256 的发行说明，用
    `GITHUB_TOKEN`（`permissions: contents: write`）创建 Release。
    若同名 Release 已存在则**明确报错并停止**，绝不自动删除已发布 Release。
@@ -265,9 +266,14 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 
 ```bash
 dotnet build src/Xqd.sln -c Release
-dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o dist-csharp/gui
+dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o dist-csharp/gui -p:PkgVersion=1.5.4
 python build_exe.py                    # 仅 Python 版历史实现：dist/xqd-downloader-v1.5.4.exe
 ```
+
+★ exe 名带版本号靠 `-p:PkgVersion=X.Y.Z` 传给 `Xqd.Gui.csproj`
+（它派生出 `AssemblyName=xqd-downloader-v$(PkgVersion)`）。
+**不要用 `-p:AssemblyName=`** —— 那是 MSBuild 全局属性，会被 NuGet restore
+当成项目名，报 `Ambiguous project name` 直接失败。
 
 ★ `PublishSingleFile=true` 需要联网还原 `Microsoft.NET.ILLink.Tasks`，
 故 C# 版采用 **framework-dependent 目录发布**：每个前端约 0.5 MB，共用系统 .NET 8 运行时。

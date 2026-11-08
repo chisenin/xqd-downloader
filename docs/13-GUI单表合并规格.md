@@ -23,11 +23,21 @@
 > | 位置 | 新名字 |
 > |---|---|
 > | Release 附件 | `xqd-downloader-vX.Y.Z.zip`（**一个**附件） |
-> | zip 内主程序 | `gui/xqd-downloader.exe` |
+> | zip 内主程序 | `gui/xqd-downloader-vX.Y.Z.exe`（**带版本号**） |
 > | zip 内 CLI | `cli/Xqd.Cli.dll` |
-> | 源码常量 | `States.ProductExeName` / `Xqd.Gui.csproj` 的 `AssemblyName` |
+> | 源码常量 | `States.ProductExeName`（产品名基址） / `Xqd.Gui.csproj` 的 `PkgVersion` |
 >
 > zip 内容 = `gui/` + `cli/` + `README.txt`，**不含 `server/`**。
+>
+> **exe 带版本号的实现方式**：`Xqd.Gui.csproj` 里
+> `<AssemblyName>xqd-downloader-v$(PkgVersion)</AssemblyName>`，
+> 发布通道传 `-p:PkgVersion=X.Y.Z`。`.dll` / `.deps.json` / `.runtimeconfig.json`
+> 随之同步改名，产物自洽。
+> ⚠️ **不要用 `-p:AssemblyName=`** —— 它是 MSBuild 全局属性，会被 NuGet restore
+> 当成项目名 → `Ambiguous project name` 直接失败。
+> ⚠️ **也不要 publish 完再手工改 exe 名** —— apphost 与 `.runtimeconfig.json`
+> 的配对一旦断掉，程序直接起不来。
+>
 > ⚠️ 历史文档（`docs/01` `docs/10` `docs/11` `docs/12`）里的
 > `xingqudao-downloader-*` 是**当时真实的产物名**，属历史记录，**不回改**。
 >

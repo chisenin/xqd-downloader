@@ -13,6 +13,8 @@ public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
     public const string AppVersion = "1.5.4";   // v1.5.4：无边框窗口 + 自绘窗口按钮
+    /// <summary>产品名基址（不含版本号）。实际 exe 名为 xqd-downloader-vX.Y.Z.exe，
+    ///   由 Xqd.Gui.csproj 的 PkgVersion 派生 —— 改版本号不用动这里。</summary>
     public const string ProductExeName = "xqd-downloader";
 
     // 课程列表 6 列（v1.5.0 起）。界面与测试一律引用这些常量。

@@ -4,7 +4,14 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <RootNamespace>Xqd.Gui</RootNamespace>
-    <AssemblyName>xqd-downloader</AssemblyName>
+    <!-- ★ exe 名带版本号：xqd-downloader-v1.5.4.exe（.dll / .deps.json /
+         .runtimeconfig.json 同步带版本号，产物自洽）。
+         发布通道用 -p:PkgVersion=X.Y.Z 覆盖；默认值必须与
+         States.AppVersion 一致（CI 会校验两者与 tag 一致）。
+         ★ 不用 -p:AssemblyName= 传参：那是 MSBuild 全局属性，会被 NuGet
+           restore 当成项目名 → "Ambiguous project name" 直接失败。 -->
+    <PkgVersion Condition="'$(PkgVersion)' == ''">1.5.4</PkgVersion>
+    <AssemblyName>xqd-downloader-v$(PkgVersion)</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />
