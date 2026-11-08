@@ -9,10 +9,12 @@
 
 | 组件 | 许可证 | 用途 |
 |---|---|---|
-| **PySide6 / Qt for Python** | LGPL-3.0 | GUI 框架 |
 | **FFmpeg** | LGPL-2.1+ / GPL（视构建而定） | HLS 分片拼接转封装为 MP4；ffprobe 校验成品时长 |
-| **pycryptodome** | BSD-2-Clause / Public Domain | 网易云课堂(163)视频地址的 AES 解密内核 |
-| **Python** | PSF | 运行时 |
+| **.NET 8 桌面运行时** | MIT（.NET Foundation / Microsoft） | WPF 界面与下载引擎的宿主；**不随本仓库分发** |
+
+> **v1.6.1 起，Python 实现已从仓库删除** —— PySide6 / Qt、pycryptodome、
+> Python 不再是运行时依赖。`_lel/` 下的分析原稿仍然保留（见第二节），
+> 但**不在运行链路里**，其中的 `pycryptodome` 依赖仅供阅读参考。
 
 ---
 
@@ -37,7 +39,7 @@ Windows 客户端**（V1.5.0 / V2.19.70）的行为。本仓库中：
 | `_lel/core/netease_mooc.py` | 依据其 V1.5.0 `Source/core` 的逻辑**独立复现**的 163 解密内核（非原文照抄） |
 | `_lel/login/` | 从其 `Login-Mooc/resources/app.asar` 提取的登录层明文 JS（分析记录） |
 | `_lel/v2/` | 对其 V2 PYZ 定制加密的分析/破解脚本（分析记录） |
-| `archive/xwz-v2/` | 对其安装包的 PyInstaller 提取脚本（分析记录） |
+| `_lel/api/qianliao.py` | 业务网关协议的对照原稿（分析记录；C# 实现在 `src/Xqd.Core/Api/`） |
 
 上述部分**不属于** `Xue-Wu-Zhi/xuewuzhi-downloader` 仓库的 MIT 授权范围
 （该仓库的 NOTICE 明确写明：GitHub Releases 中分发的官方桌面客户端
@@ -65,16 +67,15 @@ Windows 客户端**（V1.5.0 / V2.19.70）的行为。本仓库中：
 
 ## 五、C# / WPF 实现（`src/`）的额外声明
 
-v1.5.3 起 Python 与 C# 两套实现**同在 `master` 分支**（此前 C# 在独立的
-`csharp-wpf` 分支）；上文第一至四节对两套实现同样适用。
+v1.5.3 起 C# 实现与 Python 实现同在 `master`；**v1.6.1 起 Python 实现已删除**，
+仓库只剩 C# 一套运行时（`_lel/` 仅保留合规与分析材料）。上文第一至四节同样适用。
 C# 实现的组件与授权：
 
 | 组件 | 授权 | 说明 |
 |---|---|---|
 | .NET 8 SDK / Runtime、Windows Desktop Runtime（含 WPF） | MIT（.NET Foundation / Microsoft） | 使用系统自带运行时，**不随本仓库分发** |
 | `System.Text.Json` / `HttpClient` / `Process` 等 BCL | MIT（.NET） | **零第三方 NuGet 依赖** |
-| FFmpeg / ffprobe | LGPL-2.1+ / GPL | 外部可执行文件，不由本仓库分发；用途与 Python 版相同 |
-| Qt / PySide6 | LGPL-3.0 | **C# 实现不使用**，仅 Python GUI 需要 |
+| FFmpeg / ffprobe | LGPL-2.1+ / GPL | 外部可执行文件，不由本仓库分发 |
 
 `Xqd.Core/Crypto/Netease163.cs` 是 `_lel/core/netease_mooc.py` 的等价移植，
 **延续上文第二节的边界**：依据第三方客户端行为独立复现，
@@ -82,7 +83,6 @@ C# 实现的组件与授权：
 
 C# 实现同样**不含任何账号凭据**，凭据只在运行时从环境变量或用户私有文件读取。
 
-两套实现的发行二进制均由 `.github/workflows/release.yml` 在 GitHub Actions 的
-Windows runner 上构建，仓库内不存放 exe / zip；其中 PyInstaller 会把 PySide6
-（LGPL-3.0）随 Python 单文件 exe 一起分发，C# 目录发布包只含本项目编译产物，
-运行时依赖由用户系统自行提供。
+发行二进制由 `.github/workflows/release.yml` 在 GitHub Actions 的 Windows runner
+上构建，仓库内不存放 exe / zip；发布包为 **C# 目录发布**，只含本项目编译产物，
+运行时依赖（.NET 桌面运行时 / FFmpeg）由用户系统自行提供。

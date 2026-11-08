@@ -1,13 +1,12 @@
 # 兴趣岛课程导出工具 · C# / WPF 版
 
-> **v1.5.3 起两套实现合并到同一个 `master` 分支**：C# / WPF 源码在 `src/`，
-> Python / PySide6 源码在仓库根目录，二者功能对齐、同时发版。
-> 本文是 **C# / WPF 实现的专门说明**；总览、发版流程与 Python 版说明见根目录
+> **v1.6.1 起仓库只剩 C# / WPF 一套实现**（Python 版已删除；`src/` 是唯一的
+> 运行时实现）。本文是 **C# / WPF 实现的专门说明**；总览与发版流程见根目录
 > [`README.md`](README.md)。旧 `csharp-wpf` 分支及 `v1.5.2*` Release 只作历史留存。
 >
 > ★ 打包/编译由 `.github/workflows/release.yml` 在 GitHub Actions 上完成，
-> 单个 Release 同时提供 `xingqudao-downloader-vX.Y.Z.exe`（Python）与
-> `xingqudao-downloader-vX.Y.Z.zip`（C#），本机不产出二进制。
+> 单个 Release 只提供 `xqd-downloader-vX.Y.Z.zip`（C# 目录发布，内含 `gui/` + `cli/`），
+> 本机不产出二进制。
 
 把「兴趣岛」App（`com.qlchat.xingqudao`）中**已购买课程**的视频批量导出为通用 MP4，
 用于在本地教学大屏上播放。DRM 课程走同目录下的明文孪生清单，**无需解密**。
@@ -42,7 +41,7 @@
 - 并行分片下载 → 转封装 MP4 → ffprobe 校验时长。
 - 自动跳过已下载的课，残缺文件清理后用规范名覆盖重下。
 - 暂停 / 继续、跨会话断点续传、下载历史恢复、下载目录记忆。
-- 桌面 GUI（v1.5.2 全功能）：多营勾选合并、标题前缀保留原营序号、重新载入仍显示真实进度、进入封装阶段即释放网络槽位并行下一节。
+- 桌面 GUI（v1.6.0 单表）：**课程列表与下载管理合并为一张 8 列表**（状态胶囊 / 课程 / 所属营 / 时长 / 大小 / 速度 / 剩余 / 进度）；多营勾选合并、行选中只下其中几节、视图切换 5 档、右键菜单删除成品；重新载入仍显示真实进度；进入封装阶段即释放网络槽位并行下一节。
 - 授权默认直接使用本机缓存，**平时启动不拉起 MuMu 模拟器**；点「重新授权」才刷新。子进程 Qt 环境已隔离，根治 MuMu 的 Qt 插件弹窗。
 - DRM 课自动选择同目录的明文孪生，并**按时长校验**，避免下错内容。
 - 两种数据源：`api`（默认，**下载过程不需要模拟器**）/ `adb`（旧路径，需 MuMu 桥接）。
@@ -65,8 +64,9 @@
 
 操作流程：首次点「重新授权」（仅首次需要 MuMu）→ 左栏选「正式营 / 体验营」→
 **勾选一个或多个营**（表头可全选，营名「·」分隔滚动展示）→
-合并后的课程列表勾选课程（或双击单行）→「下载选中」→ 需要时点「暂停 / 继续」。
-第一列「标题前缀」是该课在**原营**里的序号（合并不重排），
+在表格里**选中要下的几行**（不选 = 下当前视图全部待下载；双击某行 = 只下这一节）
+→ 点「下载」（运行中该键变为「暂停 / 继续」）。
+成品文件名里的序号与日期照旧保留（界面不再显示这两列）；
 一节进入封装后网络槽位立刻让给下一节。点顶栏标题区可打开「使用说明与关于」。
 
 ### 方式二：源码构建
@@ -110,7 +110,7 @@ dotnet dist-csharp/cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 \
 | SDK | .NET 8 SDK（本机 8.0.416） |
 | 运行时 | 系统自带 `Microsoft.NETCore.App` + `Microsoft.WindowsDesktop.App` 8.x（本机 8.0.22） |
 | 外部包 | **零 NuGet 依赖**，全部只用 BCL（System.Text.Json / HttpClient / Process / WPF） |
-| 外部工具 | ffmpeg / ffprobe（与 Python 版相同，PATH 或引擎的固定回退目录） |
+| 外部工具 | ffmpeg / ffprobe（PATH 或引擎的固定回退目录） |
 | 授权 | 首次需 MuMu 模拟器读取本机登录态；之后直接用缓存，`api` 模式下载本身不依赖模拟器 / ADB |
 
 ★ 业务网关与 CDN 请求**必须禁用系统代理**，否则会被代理吞掉返回 HTML；
@@ -143,9 +143,11 @@ src/Xqd.sln
 前端**只经 `Services.*`** 取实现（`CreatePlatform` / `CreateDataSource` / `Engine` /
 `History` / `Auth` / `CreateChecker`），不直接依赖具体类。
 
-### 与 Python 实现的模块对照
+### 与早期 Python 实现的模块对照
 
-| Python（根目录） | C#（`src/`） |
+> Python 实现已于 v1.6.1 删除；下表留作**移植对照**。
+
+| Python（已删） | C#（`src/`） |
 |---|---|
 | `xqd_platform.py` / `xqd_api.py` | `Xqd.Core/Api/{QianliaoClient,QianliaoPlatform,ApiCompat}.cs` |
 | `xqd_engine.py` | `Xqd.Core/Engine/*.cs` |
@@ -220,7 +222,7 @@ DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"   # 或直接用 dotnet
 - 本地服务 `/api/state`、`/`（`ui.html` 16.6 KB）、`/api/camps?tab=轻课`（空）已实跑通过；
   CLI `--help` 在原生 Windows 控制台中文正常。
 - ⚠️ **未做真网络全量下载**（网络不稳定、流量昂贵，且 master 已端到端验证过 6/6）；
-  下载链路的行为由离线断言 + 与 Python 版逐行对照保证。
+  下载链路的行为由离线断言（253 项）与实机验证保证。
 
 ---
 
@@ -245,7 +247,7 @@ DOTNET="D:/user/chisenin/.dotnet/dotnet.exe"   # 或直接用 dotnet
 | [`01-已验证事实.md`](docs/01-已验证事实.md) | ⭐ 权威结论清单，所有已实测确认的事实 |
 | [`03-踩坑与修复记录.md`](docs/03-踩坑与修复记录.md) | 实际浪费过时间的坑 |
 | [`09-兴趣岛业务API.md`](docs/09-兴趣岛业务API.md) | 业务网关契约（端点 / 参数 / 成功码） |
-| [`10-GUI工具说明.md`](docs/10-GUI工具说明.md) | 界面、状态、ETA、历史、回归清单（Python 版，规格同样适用） |
+| [`10-GUI工具说明.md`](docs/10-GUI工具说明.md) | 界面、状态、ETA、历史、回归清单（早期 Python 版说明，规格同样适用） |
 | [`11-工具实现要点.md`](docs/11-工具实现要点.md) | 授权 / MuMu / 速率 / 状态 / 续传 / 测试隔离 |
 | [`12-项目现状与合规.md`](docs/12-项目现状与合规.md) | 代码结构、环境、合规声明 |
 | [`RELEASE_NOTES.md`](RELEASE_NOTES.md) | 本分支发行说明（Release 正文） |

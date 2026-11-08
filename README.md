@@ -6,7 +6,7 @@
 > 用途是临时转移到教学大屏，看完及时删除（大屏磁盘空间有限）。
 > 本工具只处理自己有权访问与保存的内容，详见文末「合规与使用边界」。
 
-## ★ v1.5.4 起：只保留 C# / WPF 一套实现
+## ★ v1.6.1 起：仓库只剩 C# / WPF 一套实现
 
 | 项 | 内容 |
 |---|---|
@@ -14,9 +14,10 @@
 | 界面 / 运行时 | WPF / .NET 8 |
 | Release 产物 | `xqd-downloader-vX.Y.Z.zip`（目录发布，约 250 KB，需系统 .NET 8 桌面运行时） |
 
-Python 实现（根目录 `xqd_*.py` · `_lel/`）与原先的 `csharp-wpf` 分支、
-`v1.5.2` / `v1.5.2-csharp-wpf` 两个 Release 保留作历史，**不再更新**；
-Python 源码将在 v1.6.1 删除。
+**v1.6.1 起，Python 实现已从仓库删除**（原先的 `csharp-wpf` 分支与
+`v1.5.2` / `v1.5.2-csharp-wpf` 两个 Release 仍作历史保留）。
+`_lel/` 只保留**合规与分析材料**：`core/netease_mooc.py` 是 NOTICE 声明的对象，
+`api/qianliao.py` 是业务网关的对照原稿 —— 运行时主链路全部是 C#。
 
 **打包与编译都在 GitHub Actions 上完成，本机不产出二进制，仓库里也不放 exe / zip。**
 推送 tag `vX.Y.Z` 会自动生成**一个** Release 和**一个**附件（版本号与 tag 一致）：
@@ -36,12 +37,13 @@ xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader-vX.Y.Z.exe + cli/ + README.tx
   瓶颈在 CDN 而非本地磁盘。
 - 自动跳过已下载的课，残缺文件清理后用规范名覆盖重下。
 - 暂停 / 继续、跨会话断点续传、下载历史恢复、下载目录记忆。
-- 桌面 GUI：多营勾选合并、标题前缀保留原营序号、重新载入仍显示真实进度、
-  进入封装阶段即释放网络槽位并行下一节；平时启动**直接用已保存的授权、
-  不用开模拟器**，点「重新授权」才刷新（子进程 Qt 环境已隔离）。
+- 桌面 GUI：**单表 8 列**（状态胶囊 / 课程 / 所属营 / 时长 / 大小 / 速度 / 剩余 / 进度），
+  多营合并、行选中只下其中几节、视图切换（全部 / 待下载 / 下载中 / 已完成 / 失败）、
+  右键菜单删除成品；重新载入仍显示真实进度；进入封装阶段即释放网络槽位并行下一节；
+  平时启动**直接用已保存的授权、不用开模拟器**，点「重新授权」才刷新。
 - DRM 课自动选择同目录的明文孪生，并**按时长校验**，避免下错内容。
 - 两种数据源：`api`（默认，**下载过程不需要模拟器**）/ `adb`（旧路径，需 MuMu 桥接）。
-- 三种前端各有两套实现：桌面 GUI、本地网页版（`ui.html` 共用）、CLI 全量批处理。
+- 三种前端：桌面 GUI（主）、本地网页版（`src/Xqd.Server/ui.html`）、CLI 全量批处理。
 
 ---
 
@@ -58,32 +60,20 @@ xqd-downloader-v1.5.4.zip      解压后整目录拷贝，双击 gui/xqd-downloa
 > 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
 > 需要 ffmpeg / ffprobe 在 PATH（或引擎的查找路径）。
 
-源码运行（历史实现，Python 版不再更新，v1.6.1 删除）：
-
-```bash
-pip install PySide6-Essentials
-python xqd_gui.py
-```
-
 操作流程：授权状态就绪 → 左栏选「正式营 / 体验营」→ **勾选一个或多个营**
-（标题栏可全选，营名「·」分隔滚动展示）→ 合并后的课程列表里勾选课程
-（或双击单行）→「下载选中」→ 需要时点「暂停 / 继续」。
-第一列「标题前缀」是该课在**原营**里的序号（合并不重排），
-「进度」列重新载入也保留真实进度；一节进入封装后网络槽位立刻让给下一节。
-点顶栏标题区可打开「使用说明与关于」。
+（标题栏可全选，营名「·」分隔滚动展示）→ 表格里**选中要下的几行**
+（不选 = 下当前视图全部待下载；双击某行 = 只下这一节）→ 点「下载」。
+「速度 / 剩余 / 进度」列显示实时值；成品文件名里的序号与日期照旧保留
+（界面不再显示这两列）。点顶栏标题区可打开「使用说明与关于」。
 
-C# 版版本以 `src/Xqd.Core/States.cs` 的 `States.AppVersion` 为准
-（Python 版以 `xqd_gui.py` 的 `APP_VERSION` 为准）；界面细节见
-[`docs/10-GUI工具说明.md`](docs/10-GUI工具说明.md)，C# 版专门说明见
-[`README-csharp-wpf.md`](README-csharp-wpf.md)。
+版本号以 `src/Xqd.Core/States.cs` 的 `States.AppVersion` 为准；
+界面细节见 [`docs/10-GUI工具说明.md`](docs/10-GUI工具说明.md)，
+C# 版专门说明见 [`README-csharp-wpf.md`](README-csharp-wpf.md)。
 
 ### 方式二：本地网页版
 
 ```bash
-# Python
-python -u xqd_server.py --mode api --port 8765 --out "D:/user/chisenin/Videos"
-
-# C#（目录发布后）
+dotnet publish src/Xqd.Server/Xqd.Server.csproj -c Release -o dist-csharp/server
 dotnet server/Xqd.Server.dll --port 8765 --mode api --out "D:/user/chisenin/Videos"
 ```
 
@@ -93,9 +83,6 @@ dotnet server/Xqd.Server.dll --port 8765 --mode api --out "D:/user/chisenin/Vide
 ### 方式三：CLI 全量批处理
 
 ```bash
-python xqd_batch.py --out "Z:/太极营" --workers 2 --seg-workers 12 \
-                    --tabs 正式营,体验营 --quality max
-
 dotnet cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 --seg-workers 12 \
                     --tabs 正式营,体验营 --quality max
 ```
@@ -109,11 +96,8 @@ dotnet cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 --seg-workers 12 \
 
 | 组件 | 用途 | 备注 |
 |---|---|---|
-| Python 3.8+ | Python 版运行时 | 业务 HTTP / 服务 / 下载内核**只用标准库** |
-| PySide6-Essentials | Python 版 GUI / 打包 | 仅 GUI 与 PyInstaller 打包需要 |
-| .NET 8 SDK / 桌面运行时 | C# 版编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF；SDK 版本由根目录 `global.json` 锁定 8.0.x |
-| ffmpeg / ffprobe | 分片转封装、成品时长校验 | 两个版本共用，需在 PATH 或引擎回退目录 |
-| pycryptodome | 163 地址解密内核 | 仅 `_lel/core/netease_mooc.py`，兴趣岛主链路不需要 |
+| .NET 8 SDK / 桌面运行时 | 编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF；SDK 版本由根目录 `global.json` 锁定 8.0.x |
+| ffmpeg / ffprobe | 分片转封装、成品时长校验 | 需在 PATH 或引擎回退目录 |
 | MuMu 模拟器 | 读取本机登录态以完成授权 | `api` 模式**下载本身不依赖模拟器/ADB** |
 
 ★ 业务网关与 CDN 请求必须 `ProxyHandler({})` **禁用系统代理**，
@@ -132,61 +116,50 @@ dotnet cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 --seg-workers 12 \
 - 序号 = 营内课表顺序（从 1 起，与 App 列表一致）
 - 日期 = 该节课的 `startTime`；课名里的全角冒号 `：` 原样保留
 - 音频课保留原始容器（`.mp3` / `.m4a`），不强行塞进 MP4
-- Python 版命名规则的唯一事实来源是 `xqd_api.course_filename()`；
-  C# 版是 `Xqd.Core/Naming.cs`，两者契约一致。
+- 命名规则的唯一事实来源是 `Xqd.Core/Naming.cs`。
 
 ---
 
 ## 代码结构
 
 ```
-Python（根目录）
-采集层   xqd.py（ADB/DOM） · _lel/api/qianliao.py（业务网关）
-   ↓
-业务层   xqd_app.py · xqd_api.py · xqd_platform.py（平台适配 REGISTRY）
-   ↓
-┌──────────────┬───────────────────┬────────────────────┐
-│ xqd_gui.py   │ xqd_server.py     │ xqd_pdl.py         │
-│ ★ 桌面工具   │ + ui.html 网页版  │ + xqd_batch.py     │
-│              │                   │   CLI 全量批处理   │
-└──────────────┴───────────────────┴────────────────────┘
-   ├─ xqd_engine.py    下载引擎（清单解析 / 并行分片 / 转封装 / 进度上报）
-   ├─ xqd_auth.py      免 adbd 授权（读本机登录态）
-   ├─ xqd_history.py   下载历史 + 分片缓存（跨会话续传）
-   ├─ xqd_dedupe.py    已下载检测 / 残件清理
-   └─ xqd_proc.py      无控制台窗口的子进程调用层（避免 Windows Terminal 闪窗）
-
 C#（src/，解决方案 Xqd.sln，6 个项目）
    Xqd.Core    公共契约：Models / States / Naming / Config / Creds / Proc /
                Net / Util / Api / Adb / Auth / Engine / History / Dedupe / Crypto
    Xqd.Controls  WPF 类库：MarqueeControl / StateColorConverter
                （XAML 引用的自定义控件，独立程序集以便干净构建时解析）
    Xqd.Gui     WPF 桌面工具（XAML + code-behind + 控件 + ViewModel）
-   Xqd.Server  本地网页版（复用根目录 ui.html，路由 / JSON 协议一致）
+   Xqd.Server  本地网页版（自带 ui.html，路由 / JSON 协议一致）
    Xqd.Cli     CLI 全量批处理
    Xqd.Tests   离线回归（直接链接编译 GUI 的 ViewModel 源码）
 
+_lel/                         ★ 只保留合规与分析材料（运行时不用）
+   core/netease_mooc.py        163 解密内核原稿（NOTICE 声明的对象）
+   api/qianliao.py             业务网关对照原稿
+   login/ v2/                  客户端逆向过程记录
+
 .github/workflows/release.yml   发版工作流
-build_exe.py                   PyInstaller 打包脚本（供 CI 与本地开发使用）
 docs/                          设计与验证文档
 ```
 
-> `archive/` 与 `_lel/` 是一次性探测脚本与第三方分析材料，不是运行时主链路；
-> 抓包原件与明文凭据已清理。
+> `_lel/` 是一次性探测脚本与第三方分析材料，不是运行时主链路；
+> 抓包原件与明文凭据已清理。Python 实现与 `archive/` 已于 v1.6.1 删除。
 
 **授权链路**：通过 MuMu 模拟器自带的内部 RPC 读取本机登录态，全程不启 adb、
 不依赖 adb 端口，也不会把任何凭据写进仓库或上传。
 详见 [`docs/11-工具实现要点.md`](docs/11-工具实现要点.md) A 节。
 
-### 两套实现的模块对照
+### 与早期 Python 实现的模块对照
 
-| Python | C# | 说明 |
+> Python 实现已于 v1.6.1 删除；下表留作**移植对照**，便于理解各模块的来源。
+
+| Python（已删） | C# | 说明 |
 |---|---|---|
 | `xqd_platform.py` / `xqd_api.py` | `Xqd.Core/Api/{QianliaoClient,QianliaoPlatform,ApiCompat}.cs` | 网关 `transferData` / `state.code` / 禁代理 / 营表 / 播放地址 |
 | `xqd_engine.py` | `Xqd.Core/Engine/*.cs` | 清单分派、DRM 明文孪生、12 片抽样、并发分片、cat 拼接、转封装、ffprobe |
 | `xqd_auth.py` / `xqd_creds.py` / `xqd_proc.py` | `Xqd.Core/Auth/MumuAuth.cs` + `Creds.cs` / `Proc.cs` | MuMu 内部 RPC 读 Cookie、缓存授权优先、Qt 环境净化、无控制台窗口 |
 | `xqd_history.py` / `xqd_dedupe.py` | `Xqd.Core/History/HistoryStore.cs` / `Dedupe/ExistingChecker.cs` | 跨会话续传分片、终态保护、已下载检测 |
-| `xqd_gui.py` | `Xqd.Gui/*` | 多营勾选、6 列表格、双速率计、双槽位流水线、暂停/续传、日志 |
+| `xqd_gui.py` | `Xqd.Gui/*` | 单表 8 列、行选中、状态胶囊、视图切换、双速率计、双槽位流水线、暂停/续传、日志 |
 | `xqd_server.py` + `ui.html` | `Xqd.Server/*` + 同一个 `ui.html` | 回环服务，路由/JSON 协议完全一致 |
 | `xqd_batch.py` / `xqd_pdl.py` | `Xqd.Cli/*` | 全量批处理、断点状态、参数一致 |
 | `xqd.py` / `xqd_app.py` | `Xqd.Core/Adb/*.cs` | ADB 采集、uiautomator DOM、sweep、明文孪生 |
@@ -231,9 +204,9 @@ docs/                          设计与验证文档
 > - C# 离线回归依赖**本机时区**（`startTime` 按本地时间格式化）与 ffmpeg/ffprobe
 >   的 PATH 查找。CI 里把 runner 时区设为 `China Standard Time`，并放两个占位
 >   `ffmpeg.exe` / `ffprobe.exe`（回归只验证查找逻辑，不执行外部工具）。
-> - Python 依赖**只能装 `PySide6-Essentials`**：完整 `PySide6` 元包会带上
->   QtWebEngine 等 Addons，`build_exe.py` 的 `--add-data` 会把它们全收进 exe，
->   实测从约 96 MB 膨胀到 330 MB。工作流加了 DLL 总量断言防回归。
+> - （历史）Python 依赖**只能装 `PySide6-Essentials`**：完整 `PySide6` 元包会带上
+>   QtWebEngine 等 Addons，PyInstaller 会把它们全收进 exe，实测从约 96 MB 膨胀到
+>   330 MB。Python 版已于 v1.6.1 删除，该坑不再适用。
 > - GitHub 的 **immutable release** 发布后不能覆盖/删除单个附件（`--clobber` 报
 >   HTTP 422 `Cannot delete asset from an immutable release`）；删掉整个 Release
 >   后也**不能复用同一 tag**（`tag_name was used by an immutable release`）。
@@ -249,7 +222,7 @@ docs/                          设计与验证文档
 # 1. 改版本号（C# 版唯一来源 + 回归断言，两处必须一致）
 #    src/Xqd.Core/States.cs : States.AppVersion   ← 唯一来源，CI 会校验与 tag 一致
 #    src/Xqd.Tests/Program.cs : 版本断言
-#    （Python 版仍在仓库里期间，xqd_gui.py: APP_VERSION 与 _lel 回归一并改）
+#    （版本号只有这两处；Python 版已于 v1.6.1 删除）
 git add -A && git commit -m "release: vX.Y.Z"
 git push origin master
 
@@ -267,7 +240,6 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 ```bash
 dotnet build src/Xqd.sln -c Release
 dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o dist-csharp/gui -p:PkgVersion=1.5.4
-python build_exe.py                    # 仅 Python 版历史实现：dist/xqd-downloader-v1.5.4.exe
 ```
 
 ★ exe 名带版本号靠 `-p:PkgVersion=X.Y.Z` 传给 `Xqd.Gui.csproj`
@@ -283,16 +255,12 @@ python build_exe.py                    # 仅 Python 版历史实现：dist/xqd-d
 ## 测试
 
 ```bash
-# Python 离线回归（集中在 _lel/api/test_*.py）
-cd _lel/api && python test_states.py && python test_history.py
-
-# C# 离线回归（224 项，不发网络请求、不启动模拟器）
+# C# 离线回归（253 项，不发网络请求、不启动模拟器）
 dotnet run --project src/Xqd.Tests -c Release
 ```
 
-★ **跑 Python 测试前必须设 `XQD_TEST_HOME`** 指向隔离目录，否则会改动真实的配置、
-下载历史与分片缓存，甚至写到用户的下载目录。C# 测试自己会设这个变量。
-`test_*_real.py` 是真网络端到端测试，需要有效的本机授权，同样必须隔离。
+★ 测试自己会设 `XQD_TEST_HOME` 指向隔离目录，不会改动真实的配置、
+下载历史与分片缓存。
 
 ---
 

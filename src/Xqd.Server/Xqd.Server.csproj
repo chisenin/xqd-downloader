@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />
-    <Content Include="..\..\ui.html" Link="ui.html" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="ui.html" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

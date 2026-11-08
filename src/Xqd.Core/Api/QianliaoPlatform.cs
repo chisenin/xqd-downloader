@@ -29,6 +29,17 @@ public sealed class QianliaoPlatform : IPlatform
     private readonly Dictionary<string, Camp> _campIndex = new();
     private readonly Dictionary<string, List<Lesson>> _catalogs = new();
 
+    /// <summary>
+    /// ★ v1.6.1：缓存字典的锁。
+    ///   这两个字典会被**两个线程**同时访问：
+    ///   · UI 线程 —— CatalogWorkerAsync 读/写 _catalogs
+    ///   · 下载线程 —— ResolveAsync → EnsureCampAsync → ListCampsAsync 写 _campIndex
+    ///   Dictionary 并发写会直接破坏内部结构（抛或静默丢数据）。
+    ///   ★ 只锁**字典读写**，**不锁网络请求** —— 否则多营并发会被串行化，
+    ///     白白牺牲并发度。
+    /// </summary>
+    private readonly object _cacheLock = new();
+
     public QianliaoPlatform(string cookie = "")
     {
         _client = new QianliaoClient(cookie);
@@ -64,7 +75,10 @@ public sealed class QianliaoPlatform : IPlatform
             var camp = ParseCamp(c, kind);
             camps.Add(camp);
             // 累积式缓存（不清空），便于 camp_info 反查；多次拉不同 tab 会自然合并。
-            if (!string.IsNullOrEmpty(camp.Name)) _campIndex[camp.Name] = camp;
+            if (!string.IsNullOrEmpty(camp.Name))
+            {
+                lock (_cacheLock) { _campIndex[camp.Name] = camp; }
+            }
         }
         return camps;
     }
@@ -96,11 +110,17 @@ public sealed class QianliaoPlatform : IPlatform
     private async Task<Camp> EnsureCampAsync(string name, CancellationToken ct)
     {
         if (string.IsNullOrEmpty(name)) return null;
-        if (_campIndex.TryGetValue(name, out var hit)) return hit;
+        lock (_cacheLock)
+        {
+            if (_campIndex.TryGetValue(name, out var hit0)) return hit0;
+        }
         foreach (var kind in new[] { "正式营", "体验营", "全部" })
         {
             await ListCampsAsync(kind, ct).ConfigureAwait(false);
-            if (_campIndex.TryGetValue(name, out hit)) return hit;
+            lock (_cacheLock)
+            {
+                if (_campIndex.TryGetValue(name, out var hit)) return hit;
+            }
         }
         return null;
     }
@@ -113,7 +133,10 @@ public sealed class QianliaoPlatform : IPlatform
     public async Task<List<Lesson>> CampCatalogAsync(Camp camp, CancellationToken ct = default)
     {
         var name = camp?.Name ?? "";
-        if (_catalogs.TryGetValue(name, out var cached)) return cached;
+        lock (_cacheLock)
+        {
+            if (_catalogs.TryGetValue(name, out var cached)) return cached;
+        }
 
         var info = camp;
         if (string.IsNullOrEmpty(info?.CampId))
@@ -145,7 +168,7 @@ public sealed class QianliaoPlatform : IPlatform
                 CampOfRow = info,                    // 逐行绑定所属营，不按合并行号重排
             });
         }
-        _catalogs[name] = lessons;
+        lock (_cacheLock) { _catalogs[name] = lessons; }
         return lessons;
     }
 
