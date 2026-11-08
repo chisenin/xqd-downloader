@@ -12,7 +12,7 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.6.1";   // v1.6.1：删除 Python 实现与 archive/，缓存加锁
+    public const string AppVersion = "1.6.2";   // v1.6.2：公开课可下载 + 营列表按真实营名分组
     /// <summary>产品名基址（不含版本号）。实际 exe 名为 xqd-downloader-vX.Y.Z.exe，
     ///   由 Xqd.Gui.csproj 的 PkgVersion 派生 —— 改版本号不用动这里。</summary>
     public const string ProductExeName = "xqd-downloader";
@@ -48,7 +48,12 @@ public static class States
     public const int SegmentWorkers = 12;    // 每节课内部的分片并发
     public const int MaxMuxWorkers = 2;      // 本地封装槽位
     public static readonly string[] LocalPhases = { "封装", "校验" };
-    public static readonly string[] Tabs = { "全部", "正式营", "体验营", "轻课" };
+    /// <summary>
+    /// 营列表的分类。★ v1.6.2：「轻课」改名「公开课」——
+    ///   App 里「轻课」确实是空的，但 myCourseListV2 不传 skyType 会带回
+    ///   16 个 skuType=OPEN_COURSE 的公开课营，它们有 periodId、能取到课表，可以下载。
+    /// </summary>
+    public static readonly string[] Tabs = { "全部", "正式营", "体验营", "公开课" };
 
     /// <summary>引擎阶段名 → 界面状态词。</summary>
     public static readonly Dictionary<string, string> PhaseText = new()

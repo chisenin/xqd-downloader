@@ -124,6 +124,18 @@ public sealed class QianliaoClient
             ["onlyCourseCatalogue"] = true,
         }, ct: ct);
 
+    /// <summary>
+    /// ★ v1.6.2：公开课课表。公开课（skuType=OPEN_COURSE）**没有 campId**，
+    ///   正课端点拿不到它的课表；要用 periodId 走这个专用端点。
+    ///   （实测「晨练焕醒计划」periodId=170814973572 → 27 节，与 courseTotalNum 一致。）
+    /// </summary>
+    public Task<JsonElement> OpenCoursePlayListAsync(string periodId,
+        CancellationToken ct = default) =>
+        ApiAsync("/gate/openCourse/playListOfCourse", new Dictionary<string, object>
+        {
+            ["periodId"] = periodId ?? "",
+        }, ct: ct);
+
     public Task<JsonElement> GetCoursePlayUrlAsync(string businessId, string businessType,
         string topicId, string roomId, string videoHost = "",
         CancellationToken ct = default) =>

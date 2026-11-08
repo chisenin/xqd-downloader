@@ -62,7 +62,10 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<LessonRow> _historyRows = new();
 
     private Camp _currentCamp;
-    private string _selectedTab = States.Tabs[0];
+    /// <summary>★ v1.6.2：不再有分类 tab —— 营列表固定拉「全部」（含公开课），按真实营名列出。</summary>
+    private const string CampListKind = "全部";
+    /// <summary>营列表的 CollectionView：负责「已购课程 / 公开课」分组与搜索过滤。</summary>
+    private ICollectionView _campView;
     private List<Camp> _campTarget = new();
     private List<(Camp Camp, List<LessonRow> Rows)> _lessonGroups = new();
 
@@ -128,9 +131,19 @@ public partial class MainWindow : Window
         _checker = Services.CreateChecker(_outDir);
         _history = Services.History.Load() ?? new List<HistoryRecord>();
 
-        TabList.ItemsSource = States.Tabs;
-        TabList.SelectedIndex = 0;
-        LstCamps.ItemsSource = _campItems;
+        // ★ v1.6.2：营列表用 CollectionView —— 分组（已购课程 / 公开课）+ 搜索过滤。
+        _campView = CollectionViewSource.GetDefaultView(_campItems);
+        _campView.GroupDescriptions.Add(new PropertyGroupDescription("GroupKey"));
+        _campView.Filter = o =>
+        {
+            var it = o as CampItem;
+            if (it == null) return false;
+            var kw = EdCampSearch?.Text?.Trim();
+            if (string.IsNullOrEmpty(kw)) return true;
+            return it.Display.Contains(kw, StringComparison.OrdinalIgnoreCase)
+                || it.Camp.Name.Contains(kw, StringComparison.OrdinalIgnoreCase);
+        };
+        LstCamps.ItemsSource = _campView;
 
         // ★ v1.6.0：主表用 CollectionView 做视图过滤（5 档：全部/待下载/下载中/已完成/失败）。
         //   过滤只影响显示，不影响「下载」按钮的下载范围判定。
@@ -285,10 +298,10 @@ public partial class MainWindow : Window
         var prev = new HashSet<string>(
             _campItems.Where(c => c.IsChecked).Select(c => c.Key), StringComparer.Ordinal);
         LblCampHint.Text = "加载中…";
-        Log("加载" + _selectedTab + "列表…");
+        Log("加载营列表…");
         try
         {
-            var camps = await _platform.ListCampsAsync(_selectedTab, _appCts.Token).ConfigureAwait(true);
+            var camps = await _platform.ListCampsAsync(CampListKind, _appCts.Token).ConfigureAwait(true);
             Ui(() => ApplyCamps(camps ?? new List<Camp>(), prev));
         }
         catch (Exception e)
@@ -306,16 +319,26 @@ public partial class MainWindow : Window
     {
         _campUpdating = true;
         _campItems.Clear();
-        foreach (var c in camps)
+        // ★ v1.6.2：同名营（公开课有多个批次，如「华佗五禽戏…」×5）加序号区分；
+        //   付费营排在前面 —— 分组标题的顺序也跟着这个来。
+        var seq = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var c in camps.Where(c => c.SkuType != "OPEN_COURSE")
+                              .Concat(camps.Where(c => c.SkuType == "OPEN_COURSE")))
         {
-            var item = new CampItem(c);
+            var key = c.Name ?? "";
+            seq.TryGetValue(key, out var n);
+            seq[key] = n + 1;
+            var item = new CampItem(c, n + 1);
             item.SetCheckedSilently(prev.Contains(item.Key));
             item.CheckChanged = OnCampItemCheckChanged;
             _campItems.Add(item);
         }
         _campUpdating = false;
+        _campView?.Refresh();
         SyncAllCampsCheckbox();
-        Log(_selectedTab + "：" + camps.Count + " 个");
+        Log("营列表：" + camps.Count + " 个（已购 " +
+            camps.Count(c => c.SkuType != "OPEN_COURSE") + " · 公开课 " +
+            camps.Count(c => c.SkuType == "OPEN_COURSE") + "）");
         if (camps.Count > 0)
         {
             _currentCamp = camps[0];
@@ -1720,13 +1743,10 @@ public partial class MainWindow : Window
 
     private void BtnRetry_Click(object sender, RoutedEventArgs e) => _ = AutoCheckAuthAsync(true);
 
-    private void TabList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    /// <summary>★ v1.6.2：按营名搜索（留空 = 全部）。</summary>
+    private void EdCampSearch_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (TabList.SelectedItem is string s && s != _selectedTab)
-        {
-            _selectedTab = s;
-            _ = LoadCampsAsync();
-        }
+        _campView?.Refresh();
     }
 
     private void ChkAllCamps_Click(object sender, RoutedEventArgs e)

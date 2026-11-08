@@ -127,16 +127,28 @@
                                       Click="ChkAllCamps_Click"/>
                         </DockPanel>
 
-                        <ListBox x:Name="TabList" Grid.Row="1" Margin="0,8,0,6"
-                                 BorderThickness="0" Background="Transparent"
-                                 ItemContainerStyle="{StaticResource PillTabItemStyle}"
-                                 SelectionChanged="TabList_SelectionChanged">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                        </ListBox>
+                        <!-- ★ v1.6.2：去掉「全部/正式营/体验营/轻课」这种固定分类表头 ——
+                             营名本身就是最好的分类（摄影课、美容课…直接列出来）。
+                             26 个营需要搜索，所以顶部放搜索框。 -->
+                        <Grid Grid.Row="1" Margin="0,8,0,6">
+                            <TextBox x:Name="EdCampSearch" Style="{StaticResource RoundTextBoxStyle}"
+                                     TextChanged="EdCampSearch_TextChanged"
+                                     ToolTip="按营名筛选（留空 = 显示全部）"/>
+                            <TextBlock Text="搜索营名…" IsHitTestVisible="False"
+                                       VerticalAlignment="Center" Margin="9,0,0,0"
+                                       Foreground="#A8B2C1">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=EdCampSearch}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
 
                         <ListBox x:Name="LstCamps" Grid.Row="2"
                                  BorderThickness="0" Background="Transparent"
@@ -148,11 +160,27 @@
                                     <DockPanel ToolTip="{Binding ToolTip}" Background="Transparent">
                                         <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding Badge}" DockPanel.Dock="Right"
+                                                   VerticalAlignment="Center" FontSize="11"
+                                                   Foreground="#9AA6B5" Margin="6,0,0,0"/>
                                         <TextBlock Text="{Binding Display}" VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </DockPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
+
+                            <!-- ★ v1.6.2：按「已购课程 / 公开课」分组，小标题用灰字 -->
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="#8494A8"
+                                                       Margin="2,10,0,4"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
                         </ListBox>
 
                         <DockPanel Grid.Row="3" Margin="0,8,0,0" LastChildFill="False">

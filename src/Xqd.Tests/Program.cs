@@ -177,9 +177,10 @@ internal static class Program
         True("本地阶段含封装", States.LocalPhases.Contains("封装"));
         True("本地阶段含校验", States.LocalPhases.Contains("校验"));
         Eq("工具名", "兴趣岛视频下载器", States.AppTitle);
-        Eq("版本", "1.6.1", States.AppVersion);
+        Eq("版本", "1.6.2", States.AppVersion);
         Eq("标签 4 个", 4, States.Tabs.Length);
-        Eq("轻课是第 4 个标签", "轻课", States.Tabs[3]);
+        // ★ v1.6.2：「轻课」改名「公开课」——公开课营（OPEN_COURSE）能正常下载
+        Eq("公开课是第 4 个标签", "公开课", States.Tabs[3]);
     }
 
     private static void UtilTests()
@@ -469,8 +470,10 @@ internal static class Program
         var p = Services.CreatePlatform();
         Eq("默认平台 id", "qianliao", p.PlatformId);
         Eq("平台显示名", "兴趣岛", p.DisplayName);
+        True("平台营类型含全部", p.CampKinds.Contains("全部"));
         True("平台营类型含正式营", p.CampKinds.Contains("正式营"));
         True("平台营类型含体验营", p.CampKinds.Contains("体验营"));
+        True("平台营类型含公开课", p.CampKinds.Contains("公开课"));
         Eq("api 数据源模式", DataSourceMode.Api, p.Mode);
         Eq("★ adb 数据源模式", DataSourceMode.Adb,
             Services.CreateDataSource(DataSourceMode.Adb).Mode);
@@ -620,5 +623,22 @@ internal static class Program
         Eq("★ 引擎的 -- 也归一成 —", "—", row.Speed);
 
         Eq("课程三态：1 / 1", States.CheckAll, States.CheckAllState(1, 1));
+
+        // ⑧ ★ v1.6.2：营列表按**真实营名**分组，公开课单列一组；同名批次可区分
+        var openCamp = new Camp { Name = "才艺名师公开课", CampId = "", PeriodId = "170814973572",
+                                  SkuType = "OPEN_COURSE", Count = 35, Badge = "35节" };
+        var openItem = new CampItem(openCamp);
+        Eq("★ 公开课归入「公开课」组", "公开课", openItem.GroupKey);
+        True("★ 公开课有标识", openItem.IsOpenCourse);
+        Eq("★ 公开课 Key 用 periodId（营名为空也能唯一区分）", "170814973572", openItem.Key);
+        var paidCamp = new Camp { Name = "道德经诵读", CampId = "7304063040", SkuType = "FINANCIAL",
+                                  Count = 27, Badge = "27节" };
+        var paidItem = new CampItem(paidCamp);
+        Eq("★ 正课归入「已购课程」组", "已购课程", paidItem.GroupKey);
+        True("★ 正课不是公开课", !paidItem.IsOpenCourse);
+        Eq("★ 正课 Key 用 campId", "7304063040", paidItem.Key);
+        var dupItem = new CampItem(openCamp, 3);
+        True("★ 同名批次加序号区分", dupItem.Display.Contains("(3)"));
+        True("★ 首个同名批次不加序号", !openItem.Display.Contains("("));
     }
 }

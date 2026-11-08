@@ -14,7 +14,7 @@ public sealed class QianliaoPlatform : IPlatform
 {
     public const string PlatformKey = "qianliao";
 
-    private static readonly IReadOnlyList<string> Kinds = new[] { "正式营", "体验营" };
+    private static readonly IReadOnlyList<string> Kinds = new[] { "全部", "正式营", "体验营", "公开课" };
 
     // skyType 参数把营分类隔开（已验证事实 〇之一）：
     //   FINANCIAL → 正式营 9 个 / INTENTION → 体验营 1 个 / 不传 → 全部（含公开课）。
@@ -58,7 +58,11 @@ public sealed class QianliaoPlatform : IPlatform
     public async Task<List<Camp>> ListCampsAsync(string kind, CancellationToken ct = default)
     {
         kind = kind ?? "";
-        // 轻课在 App 内已确认为空 → 直接返回空列表，绝不探测。
+        // ★ v1.6.2：「轻课」在 App 内确实是空的，但**公开课不是** ——
+        //   myCourseListV2 不传 skyType 会带回 16 个 skuType=OPEN_COURSE 的营
+        //   （才艺名师公开课、节气养正公开课、晨练焕醒计划…），它们有 periodId、
+        //   能取到课表，可以正常下载。因此「轻课」这个入口改名为「公开课」。
+        bool onlyOpenCourse = kind == "公开课";
         if (kind == "轻课") return new List<Camp>();
 
         string sky = SkyTypes.TryGetValue(kind, out var s) ? s : null;   // 全部/其它 → 不传
@@ -73,11 +77,20 @@ public sealed class QianliaoPlatform : IPlatform
         foreach (var c in data.Arr("courses"))
         {
             var camp = ParseCamp(c, kind);
+            // 「公开课」入口：只留 OPEN_COURSE 那些（它们无 campId，靠 periodId 取课表）
+            if (onlyOpenCourse && camp.SkuType != "OPEN_COURSE") continue;
             camps.Add(camp);
             // 累积式缓存（不清空），便于 camp_info 反查；多次拉不同 tab 会自然合并。
             if (!string.IsNullOrEmpty(camp.Name))
             {
-                lock (_cacheLock) { _campIndex[camp.Name] = camp; }
+                lock (_cacheLock)
+                {
+                    // ★ v1.6.2：同名时优先保留**有 campId 的**（付费营）。
+                    //   「全部」列表里同名公开课有多个批次（华佗五禽戏…×5），
+                    //   让它们顶掉正课会让反查取到错的营。
+                    if (!_campIndex.TryGetValue(camp.Name, out var old) || string.IsNullOrEmpty(old.CampId))
+                        _campIndex[camp.Name] = camp;
+                }
             }
         }
         return camps;
@@ -133,20 +146,51 @@ public sealed class QianliaoPlatform : IPlatform
     public async Task<List<Lesson>> CampCatalogAsync(Camp camp, CancellationToken ct = default)
     {
         var name = camp?.Name ?? "";
-        lock (_cacheLock)
-        {
-            if (_catalogs.TryGetValue(name, out var cached)) return cached;
-        }
 
         var info = camp;
-        if (string.IsNullOrEmpty(info?.CampId))
+        // ★ v1.6.2：只有「既没 campId 又没 periodId」才需要反查 ——
+        //   公开课 campId 为空但 periodId 有值，直接用它取课表，别去反查（会取到同名营）。
+        if (info != null && string.IsNullOrEmpty(info.CampId) && string.IsNullOrEmpty(info.PeriodId))
             info = await EnsureCampAsync(name, ct).ConfigureAwait(false);
 
         var campId = info?.CampId ?? "";
-        // 公开课没有 campId，playListOfCourse 拿不到 → 空列表（对齐 xqd_api.camp_catalog）。
-        if (string.IsNullOrEmpty(campId)) return new List<Lesson>();
+        var periodId = info?.PeriodId ?? "";
 
-        var data = await _client.PlayListOfCourseAsync(campId, ct).ConfigureAwait(false);
+        // ★ 缓存 key 用 campId / periodId 而不是营名 ——
+        //   同名营（如「华佗五禽戏·肩脊舒身营-T」有 5 个批次）课表不同，按名字会互相覆盖。
+        var key = !string.IsNullOrEmpty(campId) ? "c:" + campId
+                : !string.IsNullOrEmpty(periodId) ? "p:" + periodId
+                : "n:" + name;
+        lock (_cacheLock)
+        {
+            if (_catalogs.TryGetValue(key, out var cached)) return cached;
+        }
+
+        List<Lesson> lessons;
+        if (!string.IsNullOrEmpty(campId))
+        {
+            var data = await _client.PlayListOfCourseAsync(campId, ct).ConfigureAwait(false);
+            lessons = ParseLessons(data, info, name);
+        }
+        else if (!string.IsNullOrEmpty(periodId))
+        {
+            // ★ v1.6.2：公开课（OPEN_COURSE）没有 campId，用 periodId 走专用端点。
+            var data = await _client.OpenCoursePlayListAsync(periodId, ct).ConfigureAwait(false);
+            lessons = ParseLessons(data, info, name);
+        }
+        else
+        {
+            // 既无 campId 又无 periodId → 没有可用的课表入口
+            return new List<Lesson>();
+        }
+
+        lock (_cacheLock) { _catalogs[key] = lessons; }
+        return lessons;
+    }
+
+    /// <summary>课表数组 → Lesson 列表（正课与公开课的字段结构一致，共用）。</summary>
+    private static List<Lesson> ParseLessons(JsonElement data, Camp info, string name)
+    {
         var lessons = new List<Lesson>();
         int index = 0;
         foreach (var c in data.Arr("courses"))
@@ -168,7 +212,6 @@ public sealed class QianliaoPlatform : IPlatform
                 CampOfRow = info,                    // 逐行绑定所属营，不按合并行号重排
             });
         }
-        lock (_cacheLock) { _catalogs[name] = lessons; }
         return lessons;
     }
 
@@ -177,7 +220,9 @@ public sealed class QianliaoPlatform : IPlatform
     {
         var name = camp?.Name ?? lesson?.CampName ?? "";
         var info = camp;
-        if (string.IsNullOrEmpty(info?.CampId))
+        // ★ v1.6.2：公开课 campId 为空但 periodId 有值 —— **不能按营名反查**
+        //   （同名营有多个批次，反查会取到别的营 → 播放地址取错）。
+        if (info != null && string.IsNullOrEmpty(info.CampId) && string.IsNullOrEmpty(info.PeriodId))
             info = await EnsureCampAsync(name, ct).ConfigureAwait(false);
 
         var campId = info?.CampId ?? "";
