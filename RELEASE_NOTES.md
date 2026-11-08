@@ -4,6 +4,11 @@
 > Python 与 C# / WPF 两套实现合并到同一个 `master` 分支，
 > 打包与编译改由 GitHub Actions 完成，本机不再产出二进制。
 >
+> ⚠️ **状态：尚未发布（2026-11-08）。** GitHub Actions 已成功构建出正确产物
+> （exe 104,454,314 B / zip 531,234 B），但 `v1.5.3` 这个 tag 已被一次
+> **immutable release** 占用：删除 Release 后 GitHub 仍拒绝用同名 tag 重建。
+> 按用户决定暂不发布；待确定新版本号后统一替换 4 处版本号并重新打 tag 触发工作流。
+>
 > ⚠️ 仅供个人将**自己已购**的课程备份到**自有设备**使用；导出后请及时删除。
 
 ## 本版本改了什么
@@ -11,7 +16,7 @@
 | 项 | v1.5.2 及以前 | v1.5.3 |
 |---|---|---|
 | 分支 | `master`（Python）/ `csharp-wpf`（C#）分开维护 | **合并到 `master`**，两套源码同仓 |
-| 发版 | 两个独立 Release：`v1.5.2`、`v1.5.2-csharp-wpf` | **一个 Release `v1.5.3` 挂两个附件** |
+| 发版 | 两个独立 Release：`v1.5.2`、`v1.5.2-csharp-wpf` | **一个 Release 挂两个附件**（待发布，见顶部状态） |
 | 构建 | 本机 PyInstaller 打包 + 本机 `dotnet publish` | **GitHub Actions（Windows runner）** |
 | 二进制 | 手工 `gh release upload` | 工作流自动上传，仓库不含 exe / zip |
 
@@ -19,13 +24,14 @@
 版本号统一到 `1.5.3`：`xqd_gui.APP_VERSION`、`States.AppVersion`，
 以及两处离线回归的版本断言。
 
-## 下载与校验
+## 预期附件（待发布）
 
-| 附件 | 实现 | 说明 |
-|---|---|---|
-| `xingqudao-downloader-v1.5.3.exe` | Python / PySide6 | PyInstaller 单文件，约 96 MB，双击即用、绿色免安装 |
-| `xingqudao-downloader-v1.5.3.zip` | C# / WPF（.NET 8） | 目录发布，**解压后整目录拷贝**，双击 `gui/xingqudao-downloader.exe` |
+| 附件 | 实现 | 实测体积 | 说明 |
+|---|---|---|---|
+| `xingqudao-downloader-v1.5.3.exe` | Python / PySide6 | 104,454,314 B | PyInstaller 单文件，双击即用、绿色免安装 |
+| `xingqudao-downloader-v1.5.3.zip` | C# / WPF（.NET 8） | 531,234 B | 目录发布，**解压后整目录拷贝**，双击 `gui/xingqudao-downloader.exe` |
 
+上述体积是 GitHub Actions 产物实测值；改用新版本号时文件名中的版本后缀同步替换。
 两个附件的 **SHA-256 由工作流在上传时自动写进 Release 正文**（见
 `.github/workflows/release.yml` 的 `release` 作业），本地不再手工记录哈希。
 
@@ -76,8 +82,8 @@
 - `PublishSingleFile=true` 需要联网还原 `Microsoft.NET.ILLink.Tasks`，
   故 C# 版仍采用 **framework-dependent 目录发布**：三个前端各约 0.5 MB，
   共用系统 .NET 8 运行时；换来体积远小于 Python 单文件 exe。
-- exe 约 96.5 MB 已贴近 GitHub 单文件 100 MB 上限；PyInstaller 内部已压缩，
-  实测再套 deflate 只省 0.6%，所以二进制只走 Release 附件、不进仓库。
+- exe 约 104 MB；二进制无法增量存储，每次重打包都会让 git 仓库永久增大约 100 MB，
+  PyInstaller 内部已压缩（再套 deflate 只省 0.6%），所以只走 Release 附件、不进仓库。
 - 163 解密内核按第三方客户端行为独立复现，**不属于**学无止仓库的 MIT 授权范围，
   本工具整体不声明 MIT。
 

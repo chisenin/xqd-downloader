@@ -12,7 +12,7 @@
 
 | 实现 | 源码 | 界面 / 运行时 | 产物 |
 |---|---|---|---|
-| Python | 根目录 `xqd_*.py` · `_lel/api/qianliao.py` | PySide6（Qt6） | PyInstaller 单文件 exe，约 96 MB |
+| Python | 根目录 `xqd_*.py` · `_lel/api/qianliao.py` | PySide6（Qt6） | PyInstaller 单文件 exe，约 104 MB |
 | C# | `src/Xqd.sln` 六个项目 | WPF / .NET 8 | 目录发布 zip，约 250 KB，需系统 .NET 8 桌面运行时 |
 
 原先的 `master`（Python）与 `csharp-wpf`（C#）两个分支已合并到 `master`；
@@ -223,7 +223,7 @@ docs/                          设计与验证文档
    去掉 `.pdb` 后压缩成 `xingqudao-downloader-vX.Y.Z.zip`。
 4. `release`：汇总两个附件，自动生成含 SHA-256 的发行说明，用
    `GITHUB_TOKEN`（`permissions: contents: write`）创建 Release。
-   同版本重跑时，若 Release 已存在则**删除整个 Release 后重建**（见下方「不可变 Release」）。
+   若同名 Release 已存在则**明确报错并停止**，绝不自动删除已发布 Release。
 
 > ★ 几个**只在干净 CI 环境出现**的坑（本机不会复现）：
 > - Windows runner 控制台默认是 cp1252，`build_exe.py` 打印中文会抛
@@ -240,9 +240,14 @@ docs/                          设计与验证文档
 >   QtWebEngine 等 Addons，`build_exe.py` 的 `--add-data` 会把它们全收进 exe，
 >   实测从约 96 MB 膨胀到 330 MB。工作流加了 DLL 总量断言防回归。
 > - GitHub 的 **immutable release** 发布后不能覆盖/删除单个附件（`--clobber` 报
->   HTTP 422 `Cannot delete asset from an immutable release`）。所以同一版本
->   重跑时工作流先 `gh release delete <tag> --yes` 再 `gh release create`，
->   tag 保持不变。
+>   HTTP 422 `Cannot delete asset from an immutable release`）；删掉整个 Release
+>   后也**不能复用同一 tag**（`tag_name was used by an immutable release`）。
+>   → 一个版本号只能发一次，发现产物有问题必须**换版本号重发**；
+>   工作流遇到已存在 Release 会直接报错，避免误删已发布版本。
+>
+> ⚠️ **当前状态（2026-11-08）：v1.5.3 尚未发布。** CI 已成功构建出正确产物
+> （exe ≈ 104 MB、zip ≈ 531 KB），但 `v1.5.3` tag 已被一次不可变 Release 占用，
+> 无法再用该名字发版。待确定新版本号后，同步下面 4 处版本号再打 tag 即可。
 
 发版操作（ maintainer ）：
 
@@ -260,8 +265,9 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 
 > ★ 产物名固定为纯 ASCII —— GitHub Releases 会把中文附件名吞成 `default.exe`，
 > 而大附件发布后不可改名。窗口标题、界面文字仍是中文。
-> ★ exe 约 96.5 MB 已贴近 GitHub 单文件 100 MB 上限；PyInstaller 内部已压缩过，
-> 实测再套 deflate 只省 0.6%，所以二进制不进仓库、只走 Release 附件。
+> ★ exe 约 104 MB，二进制无法增量存储，每次重打包都会让 git 仓库永久增大约 100 MB；
+> PyInstaller 内部已压缩过，实测再套 deflate 只省 0.6%，所以二进制不进仓库、
+> 只走 Release 附件（Release 附件上限远高于仓库内单文件上限）。
 
 本地开发时如需自行验证（**非正式发版通道**）：
 

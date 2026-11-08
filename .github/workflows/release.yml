@@ -227,7 +227,7 @@ jobs:
             echo
             echo "| 附件 | 实现 | 运行方式 |"
             echo "|---|---|---|"
-            echo "| \`$EXE\` | Python / PySide6，PyInstaller 单文件 | 双击即用，绿色免安装，约 96 MB |"
+            echo "| \`$EXE\` | Python / PySide6，PyInstaller 单文件 | 双击即用，绿色免安装，约 104 MB |"
             echo "| \`$ZIP\` | C# / WPF（.NET 8），目录发布 | 解压后整目录拷贝，双击 \`gui/xingqudao-downloader.exe\`；需系统已装 .NET 8 桌面运行时 |"
             echo
             echo "两个版本都需要 ffmpeg / ffprobe 用于转封装与时长校验；凭据只在运行时从本机读取，仓库不含任何账号信息。"
@@ -241,18 +241,18 @@ jobs:
           } > notes.md
           cat notes.md
 
-      - name: 创建 / 重建 Release 附件
+      - name: 创建 Release 附件
         working-directory: artifacts
         shell: bash
         run: |
           EXE="xingqudao-downloader-v${VERSION}.exe"
           ZIP="xingqudao-downloader-v${VERSION}.zip"
+          # ★ GitHub 的 immutable release 发布后不能覆盖附件；删除整个 Release 后
+          #   也不能用同一 tag 重建（tag_name was used by an immutable release）。
+          #   所以绝不自动删除已发布 Release，直接给出明确指引让维护者换版本号。
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            # ★ GitHub 的 immutable release 发布后**不允许覆盖或删除单个附件**
-            #   （HTTP 422 Cannot delete asset from an immutable release）。
-            #   同一版本重跑时只能删除整个 Release 再按当前产物重建；tag 保留。
-            echo "Release $TAG 已存在且不可变 → 删除后重建"
-            gh release delete "$TAG" --yes --repo "$GITHUB_REPOSITORY"
+            echo "::error::Release $TAG 已存在且不可变：不能覆盖附件，也不能用同一 tag 重建。请换新版本号后重新打 tag。"
+            exit 1
           fi
           gh release create "$TAG" "$EXE" "$ZIP" \
             --repo "$GITHUB_REPOSITORY" \
