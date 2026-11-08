@@ -10,7 +10,21 @@
         Foreground="{StaticResource TextDarkBrush}"
         Background="{StaticResource AppBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
-        SizeChanged="Window_SizeChanged">
+        SizeChanged="Window_SizeChanged"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowDrop="True">
+
+    <!-- ★ v1.5.4：去掉 Windows 原生标题栏，改用自绘窗口按钮。
+         WindowChrome 保留 DWM 阴影与可拖拽的缩放边缘；
+         CaptionHeight=0 表示"这一行不是系统标题栏"，但左上角仍保留系统菜单。 -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      ResizeBorderThickness="6"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -22,11 +36,17 @@
         <!-- ══════════════ 顶栏：蓝色渐变品牌区（无原生菜单栏） ══════════════ -->
         <Border Grid.Row="0" Height="62" Background="{StaticResource BrandGradient}">
             <DockPanel Margin="18,8,18,8" LastChildFill="False">
-                <!-- 品牌区：点任意位置弹「使用说明与关于」 -->
+                <!-- ★ v1.5.4：logo 区可拖动窗口 + 双击最大化。
+                     左键单击（未拖动）仍然打开「使用说明与关于」，
+                     拖动与单击靠 5px 位移阈值区分（见 BrandBox_MouseLeftButtonDown）。
+                     ★ Border 没有 MouseDoubleClick 事件 —— 双击靠
+                     MouseLeftButtonDown 的 e.ClickCount >= 2 判断。 -->
                 <Border x:Name="BrandBox" DockPanel.Dock="Left" Background="Transparent"
-                        Cursor="Hand" ToolTip="点击查看使用说明与关于本工具"
+                        Cursor="Hand" ToolTip="点击查看使用说明与关于本工具 · 拖动可移动窗口 · 双击最大化"
                         VerticalAlignment="Center"
-                        MouseLeftButtonDown="BrandBox_MouseLeftButtonDown">
+                        MouseLeftButtonDown="BrandBox_MouseLeftButtonDown"
+                        MouseLeftButtonUp="BrandBox_MouseLeftButtonUp"
+                        MouseMove="BrandBox_MouseMove">
                     <StackPanel>
                         <TextBlock Text="兴趣岛视频下载器" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
                         <TextBlock Text="批量导出课程视频为通用 MP4" FontSize="11"
@@ -41,6 +61,14 @@
                          KeyDown="EdOut_KeyDown" VerticalAlignment="Center"/>
                 <Button x:Name="BtnBrowse" DockPanel.Dock="Left" Content="浏览…" Margin="6,0,0,0"
                         Style="{StaticResource ModernButtonStyle}" Click="BtnBrowse_Click"/>
+
+                <!-- ★ v1.5.4：自绘窗口按钮组（最小化 / 最大化-还原 / 关闭） -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Stretch"
+                            Margin="0,0,-18,0">
+                    <ctrl:WindowButton x:Name="BtnWinMin" ButtonKind="Minimize" Click="BtnWinMin_Click"/>
+                    <ctrl:WindowButton x:Name="BtnWinMax" ButtonKind="Maximize" Click="BtnWinMax_Click"/>
+                    <ctrl:WindowButton x:Name="BtnWinClose" ButtonKind="Close" Click="BtnWinClose_Click"/>
+                </StackPanel>
 
                 <Button x:Name="BtnRetry" DockPanel.Dock="Right" Content="重新授权"
                         Style="{StaticResource ModernButtonStyle}" Click="BtnRetry_Click"

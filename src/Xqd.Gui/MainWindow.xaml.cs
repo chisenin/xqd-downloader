@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Xqd.Core;
@@ -38,6 +40,17 @@ public partial class MainWindow : Window
 
     private List<HistoryRecord> _history = new();
     private double _histLastFlush;
+
+    // ── 无边框窗口（v1.5.4）────────────────────────────────
+    private IntPtr _hwnd;
+    private HwndSourceHook _wndProc;
+    // 品牌区：按下时的鼠标位置 —— 用来区分「拖动窗口」与「单击打开说明」
+    private Point _brandPressPoint;
+    private bool _brandDragging;
+    /// <summary>双击时置位：挡住双击带来的那两次单击，避免连弹两次说明对话框。</summary>
+    private bool _suppressBrandClick;
+    /// <summary>拖动判定阈值（像素）：移动超过它才算拖窗口，否则算单击。</summary>
+    private const double DragThreshold = 5.0;
 
     // ── 表格数据 ────────────────────────────────────────────
     private readonly ObservableCollection<CampItem> _campItems = new();
@@ -81,6 +94,19 @@ public partial class MainWindow : Window
 
         Title = States.AppTitle + "  v" + States.AppVersion;
         LblVersion.Text = "兴趣岛 · " + States.AppVersion;
+
+        // ★ v1.5.4：去掉原生标题栏后，窗口消息钩子用来修「最大化盖住任务栏」。
+        //   WM_GETMINMAXINFO 里把最大化尺寸限制到工作区（不含任务栏）。
+        //   直接用方法组赋值 —— HwndSourceHook 的第 5 个参数是 ref IntPtr，
+        //   不能用 lambda（ref 参数无法在 lambda 里转发）。
+        _wndProc = WndProc;
+        SourceInitialized += (_, _) =>
+        {
+            _hwnd = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(_hwnd)?.AddHook(_wndProc);
+            UpdateMaximizeButton();
+        };
+        StateChanged += (_, _) => UpdateMaximizeButton();
 
         _cfg = Config.Load();
         _outDir = Config.EffectiveOutDir(_cfg);
@@ -1476,9 +1502,137 @@ public partial class MainWindow : Window
 
     private void BrandBox_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        // ★ v1.5.4：Border 没有 MouseDoubleClick 事件，改用 ClickCount 判断双击。
+        //   双击时 ClickCount==2 的这次按下里切换最大化；
+        //   同时置 _suppressBrandClick，挡住随之而来的两次 MouseUp（不弹说明框）。
+        if (e.ClickCount >= 2)
+        {
+            _suppressBrandClick = true;
+            _brandDragging = false;
+            ToggleMaximize();
+            return;
+        }
+
+        // 记录按下位置。真正拖不拖，在 MouseMove 里按位移阈值判断；
+        // MouseLeftButtonUp 时若没超过阈值，视为「单击」→ 打开说明对话框。
+        _brandPressPoint = e.GetPosition(this);
+        _brandDragging = false;
+    }
+
+    private void BrandBox_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed) return;
+        if (_brandDragging) return;
+        if (_suppressBrandClick) return;
+
+        var cur = e.GetPosition(this);
+        var dx = cur.X - _brandPressPoint.X;
+        var dy = cur.Y - _brandPressPoint.Y;
+        if (Math.Abs(dx) < DragThreshold && Math.Abs(dy) < DragThreshold) return;
+
+        // 超过阈值 → 判定为拖动窗口（此时不再触发单击逻辑）
+        _brandDragging = true;
+        try { DragMove(); }
+        catch (InvalidOperationException) { /* 拖动中窗口被关闭等边界情况，忽略 */ }
+    }
+
+    private void BrandBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_brandDragging) { _brandDragging = false; return; }   // 拖过了，不算单击
+        // ★ 双击会先来两次 MouseLeftButtonUp —— 那两次要挡住，
+        //   否则说明对话框会连弹两次。
+        if (_suppressBrandClick) { _suppressBrandClick = false; return; }
+        // 没拖动、也不是双击 → 单击：打开「使用说明与关于」
         var dlg = new HelpAboutWindow(this);
         dlg.ShowDialog();
     }
+
+    private void ToggleMaximize()
+    {
+        if (WindowState == WindowState.Maximized)
+            WindowState = WindowState.Normal;
+        else
+            WindowState = WindowState.Maximized;
+    }
+
+    private void UpdateMaximizeButton()
+    {
+        if (BtnWinMax == null) return;
+        bool restored = WindowState == WindowState.Maximized;
+        BtnWinMax.SetRestoreState(restored);
+    }
+
+    // ── 自绘窗口按钮 ────────────────────────────────────────
+    private void BtnWinMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void BtnWinMax_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
+
+    private void BtnWinClose_Click(object sender, RoutedEventArgs e) => Close();
+
+    // ── 窗口消息：最大化时不遮住任务栏 ──────────────────────
+    private const int WM_GETMINMAXINFO = 0x0024;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MINMAXINFO
+    {
+        public Point ptReserved;
+        public Point ptMaxSize;
+        public Point ptMaxPosition;
+        public Point ptMinTrackSize;
+        public Point ptMaxTrackSize;
+    }
+
+    /// <summary>
+    /// 窗口消息钩子。签名必须与 <see cref="HwndSourceHook"/> 完全一致：
+    /// 最后一个参数是 <c>ref bool handled</c>（不是 ref IntPtr）。
+    /// </summary>
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        handled = false;
+        if (msg == WM_GETMINMAXINFO)
+        {
+            try
+            {
+                var mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
+                // 用 MonitorFromWindow 取当前显示器的工作区（已排除任务栏）
+                const uint MONITOR_DEFAULTTONEAREST = 2;
+                var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                var info = new MONITORINFO { cbSize = Marshal.SizeOf(typeof(MONITORINFO)) };
+                if (GetMonitorInfo(monitor, ref info))
+                {
+                    mmi.ptMaxPosition.X = info.rcWork.Left - info.rcMonitor.Left;
+                    mmi.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
+                    mmi.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
+                    mmi.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
+                    Marshal.StructureToPtr(mmi, lParam, false);
+                }
+            }
+            catch { /* 取不到显示器信息就退回系统默认最大化行为 */ }
+        }
+        return IntPtr.Zero;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
     private void BtnBrowse_Click(object sender, RoutedEventArgs e)
     {

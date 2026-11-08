@@ -1,19 +1,56 @@
-# GUI 改版规格：v1.5.4 无边框 + v1.6.0 单表合并
+# GUI 改版规格 + 技术栈收敛：v1.5.4 无边框 → v1.6.0 单表合并 → v1.6.1 只留 C#
 
-> 本文是**施工图**。C# WPF 版（`src/Xqd.Gui/`）与 Python 版（`xqd_gui.py`）**都按本文实现**，
-> 行为与视觉必须一致。规格由用户逐条确认后定稿（2026-11-08 讨论）。
+> 本文是**施工图**。规格由用户逐条确认后定稿（2026-11-08 讨论）。
 >
-> **执行顺序**：先 v1.5.4（外观，改动小、风险低），验证无误后再做 v1.6.0（结构，重构量大）。
+> ## ★ 重大调整（2026-11-08 14:10 定论）
 >
-> ⚠️ **当前状态：暂不执行**。另一窗口正在做「两语言分支合并」的工作，
-> 同时改代码会互相干扰。等合并工作结束、代码基线稳定后再开工。
+> **技术栈收敛为只保留 C# / WPF。**
+>
+> - ❌ **不回滚**到 `csharp-wpf` 分支 —— 回滚会丢掉 6 个提交，其中
+>   `acddefa`（拆 `Xqd.Controls` 类库，根治 MC3074）、`27ccffa`（XAML 补
+>   `;assembly=` + `global.json`）、`b6cb76f`（CI 中国时区 + ffmpeg 查找桩）
+>   **是干净 runner 构建的必需项**，回滚必然导致 CI 失败。
+> - ✅ **在当前 master 上做减法**：删 Python 实现，保留 C# 与全部 CI 修复。
+> - ✅ **以后只改 C# 一份**，工作量减半，且不会出现两版行为不一致。
+>
+> **Server / CLI 不再随 Release 发布**，留在源码里，需要的人从源码跑。
+>
+> ---
+>
+> ## 版本序列与执行顺序
+>
+> | 序 | 版本 | 内容 | 风险 | 依赖 |
+> |---|---|---|---|---|
+> | 1 | **v1.5.4** | 去掉 Windows 原生标题栏，顶栏右侧自绘窗口按钮 | 低（外观层） | 无 |
+> | 2 | **v1.6.0** | 课程列表 + 下载管理合并为单表（8 列） | 高（结构层） | v1.5.4 已验证 |
+> | 3 | **v1.6.1** | 删 Python 实现与 archive/，CI 只发 C# 一个附件 | 低（删除层） | v1.6.0 已验证 |
+>
+> **为什么是这个顺序**：
+>
+> - **v1.5.4 排最前**：纯外观、零结构依赖，先跑热构建/打包流程，
+>   拿一个能立刻看到成果的版本。
+> - **v1.6.0 居中**：结构重构主体，此时外观层已稳定，不会被推翻。
+> - **v1.6.1 收尾**：删代码是「减法」，风险最低；放最后可确保前面的
+>   改动都在只有 Python 存在的基线上验证过，**不会删掉正在开发的代码**。
+>
+> ## ★ 原「v1.5.5 启动异步化」已取消
+>
+> 核实后发现：**C# 版本来就是全异步的**（`LoadCampsAsync` /
+> `CatalogWorkerAsync`，单营多营统一走后台 worker，**没有同步分支**）。
+> 「单营同步拉课表卡 UI 线程」是 **Python 版独有**的问题。
+> 技术栈收敛到 C# 后，这个问题自动消失，**不需要单独的 v1.5.5**。
+>
+> ⚠️ 但 C# 版仍有一处待改进：`QianliaoPlatform._catalogs` 缓存 dict
+> 在多营并发时无锁写入（Python 版同样问题）。v1.6.0 改行结构时
+> 一并加锁 —— **先改缓存结构，后改行结构**，反过来要在行结构里塞并发补丁。
 
-## 〇、两个版本的分工
+## 〇、涉及范围
 
-| 版本 | 内容 | 风险 | 依赖 |
-|---|---|---|---|
-| **v1.5.4** | 去掉 Windows 原生标题栏，顶栏右侧自绘窗口按钮 | 低（外观层） | 无 |
-| **v1.6.0** | 课程列表 + 下载管理合并为单表（8 列） | 高（结构层） | v1.5.4 已验证 |
+| 版本 | 涉及文件 |
+|---|---|
+| v1.5.4 | `src/Xqd.Gui/MainWindow.xaml(.cs)`、`src/Xqd.Gui/Resources/Theme.xaml` |
+| v1.6.0 | `src/Xqd.Gui/MainWindow.xaml(.cs)`、`src/Xqd.Gui/ViewModels/*.cs`、`src/Xqd.Core/States.cs`、`src/Xqd.Core/Naming.cs`、`src/Xqd.Core/Api/QianliaoClient.cs`、`src/Xqd.Tests/Program.cs` |
+| v1.6.1 | 根目录 `xqd_*.py`、`build_exe.py`、`ui.html`、`archive/`、`.github/workflows/release.yml`、`README.md`、`NOTICE.md`、`RELEASE_NOTES.md`、`docs/12` |
 
 ---
 
@@ -39,7 +76,7 @@
 | 左键拖动与「单击打开说明」冲突 | **用位移阈值区分**：按下后移动 > 5px 判定为拖动（不打开对话框）；未移动则视为单击 |
 | 双击不会自动最大化 | 自己实现：双击切换 `WindowState`（最大化 ↔ 还原） |
 | 最大化会盖住任务栏 | 处理 `WM_GETMINMAXINFO`，给最大化窗口留出任务栏高度（`MonitorArea` / `WorkArea`） |
-| 窗口边缘没有 DWM 阴影，显得"贴纸化" | 用 `WindowChrome`（WPF）/ 保留 `Qt.FramelessWindowHint` + 自绘边框（PySide6）；Python 版接受无阴影，优先保证功能 |
+| 窗口边缘没有 DWM 阴影，显得"贴纸化" | 用 `WindowChrome` 保留阴影与缩放边框（`CaptionHeight=0` + `GlassFrameThickness=0`） |
 | 缩放边框（resize handle）消失 | `WindowChrome` 的 `ResizeBorderThickness` 保留可拖拽边缘；PySide6 用 `QSizeGrip` 补一个右下角拖拽把手 |
 
 ## 自绘按钮规格
@@ -61,9 +98,7 @@
 - `src/Xqd.Gui/Resources/Theme.xaml` — 窗口按钮样式（普通 / 悬停 / 关闭悬停）
 
 **Python 版**
-- `xqd_gui.py` — `setWindowFlags(Qt.FramelessWindowHint)`；顶栏加按钮；
-  `mousePressEvent` 里记住位置、`mouseMoveEvent` 里 `startSystemMove()`；
-  双击最大化；右下角 `QSizeGrip`
+- ~~`xqd_gui.py`~~ —— **技术栈收敛后不需要**（见第三部分 v1.6.1）。
 
 ## 验收
 
@@ -71,7 +106,6 @@
 - 拖动、双击最大化、右键任务栏菜单（还原/移动/大小/关闭）均正常。
 - **最大化后不遮挡任务栏**。
 - 关闭按钮能正常退出（`OnClosing` 里的 `_appCts.Cancel()` / `FlushHistory()` / `SaveCfg()` 仍执行）。
-- Python 版与 C# 版行为一致。
 
 ---
 
@@ -185,7 +219,7 @@
 
 ## 五、视觉规格
 
-配色沿用现有主题（`src/Xqd.Gui/Resources/Theme.xaml`，Python 侧 `xqd_gui.py` 的 QSS）：
+配色沿用现有主题（`src/Xqd.Gui/Resources/Theme.xaml`）：
 
 | 项 | 规格 |
 |---|---|
@@ -213,24 +247,25 @@
 
 历史行统一用 `#F1F3F6` 底 + `#7D8B9C` 字。
 
-## 六、实现要点（两版通用）
+## 六、实现要点
 
-1. **列号一律走常量**（`States.Col*` / `xqd_gui.COL_*`），界面与测试一律引用，
+1. **列号一律走常量**（`States.Col*`），界面与测试一律引用，
    不要写死数字。列号重排后**必须同步改单测里的断言**
    （`src/Xqd.Tests/Program.cs` 约 162-164 行引用了旧列号 —— 这是最易漏的点）。
-2. **状态词表单一来源**：`States.StateTexts` / `States.StateColors` /
-   `xqd_gui.STATE_TEXTS` / `STATE_COLORS`。状态列胶囊颜色由同一份状态词驱动，
-   **漏一个词就少一种配色**。
+2. **状态词表单一来源**：`States.StateTexts` / `States.StateColors`。
+   状态列胶囊颜色由同一份状态词驱动，**漏一个词就少一种配色**。
 3. **状态更新走同一套**：原来有「课名后状态词」和「下载管理状态列」两处，
    合并后只剩状态列一处 —— 状态变更的通知路径要一并收敛。
 4. **进度口径统一**：有 Job 用 Job 实时进度，否则用
    历史 / 分片缓存 / 磁盘检测 四个来源（课程列表原本就是这个口径，下载管理那列合并掉）。
-5. **文件名生成不动**：`Naming.LessonStem` / `xqd_api.course_filename` 保持原样。
-6. **右对齐**：`GridViewColumn` 的 `CellTemplate` 里用 `TextAlignment="Right"`；
-   Python 侧用 `Qt.AlignRight`。
-7. **两版行为必须一致**：Python 版是同一套逻辑的第二实现，改一处就要对另一处。
+5. **文件名生成不动**：`Naming.LessonStem` 保持原样。
+6. **右对齐**：`GridViewColumn` 的 `CellTemplate` 里用 `TextAlignment="Right"`。
+7. **课表缓存加锁**：`QianliaoClient` 的课表缓存 dict 在多营并发时
+   无锁写入，v1.6.0 一并加锁（只锁缓存读写，不锁网络请求）。
 
 ## 七、涉及文件
+
+> ★ **只改 C# 版**（技术栈收敛后不再同步 Python 实现）。
 
 **C# WPF 版**
 - `src/Xqd.Core/States.cs` — 列常量重排 + 胶囊配色表
@@ -240,14 +275,117 @@
   加 `Camp`/`Size`/`Speed`/`Eta`/`Progress`/`StateWord`
 - `src/Xqd.Gui/ViewModels/TaskRow.cs` — 合并进 LessonRow 后删除
 - `src/Xqd.Gui/Resources/Theme.xaml` — 胶囊样式、进度条着色
+- `src/Xqd.Core/Api/QianliaoClient.cs` — 课表缓存加锁（多营并发写）
 - `src/Xqd.Tests/Program.cs` — 列号断言
-
-**Python 版**
-- `xqd_gui.py` — 表格结构、列常量、行为规则、QSS
 
 ## 八、验收
 
-- 离线回归全绿（Python 侧 + C# 侧 `Xqd.Tests`）。
 - C# Release 构建 0 错 0 警，实机启动界面正常。
-- 两版行为一致：视图切换、下载范围判定、失败自动重试、删除成品。
+- 视图切换、下载范围判定、失败自动重试、删除成品，四项行为正确。
 - 成品文件名格式与改动前完全一致（`<序号>.<课名>.<日期>.mp4`）。
+- `Xqd.Tests` 离线回归全绿。
+
+---
+
+# 第三部分：v1.6.1 —— 技术栈收敛为只留 C#
+
+## 目标
+
+仓库里**只剩 C# / WPF 一套实现**。Release 只发一个 C# 附件。
+
+## ⚠️ 绝对不要用 `git reset --hard csharp-wpf`
+
+回滚到 `csharp-wpf` 分支会丢掉这 6 个提交，其中三个是**干净 runner 构建的必需项**：
+
+| 提交 | 内容 | 丢了会怎样 |
+|---|---|---|
+| `27ccffa` | XAML 补 `;assembly=Xqd.Controls`、`global.json` 锁 SDK、CI UTF-8 | CI 构建失败（MC3074 复发） |
+| `acddefa` | 拆出 `src/Xqd.Controls` 类库 | **CI 构建失败** —— 根治 MC3074 的关键 |
+| `b6cb76f` | CI 补中国时区 + ffmpeg/ffprobe 查找桩 | C# 离线回归在 runner 上必挂 |
+| `13e5acc` | Python 依赖锁 Essentials | 不需要（Python 要删） |
+| `f27ef3f` | CI 兼容 immutable release | 建议保留 |
+| `95b4f7b` | 记录 immutable release 限制 | 建议保留 |
+
+**正确做法：在当前 master 上做减法**（`git rm` / 删除文件），不碰历史。
+
+## 删除清单
+
+| 路径 | 处理 | 理由 |
+|---|---|---|
+| `xqd.py` `xqd_api.py` `xqd_app.py` `xqd_auth.py` `xqd_batch.py` `xqd_creds.py` `xqd_dedupe.py` `xqd_engine.py` `xqd_gui.py` `xqd_history.py` `xqd_pdl.py` `xqd_platform.py` `xqd_proc.py` `xqd_server.py` | **删** | Python 实现主体，C# 版已全量覆盖 |
+| `build_exe.py` | **删** | PyInstaller 打包脚本（CI 改后不再需要） |
+| `ui.html` | **删** | Python 网页版前端，Server 不再发布 |
+| `archive/`（整个目录，210K） | **删** | 历史脚本归档：`drm-analysis/` `legacy-docs/` `oneshot/` `probes/` `xwz-v2/` —— 一次性分析与实验脚本，无运行价值 |
+| `dist/` `dist-csharp/` `build/` | **删** | 构建产物（已在 .gitignore，本地残留） |
+| `NUL` | **删** | Windows 误建的空文件 |
+| `_lel/`（1.6M） | **保留** | ⚠️ 见下方合规说明 |
+
+### ★ 为什么保留 `_lel/`
+
+C# 版**代码不依赖** `_lel/`（只在注释和「关于」对话框里提到路径），
+但 `NOTICE.md` 明确声明了 `_lel/core/netease_mooc.py`、
+`_lel/login/`、`_lel/v2/` 的来源与授权边界 —— 这是**合规声明的一部分**。
+
+`src/Xqd.Core/Crypto/Netease163.cs` 是 `_lel/core/netease_mooc.py` 的等价移植，
+NOTICE 里也写了「延续上文第二节的边界」。删掉 `_lel/` 会让这段声明失去依托。
+
+**决策：保留 `_lel/`**，体积仅 1.6M，成本可忽略。
+
+## 需同步修改的文件
+
+### `.github/workflows/release.yml`
+- **删掉 `build-python` 整个作业**（PyInstaller 那套）。
+- `release` 作业的附件校验从 2 个改成 1 个（只认 zip）。
+- 发行说明模板改成只描述 C# 版。
+- `PYTHONIOENCODING` / `PYTHONUTF8` 环境变量**保留**（C# 作业的
+  `dotnet` 输出也可能含中文，且删了更保险）。
+- `global.json`、`TZ: Asia/Shanghai`、ffmpeg 查找桩**全部保留**。
+
+### `README.md`
+- 删掉「方式二：本地网页版」「方式三：CLI 全量批处理」的**发布下载**表述，
+  改为「源码内提供，用法见下」—— **代码保留，只是不再随 Release 分发**。
+- 三种前端 → 只讲 GUI 为主，Server/CLI 标注「源码内提供，需自行 `dotnet run`」。
+- 架构图去掉 Python 那几层。
+
+### `NOTICE.md`
+- 第一节「运行时依赖的第三方组件」删掉 PySide6 / pycryptodome / Python
+  （C# 版不用；pycryptodome 若 163 解密已移植到 C# 则一并删）。
+- 第五节改写：不再提「两套实现同在 master」，只讲 C#。
+- 保留 `_lel/` 的合规声明与「C# 实现不含其客户端代码」的边界。
+
+### `RELEASE_NOTES.md` / `docs/12-项目现状与合规.md`
+- 同步改为「只保留 C# 实现」的现状描述。
+
+### `src/Xqd.Gui/Controls/HelpAboutWindow.cs`
+- 「关于」对话框里提到 `_lel/core/netease_mooc.py` 的段落**保留**
+  （合规声明），但措辞要调整为「C# 实现是 `_lel/` Python 实现的等价移植」。
+
+### 版本号同步点（CI 会校验，漏了直接失败）
+- `src/Xqd.Core/States.cs` → `AppVersion`
+- `src/Xqd.Tests/Program.cs` → 断言里的版本号
+
+（Python 版的 `xqd_gui.APP_VERSION` 与 `_lel/api/test_mumu_env.py` 随文件一起删除。）
+
+## Release 附件最终形态
+
+```
+Release vX.Y.Z
+└── xingqudao-downloader-vX.Y.Z.zip
+    ├── gui/xingqudao-downloader.exe    ← 桌面工具（日常使用，双击启动）
+    ├── cli/Xqd.Cli.dll                 ← CLI 全量批处理（源码内提供的能力，随包）
+    └── README.txt
+```
+
+- **只发这一个 zip**，不再有 Python exe。
+- zip 内含 `gui/` + `cli/`（**不含 `server/`** —— 网页版不再发布）。
+- `README.txt` 说明：需系统已装 .NET 8 桌面运行时；ffmpeg/ffprobe 需在 PATH；
+  请整目录解压后一起拷贝。
+
+## 验收
+
+- CI 跑通，`Xqd.Tests` 离线回归全绿，产出单个 zip。
+- 本地 `dotnet build src/Xqd.sln -c Release` 0 错 0 警。
+- 仓库里搜不到任何 `xqd_*.py` 引用（`docs/` 里的历史说明除外）。
+- `NOTICE.md` 的声明与仓库实际内容一致（不能声明已删除的文件仍存在，
+  也不能漏掉仍存在的 `_lel/`）。
+
