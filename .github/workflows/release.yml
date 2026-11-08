@@ -20,6 +20,11 @@ on:
 permissions:
   contents: write
 
+# Windows runner 的控制台默认 cp1252，build_exe.py 会打印中文 → 强制 UTF-8。
+env:
+  PYTHONIOENCODING: utf-8
+  PYTHONUTF8: "1"
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -116,6 +121,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      - name: 确认 SDK 版本（根目录 global.json 锁定 8.0.x）
+        shell: pwsh
+        run: dotnet --version
 
       - name: 编译解决方案 + 离线回归
         shell: pwsh

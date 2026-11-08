@@ -114,7 +114,7 @@ dotnet cli/Xqd.Cli.dll --out "Z:/太极营" --workers 2 --seg-workers 12 \
 |---|---|---|
 | Python 3.8+ | Python 版运行时 | 业务 HTTP / 服务 / 下载内核**只用标准库** |
 | PySide6-Essentials | Python 版 GUI / 打包 | 仅 GUI 与 PyInstaller 打包需要 |
-| .NET 8 SDK / 桌面运行时 | C# 版编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF |
+| .NET 8 SDK / 桌面运行时 | C# 版编译 / 运行 | **零第三方 NuGet 依赖**，只用 BCL + WPF；SDK 版本由根目录 `global.json` 锁定 8.0.x |
 | ffmpeg / ffprobe | 分片转封装、成品时长校验 | 两个版本共用，需在 PATH 或引擎回退目录 |
 | pycryptodome | 163 地址解密内核 | 仅 `_lel/core/netease_mooc.py`，兴趣岛主链路不需要 |
 | MuMu 模拟器 | 读取本机登录态以完成授权 | `api` 模式**下载本身不依赖模拟器/ADB** |
@@ -221,6 +221,13 @@ docs/                          设计与验证文档
    去掉 `.pdb` 后压缩成 `xingqudao-downloader-vX.Y.Z.zip`。
 4. `release`：汇总两个附件，自动生成含 SHA-256 的发行说明，用
    `GITHUB_TOKEN`（`permissions: contents: write`）创建 / 更新 Release。
+
+> ★ 两个**只在干净 CI 环境出现**的坑（本机不会复现）：
+> - Windows runner 控制台默认是 cp1252，`build_exe.py` 打印中文会抛
+>   `UnicodeEncodeError` → 工作流设 `PYTHONIOENCODING=utf-8` / `PYTHONUTF8=1`。
+> - 干净构建时 XAML 的 `clr-namespace` 引用**同程序集**自定义控件必须写全
+>   `;assembly=xingqudao-downloader`，否则报 MC3074；本机因 `obj/` 有增量缓存而被掩盖。
+>   根目录 `global.json` 另把 .NET SDK 锁在 8.0.x，避免 runner 上更高版本 SDK 改变编译行为。
 
 发版操作（ maintainer ）：
 
