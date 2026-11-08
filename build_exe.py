@@ -5,7 +5,7 @@
     python build_exe.py              # 正式打包
     python build_exe.py --dry-run    # 只打印命令，不执行
 
-产物：dist/xingqudao-downloader-v<版本>.exe（版本取自 xqd_gui.APP_VERSION）
+产物：dist/xqd-downloader-v<版本>.exe（版本取自 xqd_gui.APP_VERSION）
 
 ★ exe 文件名一律用 ASCII。GitHub Releases 会把中文附件名吞成
   ``default.exe``，而 96 MB 的附件一旦发布（immutable release）就改不了名，
@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-EXE_BASENAME = 'xingqudao-downloader'
+EXE_BASENAME = 'xqd-downloader'
 
 # 需要一起打进去的自有模块
 HIDDEN = [

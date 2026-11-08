@@ -1,10 +1,11 @@
-name: 构建并发布双版本
+name: 构建并发布 C# 版
 
-# v1.5.3 起：master 一个分支同时存放 Python 与 C# 两套实现，
-# 打包 / 编译**只在本工作流所在的 GitHub Actions runner 上执行**，本机不产出二进制。
-# 推送 tag vX.Y.Z → 生成同一个 Release 下的两个附件：
-#   xingqudao-downloader-vX.Y.Z.exe  （Python / PySide6，PyInstaller 单文件）
-#   xingqudao-downloader-vX.Y.Z.zip  （C# / WPF，dotnet publish 目录发布）
+# ★ 2026-11-08 定论：技术栈收敛为只保留 C# / WPF，Release 只发一个附件。
+#   打包 / 编译**只在本工作流所在的 GitHub Actions runner 上执行**，本机不产出二进制。
+#   推送 tag vX.Y.Z → 创建一个 Release，挂**一个** zip：
+#     xqd-downloader-vX.Y.Z.zip  （C# / WPF 目录发布，内含 gui/ + cli/）
+#   · server/ 不再随包发布，需要的人从源码跑（见 README）
+#   · Python 实现不再打包；其源码在 v1.6.1 一并删除
 
 on:
   push:
@@ -13,17 +14,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '版本号（不含 v，例如 1.5.3）；用于手动重跑发版'
+        description: '版本号（不含 v，例如 1.5.4）；用于手动重跑发版'
         required: true
         type: string
 
 permissions:
   contents: write
 
-# Windows runner 的控制台默认 cp1252，build_exe.py 会打印中文 → 强制 UTF-8。
 env:
-  PYTHONIOENCODING: utf-8
-  PYTHONUTF8: "1"
   # C# 离线回归里有按本机时区格式化的 startTime 断言；课程时间一律按中国时区。
   TZ: Asia/Shanghai
 
@@ -61,59 +59,6 @@ jobs:
           echo "tag=v$V" >> "$GITHUB_OUTPUT"
           echo "发版版本：$V"
 
-  build-python:
-    name: PyInstaller 单文件 exe
-    needs: prepare
-    runs-on: windows-2022
-    env:
-      VERSION: ${{ needs.prepare.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: 安装打包依赖（与本机已验证组合一致）
-        shell: pwsh
-        run: |
-          python -m pip install --upgrade pip
-          # ★ 必须装 Essentials，不能装完整 PySide6 元包：后者会带 QtWebEngine 等
-          #   Addons（+200MB DLL），build_exe.py 会把它们全收进单文件 exe。
-          python -m pip install "PySide6-Essentials==6.12.0" "pyinstaller==6.22.3"
-          python -c "import PySide6, PyInstaller; print('PySide6', PySide6.__version__, '/ PyInstaller', PyInstaller.__version__)"
-          python -c "import os, PySide6; r=os.path.dirname(PySide6.__file__); t=sum(os.path.getsize(os.path.join(r,f)) for f in os.listdir(r) if f.lower().endswith(('.dll','.json'))); print('Qt DLL 合计 %.1f MiB'%(t/1048576)); assert t < 150*1048576, '装到 PySide6-Addons 了，exe 会膨胀到 300MB+'"
-
-      - name: 校验源码版本号与 tag 一致
-        shell: pwsh
-        run: |
-          $src = Get-Content xqd_gui.py -Raw
-          $m = [regex]::Match($src, "(?m)^APP_VERSION\s*=\s*'([^']+)'")
-          if (-not $m.Success) { throw 'xqd_gui.py 里找不到 APP_VERSION' }
-          if ($m.Groups[1].Value -ne $env:VERSION) {
-            throw "APP_VERSION=$($m.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
-          }
-          "APP_VERSION = $($m.Groups[1].Value)"
-
-      - name: PyInstaller 打包
-        shell: pwsh
-        run: python build_exe.py
-
-      - name: 核对产物
-        shell: pwsh
-        run: |
-          $exe = "dist/xingqudao-downloader-v$env:VERSION.exe"
-          if (-not (Test-Path $exe)) { throw "缺少产物 $exe" }
-          Get-Item $exe | Select-Object Name, Length | Format-Table -AutoSize
-          "SHA256 = $((Get-FileHash $exe -Algorithm SHA256).Hash)"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: python-exe
-          path: dist/xingqudao-downloader-v${{ needs.prepare.outputs.version }}.exe
-          if-no-files-found: error
-          retention-days: 7
-
   build-csharp:
     name: dotnet publish 目录发布 zip
     needs: prepare
@@ -130,6 +75,19 @@ jobs:
       - name: 确认 SDK 版本（根目录 global.json 锁定 8.0.x）
         shell: pwsh
         run: dotnet --version
+
+      - name: 校验源码版本号与 tag 一致
+        shell: pwsh
+        run: |
+          # ★ 版本号唯一来源：Xqd.Core/States.cs 的 AppVersion。
+          #   离线回归里也有同样的断言（Xqd.Tests），两处不一致会直接构建/测试失败。
+          $src = Get-Content src/Xqd.Core/States.cs -Raw
+          $m = [regex]::Match($src, 'AppVersion\s*=\s*"([^"]+)"')
+          if (-not $m.Success) { throw 'States.cs 里找不到 AppVersion' }
+          if ($m.Groups[1].Value -ne $env:VERSION) {
+            throw "AppVersion=$($m.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
+          }
+          "AppVersion = $($m.Groups[1].Value)"
 
       - name: 准备离线回归环境（中国时区 + ffmpeg/ffprobe 查找桩）
         shell: pwsh
@@ -156,15 +114,14 @@ jobs:
           dotnet run --project src/Xqd.Tests/Xqd.Tests.csproj -c Release --no-build
           if ($LASTEXITCODE -ne 0) { throw 'C# 离线回归失败' }
 
-      - name: 目录发布三个前端
+      - name: 目录发布两个前端（gui + cli）
         shell: pwsh
         run: |
           Remove-Item -Recurse -Force stage -ErrorAction SilentlyContinue
-          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj       -c Release -o stage/gui
+          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o stage/gui
           if ($LASTEXITCODE -ne 0) { throw 'GUI publish 失败' }
-          dotnet publish src/Xqd.Server/Xqd.Server.csproj -c Release -o stage/server
-          if ($LASTEXITCODE -ne 0) { throw 'Server publish 失败' }
-          dotnet publish src/Xqd.Cli/Xqd.Cli.csproj       -c Release -o stage/cli
+          # ★ 不发布 server/：网页版与 GUI 功能重叠，已定为「需要时从源码跑」。
+          dotnet publish src/Xqd.Cli/Xqd.Cli.csproj -c Release -o stage/cli
           if ($LASTEXITCODE -ne 0) { throw 'CLI publish 失败' }
 
       - name: 打包 zip
@@ -175,17 +132,18 @@ jobs:
           $readme = @"
           兴趣岛视频下载器 v$env:VERSION · C# / WPF 目录发布版
 
-          gui/xingqudao-downloader.exe     桌面工具（日常使用，双击启动）
-          server/Xqd.Server.dll           本地网页版，用法见 README.md
-          cli/Xqd.Cli.dll                 CLI 全量批处理，用法见 README.md
+          gui/xqd-downloader.exe    桌面工具（日常使用，双击启动）
+          cli/Xqd.Cli.dll           CLI 全量批处理，用法见 README.md
 
           请整目录解压后一起拷贝，不要只拷单个 exe。
           运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；
           ffmpeg / ffprobe 需在 PATH 或引擎回退目录。
+
+          本地网页版（server）与 Python 版不再随包发布，需要时从源码运行。
           "@
           $readme | Set-Content -Path stage/README.txt -Encoding utf8
 
-          $zip = "xingqudao-downloader-v$env:VERSION.zip"
+          $zip = "xqd-downloader-v$env:VERSION.zip"
           Compress-Archive -Path stage/* -DestinationPath $zip -Force
           Get-Item $zip | Select-Object Name, Length | Format-Table -AutoSize
           "SHA256 = $((Get-FileHash $zip -Algorithm SHA256).Hash)"
@@ -193,13 +151,13 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: csharp-zip
-          path: xingqudao-downloader-v${{ needs.prepare.outputs.version }}.zip
+          path: xqd-downloader-v${{ needs.prepare.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 7
 
   release:
     name: 发布 GitHub Release
-    needs: [prepare, build-python, build-csharp]
+    needs: [prepare, build-csharp]
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
@@ -215,26 +173,26 @@ jobs:
         working-directory: artifacts
         shell: bash
         run: |
-          EXE="xingqudao-downloader-v${VERSION}.exe"
-          ZIP="xingqudao-downloader-v${VERSION}.zip"
-          test -f "$EXE" || { echo "缺少 $EXE" >&2; exit 1; }
+          ZIP="xqd-downloader-v${VERSION}.zip"
           test -f "$ZIP" || { echo "缺少 $ZIP" >&2; exit 1; }
           {
             echo "## 兴趣岛视频下载器 v${VERSION}"
             echo
-            echo "同一个 Release 提供两套功能对齐的实现，按需二选一，不必同时安装。"
-            echo "二进制由 GitHub Actions 在 Windows runner 上构建，仓库不含 exe / zip。"
+            echo "C# / WPF（.NET 8）目录发布版。二进制由 GitHub Actions 在 Windows runner 上构建，仓库不含 exe / zip。"
             echo
-            echo "| 附件 | 实现 | 运行方式 |"
-            echo "|---|---|---|"
-            echo "| \`$EXE\` | Python / PySide6，PyInstaller 单文件 | 双击即用，绿色免安装，约 104 MB |"
-            echo "| \`$ZIP\` | C# / WPF（.NET 8），目录发布 | 解压后整目录拷贝，双击 \`gui/xingqudao-downloader.exe\`；需系统已装 .NET 8 桌面运行时 |"
+            echo "| 包内路径 | 用途 |"
+            echo "|---|---|"
+            echo "| \`gui/xqd-downloader.exe\` | 桌面工具，双击启动（日常使用） |"
+            echo "| \`cli/Xqd.Cli.dll\` | CLI 全量批处理，\`dotnet cli/Xqd.Cli.dll --help\` |"
             echo
-            echo "两个版本都需要 ffmpeg / ffprobe 用于转封装与时长校验；凭据只在运行时从本机读取，仓库不含任何账号信息。"
+            echo "解压后**整目录**拷贝，不要只拷单个 exe；同级目录里的 \`Xqd.Core.dll\`、\`*.runtimeconfig.json\` 等是必需的。"
+            echo "运行依赖：Windows 10/11 x64 + .NET 8 桌面运行时；ffmpeg / ffprobe 需在 PATH（或引擎查找路径）。"
+            echo
+            echo "本地网页版（server）与 Python 版不再随包发布，需要时从源码运行（见 README）。"
             echo
             echo "### SHA-256"
             echo '```'
-            sha256sum "$EXE" "$ZIP"
+            sha256sum "$ZIP"
             echo '```'
             echo
             echo "> 只处理自己已购买、有权访问与保存的内容；导出到教学大屏后请及时删除。"
@@ -245,8 +203,7 @@ jobs:
         working-directory: artifacts
         shell: bash
         run: |
-          EXE="xingqudao-downloader-v${VERSION}.exe"
-          ZIP="xingqudao-downloader-v${VERSION}.zip"
+          ZIP="xqd-downloader-v${VERSION}.zip"
           # ★ GitHub 的 immutable release 发布后不能覆盖附件；删除整个 Release 后
           #   也不能用同一 tag 重建（tag_name was used by an immutable release）。
           #   所以绝不自动删除已发布 Release，直接给出明确指引让维护者换版本号。
@@ -254,7 +211,7 @@ jobs:
             echo "::error::Release $TAG 已存在且不可变：不能覆盖附件，也不能用同一 tag 重建。请换新版本号后重新打 tag。"
             exit 1
           fi
-          gh release create "$TAG" "$EXE" "$ZIP" \
+          gh release create "$TAG" "$ZIP" \
             --repo "$GITHUB_REPOSITORY" \
             --title "兴趣岛视频下载器 v${VERSION}" \
             --notes-file notes.md

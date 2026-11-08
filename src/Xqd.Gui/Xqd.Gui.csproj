@@ -4,7 +4,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <RootNamespace>Xqd.Gui</RootNamespace>
-    <AssemblyName>xingqudao-downloader</AssemblyName>
+    <AssemblyName>xqd-downloader</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />

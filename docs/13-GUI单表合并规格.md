@@ -15,6 +15,25 @@
 >
 > **Server / CLI 不再随 Release 发布**，留在源码里，需要的人从源码跑。
 >
+> ### ★ Release 产物命名（2026-11-08 14:30 追加）
+>
+> 产物名从 `xingqudao-downloader` 统一改成 **`xqd-downloader`**（与仓库名
+> `chisenin/xqd-downloader` 对齐，短、纯 ASCII、少 8 个字符）。
+>
+> | 位置 | 新名字 |
+> |---|---|
+> | Release 附件 | `xqd-downloader-vX.Y.Z.zip`（**一个**附件） |
+> | zip 内主程序 | `gui/xqd-downloader.exe` |
+> | zip 内 CLI | `cli/Xqd.Cli.dll` |
+> | 源码常量 | `States.ProductExeName` / `Xqd.Gui.csproj` 的 `AssemblyName` |
+>
+> zip 内容 = `gui/` + `cli/` + `README.txt`，**不含 `server/`**。
+> ⚠️ 历史文档（`docs/01` `docs/10` `docs/11` `docs/12`）里的
+> `xingqudao-downloader-*` 是**当时真实的产物名**，属历史记录，**不回改**。
+>
+> ⚠️ 改名不影响 XAML 程序集解析：当前 XAML 引用的是 `;assembly=Xqd.Controls`
+> （`acddefa` 拆出的类库），与主程序 `AssemblyName` 无关。
+>
 > ---
 >
 > ## 版本序列与执行顺序

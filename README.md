@@ -6,28 +6,26 @@
 > 用途是临时转移到教学大屏，看完及时删除（大屏磁盘空间有限）。
 > 本工具只处理自己有权访问与保存的内容，详见文末「合规与使用边界」。
 
-## ★ v1.5.3：一个分支，两套实现，一个 Release
+## ★ v1.5.4 起：只保留 C# / WPF 一套实现
 
-`master` 同时保留两套功能对齐的实现，源码都在这个仓库里：
+| 项 | 内容 |
+|---|---|
+| 源码 | `src/Xqd.sln` —— 六个项目：`Xqd.Core` / `Xqd.Controls` / `Xqd.Gui` / `Xqd.Server` / `Xqd.Cli` / `Xqd.Tests` |
+| 界面 / 运行时 | WPF / .NET 8 |
+| Release 产物 | `xqd-downloader-vX.Y.Z.zip`（目录发布，约 250 KB，需系统 .NET 8 桌面运行时） |
 
-| 实现 | 源码 | 界面 / 运行时 | 产物 |
-|---|---|---|---|
-| Python | 根目录 `xqd_*.py` · `_lel/api/qianliao.py` | PySide6（Qt6） | PyInstaller 单文件 exe，约 104 MB |
-| C# | `src/Xqd.sln` 六个项目 | WPF / .NET 8 | 目录发布 zip，约 250 KB，需系统 .NET 8 桌面运行时 |
+Python 实现（根目录 `xqd_*.py` · `_lel/`）与原先的 `csharp-wpf` 分支、
+`v1.5.2` / `v1.5.2-csharp-wpf` 两个 Release 保留作历史，**不再更新**；
+Python 源码将在 v1.6.1 删除。
 
-原先的 `master`（Python）与 `csharp-wpf`（C#）两个分支已合并到 `master`；
-旧分支与 `v1.5.2` / `v1.5.2-csharp-wpf` 两个 Release 保留作历史，不再更新。
-
-**从 v1.5.3 起，打包与编译都在 GitHub Actions 上完成，本机不产出二进制，
-仓库里也不放 exe / zip。** 推送 tag `vX.Y.Z` 会自动生成**一个** Release，
-同时挂两个附件（版本号与 tag 一致）：
+**打包与编译都在 GitHub Actions 上完成，本机不产出二进制，仓库里也不放 exe / zip。**
+推送 tag `vX.Y.Z` 会自动生成**一个** Release 和**一个**附件（版本号与 tag 一致）：
 
 ```
-xingqudao-downloader-vX.Y.Z.exe   ← Python / PySide6，双击即用
-xingqudao-downloader-vX.Y.Z.zip   ← C# / WPF，解压后整目录拷贝
+xqd-downloader-vX.Y.Z.zip   ← gui/xqd-downloader.exe + cli/ + README.txt
 ```
 
-按需二选一即可，不必同时安装。详见下文「GitHub Actions 发版」。
+`server/`（本地网页版）不再随包发布，需要时从源码运行。详见下文「GitHub Actions 发版」。
 
 ---
 
@@ -54,14 +52,13 @@ xingqudao-downloader-vX.Y.Z.zip   ← C# / WPF，解压后整目录拷贝
 到 [GitHub Releases](https://github.com/chisenin/xqd-downloader/releases) 取最新版：
 
 ```
-xingqudao-downloader-v1.5.3.exe      双击即用，绿色免安装
-xingqudao-downloader-v1.5.3.zip      解压后整目录拷贝，双击 gui/xingqudao-downloader.exe
+xqd-downloader-v1.5.4.zip      解压后整目录拷贝，双击 gui/xqd-downloader.exe
 ```
 
-> C# 版不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
-> 两个版本都需要 ffmpeg / ffprobe 在 PATH（或引擎的查找路径）。
+> 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.runtimeconfig.json` 等是必需的。
+> 需要 ffmpeg / ffprobe 在 PATH（或引擎的查找路径）。
 
-源码运行（Python 版）：
+源码运行（历史实现，Python 版不再更新，v1.6.1 删除）：
 
 ```bash
 pip install PySide6-Essentials
@@ -75,8 +72,8 @@ python xqd_gui.py
 「进度」列重新载入也保留真实进度；一节进入封装后网络槽位立刻让给下一节。
 点顶栏标题区可打开「使用说明与关于」。
 
-Python 版版本以 `xqd_gui.py` 的 `APP_VERSION` 为准，C# 版以
-`src/Xqd.Core/States.cs` 的 `States.AppVersion` 为准；界面细节见
+C# 版版本以 `src/Xqd.Core/States.cs` 的 `States.AppVersion` 为准
+（Python 版以 `xqd_gui.py` 的 `APP_VERSION` 为准）；界面细节见
 [`docs/10-GUI工具说明.md`](docs/10-GUI工具说明.md)，C# 版专门说明见
 [`README-csharp-wpf.md`](README-csharp-wpf.md)。
 
@@ -205,23 +202,20 @@ docs/                          设计与验证文档
 ## GitHub Actions 发版
 
 工作流文件：[`.github/workflows/release.yml`](.github/workflows/release.yml)。
-**打包与编译只在 GitHub 的 Windows runner 上执行**，本机不需要装 PyInstaller / .NET SDK。
+**打包与编译只在 GitHub 的 Windows runner 上执行**，本机不需要装 .NET SDK。
 
 | 触发 | 行为 |
 |---|---|
-| 推送 tag `vX.Y.Z` | 解析版本号 → 并行构建两份产物 → 创建一个 Release 并挂两个附件 |
-| 手动 `workflow_dispatch` | 填版本号重跑；Release 已存在时覆盖附件并更新说明 |
+| 推送 tag `vX.Y.Z` | 解析版本号 → 构建 C# 产物 → 创建一个 Release 并挂**一个**附件 |
+| 手动 `workflow_dispatch` | 填版本号重跑；Release 已存在时**直接报错**（见下） |
 
-四个作业：
+三个作业：
 
 1. `prepare`：从 tag（或手动输入）取版本号，校验 `X.Y.Z` 格式。
-2. `build-python`（`windows-2022`）：Python 3.13 + **`PySide6-Essentials==6.12.0`** +
-   `pyinstaller==6.22.3`，校验 `APP_VERSION` 与 tag 一致、Qt DLL 总量 < 150 MiB，
-   跑 `build_exe.py`，产出 `xingqudao-downloader-vX.Y.Z.exe`。
-3. `build-csharp`（`windows-2022`）：.NET 8 SDK，`dotnet build` 全解决方案 +
-   离线回归 `Xqd.Tests`，再 `dotnet publish` 三个前端到 `gui/ server/ cli/`，
-   去掉 `.pdb` 后压缩成 `xingqudao-downloader-vX.Y.Z.zip`。
-4. `release`：汇总两个附件，自动生成含 SHA-256 的发行说明，用
+2. `build-csharp`（`windows-2022`）：.NET 8 SDK，校验 `States.AppVersion` 与 tag 一致，
+   `dotnet build` 全解决方案 + 离线回归 `Xqd.Tests`，再 `dotnet publish` 两个前端到
+   `gui/ cli/`，去掉 `.pdb`、附 `README.txt` 后压缩成 `xqd-downloader-vX.Y.Z.zip`。
+3. `release`：自动生成含 SHA-256 的发行说明，用
    `GITHUB_TOKEN`（`permissions: contents: write`）创建 Release。
    若同名 Release 已存在则**明确报错并停止**，绝不自动删除已发布 Release。
 
@@ -245,17 +239,16 @@ docs/                          设计与验证文档
 >   → 一个版本号只能发一次，发现产物有问题必须**换版本号重发**；
 >   工作流遇到已存在 Release 会直接报错，避免误删已发布版本。
 >
-> ⚠️ **当前状态（2026-11-08）：v1.5.3 尚未发布。** CI 已成功构建出正确产物
-> （exe ≈ 104 MB、zip ≈ 531 KB），但 `v1.5.3` tag 已被一次不可变 Release 占用，
-> 无法再用该名字发版。待确定新版本号后，同步下面 4 处版本号再打 tag 即可。
+> ⚠️ **当前状态（2026-11-08）：v1.5.4 待发布（无边框窗口 + 自绘窗口按钮）。**
+> v1.5.3 的 tag 已被一次不可变 Release 占用，无法再用该名字发版，故跳到 v1.5.4。
 
-发版操作（ maintainer ）：
+发版操作（maintainer）：
 
 ```bash
-# 1. 改版本号（两处必须一致）
-#    xqd_gui.py: APP_VERSION
-#    src/Xqd.Core/States.cs: States.AppVersion
-#    以及两处离线回归的版本断言（_lel/api/test_mumu_env.py、src/Xqd.Tests/Program.cs）
+# 1. 改版本号（C# 版唯一来源 + 回归断言，两处必须一致）
+#    src/Xqd.Core/States.cs : States.AppVersion   ← 唯一来源，CI 会校验与 tag 一致
+#    src/Xqd.Tests/Program.cs : 版本断言
+#    （Python 版仍在仓库里期间，xqd_gui.py: APP_VERSION 与 _lel 回归一并改）
 git add -A && git commit -m "release: vX.Y.Z"
 git push origin master
 
@@ -265,17 +258,15 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 
 > ★ 产物名固定为纯 ASCII —— GitHub Releases 会把中文附件名吞成 `default.exe`，
 > 而大附件发布后不可改名。窗口标题、界面文字仍是中文。
-> ★ exe 约 104 MB，二进制无法增量存储，每次重打包都会让 git 仓库永久增大约 100 MB；
-> PyInstaller 内部已压缩过，实测再套 deflate 只省 0.6%，所以二进制不进仓库、
-> 只走 Release 附件（Release 附件上限远高于仓库内单文件上限）。
+> ★ 二进制不进仓库，只走 Release 附件：git 对二进制无法增量存储，
+> 每次重新打包都会让仓库永久膨胀，而 Release 附件的容量上限远高于仓库内单文件。
 
 本地开发时如需自行验证（**非正式发版通道**）：
 
 ```bash
-python build_exe.py --dry-run          # 只打印 PyInstaller 命令
-python build_exe.py                    # 产出 dist/xingqudao-downloader-v1.5.3.exe
 dotnet build src/Xqd.sln -c Release
 dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o dist-csharp/gui
+python build_exe.py                    # 仅 Python 版历史实现：dist/xqd-downloader-v1.5.4.exe
 ```
 
 ★ `PublishSingleFile=true` 需要联网还原 `Microsoft.NET.ILLink.Tasks`，

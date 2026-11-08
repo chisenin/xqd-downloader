@@ -12,8 +12,8 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.5.3";   // v1.5.3：双语言合并 + GitHub Actions 发版
-    public const string ProductExeName = "xingqudao-downloader";
+    public const string AppVersion = "1.5.4";   // v1.5.4：无边框窗口 + 自绘窗口按钮
+    public const string ProductExeName = "xqd-downloader";
 
     // 课程列表 6 列（v1.5.0 起）。界面与测试一律引用这些常量。
     public const int ColCheck = 0;

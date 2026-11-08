@@ -172,7 +172,7 @@ internal static class Program
         True("本地阶段含封装", States.LocalPhases.Contains("封装"));
         True("本地阶段含校验", States.LocalPhases.Contains("校验"));
         Eq("工具名", "兴趣岛视频下载器", States.AppTitle);
-        Eq("版本", "1.5.3", States.AppVersion);
+        Eq("版本", "1.5.4", States.AppVersion);
         Eq("标签 4 个", 4, States.Tabs.Length);
         Eq("轻课是第 4 个标签", "轻课", States.Tabs[3]);
     }
