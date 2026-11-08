@@ -8,5 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xqd.Core\Xqd.Core.csproj" />
+    <!-- XAML 里引用的两个自定义控件放在已编译的引用程序集里，
+         干净 CI 构建时才能被 MarkupCompile 稳定解析（避免 MC3074）。 -->
+    <ProjectReference Include="..\Xqd.Controls\Xqd.Controls.csproj" />
   </ItemGroup>
 </Project>

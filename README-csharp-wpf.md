@@ -59,7 +59,8 @@
 `xingqudao-downloader-v1.5.3.zip`，**解压后把整目录一起拷贝**，
 双击 `gui/xingqudao-downloader.exe` 即可，绿色免安装。
 
-> 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`*.deps.json`、`*.runtimeconfig.json` 是必需的。
+> 不要只拷单个 exe：同级目录里的 `Xqd.Core.dll`、`Xqd.Controls.dll`、
+> `*.deps.json`、`*.runtimeconfig.json` 是必需的。
 > 需要系统已安装 **.NET 8 桌面运行时**；ffmpeg / ffprobe 需在 PATH。
 
 操作流程：首次点「重新授权」（仅首次需要 MuMu）→ 左栏选「正式营 / 体验营」→
@@ -131,6 +132,8 @@ src/Xqd.sln
 │   ├── Dedupe/         已下载检测
 │   ├── Adb/            ADB 采集 / uiautomator DOM / sweep
 │   └── Crypto/         163 解密内核（非 MIT，见 NOTICE）
+├── Xqd.Controls/      WPF 类库：XAML 引用的 MarqueeControl / StateColorConverter
+│                      （独立程序集，保证干净构建时 XAML 能解析本地控件）
 ├── Xqd.Gui/           WPF 桌面工具（XAML + code-behind + 控件 + VM）
 ├── Xqd.Server/        HttpListener 本地网页版（复用根目录 ui.html）
 ├── Xqd.Cli/           全量批处理

@@ -13,7 +13,7 @@
 | 实现 | 源码 | 界面 / 运行时 | 产物 |
 |---|---|---|---|
 | Python | 根目录 `xqd_*.py` · `_lel/api/qianliao.py` | PySide6（Qt6） | PyInstaller 单文件 exe，约 96 MB |
-| C# | `src/Xqd.*` 五个项目 | WPF / .NET 8 | 目录发布 zip，约 250 KB，需系统 .NET 8 桌面运行时 |
+| C# | `src/Xqd.sln` 六个项目 | WPF / .NET 8 | 目录发布 zip，约 250 KB，需系统 .NET 8 桌面运行时 |
 
 原先的 `master`（Python）与 `csharp-wpf`（C#）两个分支已合并到 `master`；
 旧分支与 `v1.5.2` / `v1.5.2-csharp-wpf` 两个 Release 保留作历史，不再更新。
@@ -159,9 +159,11 @@ Python（根目录）
    ├─ xqd_dedupe.py    已下载检测 / 残件清理
    └─ xqd_proc.py      无控制台窗口的子进程调用层（避免 Windows Terminal 闪窗）
 
-C#（src/，解决方案 Xqd.sln，5 个项目）
+C#（src/，解决方案 Xqd.sln，6 个项目）
    Xqd.Core    公共契约：Models / States / Naming / Config / Creds / Proc /
                Net / Util / Api / Adb / Auth / Engine / History / Dedupe / Crypto
+   Xqd.Controls  WPF 类库：MarqueeControl / StateColorConverter
+               （XAML 引用的自定义控件，独立程序集以便干净构建时解析）
    Xqd.Gui     WPF 桌面工具（XAML + code-behind + 控件 + ViewModel）
    Xqd.Server  本地网页版（复用根目录 ui.html，路由 / JSON 协议一致）
    Xqd.Cli     CLI 全量批处理
@@ -225,8 +227,10 @@ docs/                          设计与验证文档
 > ★ 两个**只在干净 CI 环境出现**的坑（本机不会复现）：
 > - Windows runner 控制台默认是 cp1252，`build_exe.py` 打印中文会抛
 >   `UnicodeEncodeError` → 工作流设 `PYTHONIOENCODING=utf-8` / `PYTHONUTF8=1`。
-> - 干净构建时 XAML 的 `clr-namespace` 引用**同程序集**自定义控件必须写全
->   `;assembly=xingqudao-downloader`，否则报 MC3074；本机因 `obj/` 有增量缓存而被掩盖。
+> - 干净构建时 XAML 引用**同程序集**自定义控件会报 MC3074（`clr-namespace` 补
+>   `;assembly=` 也救不回来，本机因 `obj/` 有增量缓存而被掩盖）。最终把
+>   `MarqueeControl` / `StateColorConverter` 拆到 `Xqd.Controls` 类库，XAML 改为
+>   `;assembly=Xqd.Controls`，从**已编译的引用程序集**解析，彻底绕开 markup compile 的本地类型解析。
 >   根目录 `global.json` 另把 .NET SDK 锁在 8.0.x，避免 runner 上更高版本 SDK 改变编译行为。
 
 发版操作（ maintainer ）：

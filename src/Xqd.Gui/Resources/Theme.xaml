@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:ctrl="clr-namespace:Xqd.Gui.Controls;assembly=xingqudao-downloader">
+                    xmlns:ctrl="clr-namespace:Xqd.Gui.Controls;assembly=Xqd.Controls">
 
     <!-- ══════════════ 状态词 → 画刷（三处状态共用的独立配色） ══════════════ -->
     <ctrl:StateColorConverter x:Key="StateColorConverter"/>
