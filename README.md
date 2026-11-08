@@ -222,9 +222,10 @@ docs/                          设计与验证文档
    离线回归 `Xqd.Tests`，再 `dotnet publish` 三个前端到 `gui/ server/ cli/`，
    去掉 `.pdb` 后压缩成 `xingqudao-downloader-vX.Y.Z.zip`。
 4. `release`：汇总两个附件，自动生成含 SHA-256 的发行说明，用
-   `GITHUB_TOKEN`（`permissions: contents: write`）创建 / 更新 Release。
+   `GITHUB_TOKEN`（`permissions: contents: write`）创建 Release。
+   同版本重跑时，若 Release 已存在则**删除整个 Release 后重建**（见下方「不可变 Release」）。
 
-> ★ 两个**只在干净 CI 环境出现**的坑（本机不会复现）：
+> ★ 几个**只在干净 CI 环境出现**的坑（本机不会复现）：
 > - Windows runner 控制台默认是 cp1252，`build_exe.py` 打印中文会抛
 >   `UnicodeEncodeError` → 工作流设 `PYTHONIOENCODING=utf-8` / `PYTHONUTF8=1`。
 > - 干净构建时 XAML 引用**同程序集**自定义控件会报 MC3074（`clr-namespace` 补
@@ -238,6 +239,10 @@ docs/                          设计与验证文档
 > - Python 依赖**只能装 `PySide6-Essentials`**：完整 `PySide6` 元包会带上
 >   QtWebEngine 等 Addons，`build_exe.py` 的 `--add-data` 会把它们全收进 exe，
 >   实测从约 96 MB 膨胀到 330 MB。工作流加了 DLL 总量断言防回归。
+> - GitHub 的 **immutable release** 发布后不能覆盖/删除单个附件（`--clobber` 报
+>   HTTP 422 `Cannot delete asset from an immutable release`）。所以同一版本
+>   重跑时工作流先 `gh release delete <tag> --yes` 再 `gh release create`，
+>   tag 保持不变。
 
 发版操作（ maintainer ）：
 

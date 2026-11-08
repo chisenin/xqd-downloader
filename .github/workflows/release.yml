@@ -241,19 +241,21 @@ jobs:
           } > notes.md
           cat notes.md
 
-      - name: 创建或更新 Release 附件
+      - name: 创建 / 重建 Release 附件
         working-directory: artifacts
         shell: bash
         run: |
           EXE="xingqudao-downloader-v${VERSION}.exe"
           ZIP="xingqudao-downloader-v${VERSION}.zip"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$EXE" "$ZIP" --clobber --repo "$GITHUB_REPOSITORY"
-            gh release edit   "$TAG" --notes-file notes.md --repo "$GITHUB_REPOSITORY"
-          else
-            gh release create "$TAG" "$EXE" "$ZIP" \
-              --repo "$GITHUB_REPOSITORY" \
-              --title "兴趣岛视频下载器 v${VERSION}" \
-              --notes-file notes.md
+            # ★ GitHub 的 immutable release 发布后**不允许覆盖或删除单个附件**
+            #   （HTTP 422 Cannot delete asset from an immutable release）。
+            #   同一版本重跑时只能删除整个 Release 再按当前产物重建；tag 保留。
+            echo "Release $TAG 已存在且不可变 → 删除后重建"
+            gh release delete "$TAG" --yes --repo "$GITHUB_REPOSITORY"
           fi
+          gh release create "$TAG" "$EXE" "$ZIP" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "兴趣岛视频下载器 v${VERSION}" \
+            --notes-file notes.md
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,assets
