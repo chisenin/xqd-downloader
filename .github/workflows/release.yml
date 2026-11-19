@@ -38,7 +38,7 @@ jobs:
       - name: C# 离线回归（281 项）
         shell: pwsh
         run: |
-          dotnet restore xqd-csharp/Xqd.sln --configfile NuGet.config
+          dotnet restore xqd-csharp/Xqd.sln --configfile .github/nuget.ci.config
           dotnet build xqd-csharp/Xqd.sln -c Release --no-restore
           ./xqd-csharp/src/Xqd.Tests/bin/Release/net8.0/Xqd.Tests.exe
 
@@ -59,7 +59,7 @@ jobs:
             if ($default -ne $ver) { Write-Warning "csproj 默认 PkgVersion=$default 与标签 $ver 不一致（本次发布仍按标签）" }
           }
 
-          dotnet restore xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj --configfile xqd-avalonia/NuGet.config -r win-x64
+          dotnet restore xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj --configfile .github/nuget.ci.config -r win-x64
           dotnet publish xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj -c Release --no-restore -o xqd-avalonia/dist -p:PkgVersion=$ver
           Get-ChildItem xqd-avalonia/dist | Format-Table Name, Length
 

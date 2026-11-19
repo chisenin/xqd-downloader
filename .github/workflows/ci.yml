@@ -33,7 +33,7 @@ jobs:
 
       - name: 还原（Core / Tests / Cli / Server）
         shell: pwsh
-        run: dotnet restore xqd-csharp/Xqd.sln --configfile NuGet.config
+        run: dotnet restore xqd-csharp/Xqd.sln --configfile .github/nuget.ci.config
 
       - name: C# 离线回归（281 项：签名链 / 命名 / 去重 / 视图过滤 / Ui 组件）
         shell: pwsh
@@ -54,7 +54,7 @@ jobs:
       - name: 单文件自包含发行版能构建
         shell: pwsh
         run: |
-          dotnet restore xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj --configfile xqd-avalonia/NuGet.config -r win-x64
+          dotnet restore xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj --configfile .github/nuget.ci.config -r win-x64
           dotnet publish xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj -c Release --no-restore -o xqd-avalonia/dist -p:PkgVersion=0.0.0-ci
           $exe = "xqd-avalonia/dist/xqd-downloader-v0.0.0-ci.exe"
           if (-not (Test-Path $exe)) { throw "没产出单文件 exe：$exe" }
