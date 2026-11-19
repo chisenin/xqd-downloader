@@ -1,70 +1,32 @@
-name: 构建并发布 C# 版
+name: Release
 
-# ★ 2026-11-08 定论：技术栈收敛为只保留 C# / WPF，Release 只发一个附件。
-#   打包 / 编译**只在本工作流所在的 GitHub Actions runner 上执行**，本机不产出二进制。
-#   推送 tag vX.Y.Z → 创建一个 Release，挂**一个** zip：
-#     xqd-downloader-vX.Y.Z.zip  （C# / WPF 目录发布，内含 gui/ + cli/）
-#   · server/ 不再随包发布，需要的人从源码跑（见 README）
-#   · Python 实现不再打包；其源码在 v1.6.1 一并删除
-
+# ★ 打 tag 即发布：
+#     git tag v1.7.0 && git push origin master v1.7.0
+#   → 跑离线回归 → 构建自包含单文件 exe → 核对版本 → 建 Release 上传 exe。
+#   目标机器只要 Windows x64，**不需要装 .NET 运行时**。
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
     inputs:
-      version:
-        description: '版本号（不含 v，例如 1.5.4）；用于手动重跑发版'
+      tag:
+        description: '要发布的标签（如 v1.7.0）'
         required: true
-        type: string
 
 permissions:
-  contents: write
-
-env:
-  # C# 离线回归里有按本机时区格式化的 startTime 断言；课程时间一律按中国时区。
-  TZ: Asia/Shanghai
-
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  contents: write          # 创建 Release + 上传附件需要
 
 jobs:
-  prepare:
-    name: 解析版本号
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.meta.outputs.version }}
-      tag: ${{ steps.meta.outputs.tag }}
-    steps:
-      - name: 从 tag / 输入取版本号
-        id: meta
-        shell: bash
-        env:
-          EVENT: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          if [ "$EVENT" = "workflow_dispatch" ]; then
-            V="$INPUT_VERSION"
-          else
-            V="${REF_NAME#v}"
-          fi
-          V="${V#v}"
-          if ! [[ "$V" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "版本号不合法（需要 X.Y.Z）：$V" >&2
-            exit 1
-          fi
-          echo "version=$V" >> "$GITHUB_OUTPUT"
-          echo "tag=v$V" >> "$GITHUB_OUTPUT"
-          echo "发版版本：$V"
-
-  build-csharp:
-    name: dotnet publish 目录发布 zip
-    needs: prepare
-    runs-on: windows-2022
+  release:
+    name: 构建并发布
+    runs-on: windows-latest
     env:
-      VERSION: ${{ needs.prepare.outputs.version }}
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -72,191 +34,57 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: 确认 SDK 版本（根目录 global.json 锁定 8.0.x）
-        shell: pwsh
-        run: dotnet --version
-
-      - name: 校验源码版本号与 tag 一致
+      # ── 1. 回归不过就不发版 ──
+      - name: C# 离线回归（281 项）
         shell: pwsh
         run: |
-          # ★ 版本号唯一来源：Xqd.Core/States.cs 的 AppVersion。
-          #   离线回归里也有同样的断言（Xqd.Tests），两处不一致会直接构建/测试失败。
-          $src = Get-Content src/Xqd.Core/States.cs -Raw
-          $m = [regex]::Match($src, 'AppVersion\s*=\s*"([^"]+)"')
-          if (-not $m.Success) { throw 'States.cs 里找不到 AppVersion' }
-          if ($m.Groups[1].Value -ne $env:VERSION) {
-            throw "AppVersion=$($m.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
+          dotnet restore xqd-csharp/Xqd.sln --configfile NuGet.config
+          dotnet build xqd-csharp/Xqd.sln -c Release --no-restore
+          ./xqd-csharp/src/Xqd.Tests/bin/Release/net8.0/Xqd.Tests.exe
+
+      # ── 2. 按标签版本号发布单文件 exe ──
+      - name: 发布自包含单文件 exe
+        shell: pwsh
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          $ver = $env:TAG -replace '^v',''
+          if (-not $ver) { throw "拿不到版本号（TAG=$env:TAG）" }
+          Write-Host ">>> 发布版本: $ver"
+
+          # 提醒：csproj 里的默认 PkgVersion 应与之同步（界面版本读程序集版本）
+          $csproj = Get-Content xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj -Raw
+          if ($csproj -match '<PkgVersion[^>]*>([^<]+)<') {
+            $default = $Matches[1]
+            if ($default -ne $ver) { Write-Warning "csproj 默认 PkgVersion=$default 与标签 $ver 不一致（本次发布仍按标签）" }
           }
-          "AppVersion = $($m.Groups[1].Value)"
 
-          # ★ exe 名里的版本号来自 csproj 的 PkgVersion（派生成 AssemblyName）。
-          #   它必须与 tag 一致，否则 zip 里的 exe 会挂着上一个版本的号。
-          $proj = Get-Content src/Xqd.Gui/Xqd.Gui.csproj -Raw
-          $pm = [regex]::Match($proj, '<PkgVersion[^>]*>([^<]+)</PkgVersion>')
-          if (-not $pm.Success) { throw 'Xqd.Gui.csproj 里找不到 PkgVersion' }
-          if ($pm.Groups[1].Value -ne $env:VERSION) {
-            throw "csproj PkgVersion=$($pm.Groups[1].Value) 与 tag 版本 $env:VERSION 不一致"
-          }
-          "PkgVersion = $($pm.Groups[1].Value)"
+          dotnet restore xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj --configfile xqd-avalonia/NuGet.config -r win-x64
+          dotnet publish xqd-avalonia/src/Xqd.Avalonia/Xqd.Avalonia.csproj -c Release --no-restore -o xqd-avalonia/dist -p:PkgVersion=$ver
+          Get-ChildItem xqd-avalonia/dist | Format-Table Name, Length
 
-      - name: 准备离线回归环境（中国时区 + ffmpeg/ffprobe 查找桩）
+      # ── 3. 核对产物：文件名 + 文件版本都要跟标签一致 ──
+      - name: 核对产物版本
         shell: pwsh
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          # ① Naming.FmtDate / FmtWhen 用本机时区（与 Python 版 fromtimestamp 一致）。
-          #    runner 默认 UTC，会把 12:00+08:00 显示成 04:00 → 断言失败。
-          tzutil /s "China Standard Time"
-          if ($LASTEXITCODE -ne 0) { throw '设置 runner 时区失败' }
-          tzutil /g
-          # ② 离线回归只验证 MediaProbe.FindTool 的 PATH 查找逻辑（不执行 ffmpeg），
-          #    runner 不带 ffmpeg；放两个占位文件即可，无需联网安装 ~100MB 工具链。
-          $dir = Join-Path $env:RUNNER_TEMP 'xqd-tools'
-          New-Item -ItemType Directory -Force -Path $dir | Out-Null
-          New-Item -ItemType File -Force -Path (Join-Path $dir 'ffmpeg.exe')  | Out-Null
-          New-Item -ItemType File -Force -Path (Join-Path $dir 'ffprobe.exe') | Out-Null
-          $dir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "查找桩目录：$dir"
+          $ver = $env:TAG -replace '^v',''
+          $exe = "xqd-avalonia/dist/xqd-downloader-v$ver.exe"
+          if (-not (Test-Path $exe)) { throw "产物不对：$exe 不存在" }
+          $fv = (Get-Item $exe).VersionInfo.FileVersion
+          Write-Host ">>> 产物: $exe   FileVersion=$fv"
+          if (-not $fv.StartsWith($ver)) { throw "文件版本($fv) 与标签($ver) 不一致" }
+          $len = [math]::Round((Get-Item $exe).Length / 1MB, 1)
+          Write-Host ">>> 自包含单文件，大小 ${len} MB"
 
-      - name: 编译解决方案 + 离线回归
-        shell: pwsh
-        run: |
-          dotnet build src/Xqd.sln -c Release
-          if ($LASTEXITCODE -ne 0) { throw 'dotnet build 失败' }
-          dotnet run --project src/Xqd.Tests/Xqd.Tests.csproj -c Release --no-build
-          if ($LASTEXITCODE -ne 0) { throw 'C# 离线回归失败' }
-
-      - name: 目录发布两个前端（gui + cli）
-        shell: pwsh
-        run: |
-          Remove-Item -Recurse -Force stage -ErrorAction SilentlyContinue
-          # ★ GUI 用带版本号的程序集名 → 产物 gui/xqd-downloader-vX.Y.Z.exe
-          #   （.dll / .deps.json / .runtimeconfig.json 同步带版本号，自洽）。
-          #   ★ 不要在 publish 之后再改名 exe：apphost 与 runtimeconfig.json 的
-          #   配对关系一旦断掉，程序会直接起不来。让 MSBuild 统一改名最稳。
-          dotnet publish src/Xqd.Gui/Xqd.Gui.csproj -c Release -o stage/gui `
-            -p:PkgVersion=$env:VERSION
-          if ($LASTEXITCODE -ne 0) { throw 'GUI publish 失败' }
-          # ★ 不发布 server/：网页版与 GUI 功能重叠，已定为「需要时从源码跑」。
-          dotnet publish src/Xqd.Cli/Xqd.Cli.csproj -c Release -o stage/cli
-          if ($LASTEXITCODE -ne 0) { throw 'CLI publish 失败' }
-          # ★ v1.6.3：启动引导脚本（纯 cmd，不需要 .NET 就能跑）。
-          #   别人电脑没装 .NET 8 桌面运行时时，双击这个脚本会检测并给出下载链接。
-          Copy-Item src/Xqd.Gui/启动.bat stage/gui/启动.bat -Force
-
-      - name: 打包 zip
-        shell: pwsh
-        run: |
-          # 调试符号不随发行包分发，减小体积
-          Get-ChildItem stage -Recurse -Filter *.pdb | Remove-Item -Force
-          $readme = @"
-          兴趣岛视频下载器 v$env:VERSION · C# / WPF 目录发布版
-
-          gui/xqd-downloader-v$env:VERSION.exe   桌面工具（日常使用，双击启动）
-          gui/启动.bat                            启动引导脚本（缺运行时时用它）
-          cli/Xqd.Cli.dll                        CLI 全量批处理，用法见 README.md
-
-          请整目录解压后一起拷贝，不要只拷单个 exe。
-
-          ── 需要先装 .NET 8 桌面运行时（约 55 MB，一次性）─────────────
-          下载页：https://dotnet.microsoft.com/download/dotnet/8.0
-          官方直链：https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.22/windowsdesktop-runtime-8.0.22-win-x64.exe
-          装不上或不确定？双击 gui/启动.bat，它会检测并引导你安装。
-
-          ── ffmpeg / ffprobe 不需要手动装 ────────────────────────────
-          首次启动若检测到缺失，工具会弹「运行环境检查」窗口，
-          点「立即下载安装」即可自动获取（国内镜像优先，约 60 MB，装到
-          %USERPROFILE%\.xqd_tool\ffmpeg\bin，不写系统 PATH、不需管理员权限）。
-
-          本地网页版（server）不再随包发布，需要时从源码运行。
-          "@
-          $readme | Set-Content -Path stage/README.txt -Encoding utf8
-
-          $zip = "xqd-downloader-v$env:VERSION.zip"
-          Compress-Archive -Path stage/* -DestinationPath $zip -Force
-          Get-Item $zip | Select-Object Name, Length | Format-Table -AutoSize
-          "SHA256 = $((Get-FileHash $zip -Algorithm SHA256).Hash)"
-
-      - uses: actions/upload-artifact@v4
+      # ── 4. 建 Release、传附件 ──
+      - name: 创建 Release 并上传 exe
+        uses: softprops/action-gh-release@v2
         with:
-          name: csharp-zip
-          path: xqd-downloader-v${{ needs.prepare.outputs.version }}.zip
-          if-no-files-found: error
-          retention-days: 7
-
-  release:
-    name: 发布 GitHub Release
-    needs: [prepare, build-csharp]
-    runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.prepare.outputs.version }}
-      TAG: ${{ needs.prepare.outputs.tag }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: 生成发行说明（含 SHA-256）
-        working-directory: artifacts
-        shell: bash
-        run: |
-          ZIP="xqd-downloader-v${VERSION}.zip"
-          test -f "$ZIP" || { echo "缺少 $ZIP" >&2; exit 1; }
-          {
-            echo "## 兴趣岛视频下载器 v${VERSION}"
-            echo
-            echo "C# / WPF（.NET 8）目录发布版。二进制由 GitHub Actions 在 Windows runner 上构建，仓库不含 exe / zip。"
-            echo
-            echo "| 包内路径 | 用途 |"
-            echo "|---|---|"
-            echo "| \`gui/xqd-downloader-v${VERSION}.exe\` | 桌面工具，双击启动（日常使用） |"
-            echo "| \`gui/启动.bat\` | 启动引导脚本 —— 没装 .NET 运行时时用它，会检测并引导安装 |"
-            echo "| \`cli/Xqd.Cli.dll\` | CLI 全量批处理，\`dotnet cli/Xqd.Cli.dll --help\` |"
-            echo
-            echo "解压后**整目录**拷贝，不要只拷单个 exe；同级目录里的 \`Xqd.Core.dll\`、\`*.runtimeconfig.json\` 等是必需的。"
-            echo
-            echo "### 需要先装 .NET 8 桌面运行时（约 55 MB，装一次就够）"
-            echo
-            echo "| 用途 | 链接 |"
-            echo "|---|---|"
-            echo "| 官方下载页（中文） | https://dotnet.microsoft.com/zh-cn/download/dotnet/8.0 |"
-            echo "| 官方下载页 | https://dotnet.microsoft.com/download/dotnet/8.0 |"
-            echo "| 官方直链（win-x64，8.0.22） | https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.22/windowsdesktop-runtime-8.0.22-win-x64.exe |"
-            echo
-            echo "> 装不上或不确定？直接双击 \`gui/启动.bat\` —— 它不依赖 .NET 就能跑，"
-            echo "> 会检测运行环境并引导你装好再自动启动工具。"
-            echo
-            echo "### ffmpeg / ffprobe 不用手动装"
-            echo
-            echo "首次启动若检测到缺失，工具会弹「运行环境检查」窗口，点「立即下载安装」即可自动获取"
-            echo "（**国内镜像优先**，约 60 MB，装到 \`%USERPROFILE%\\.xqd_tool\\ffmpeg\\bin\` —— 不写系统 PATH、不需要管理员权限）。"
-            echo "已装在 PATH 或引擎回退目录里的 ffmpeg 会被直接识别，不会重复下载。"
-            echo
-            echo "本地网页版（server）不再随包发布，需要时从源码运行（见 README）。"
-            echo
-            echo "### SHA-256"
-            echo '```'
-            sha256sum "$ZIP"
-            echo '```'
-            echo
-            echo "> 只处理自己已购买、有权访问与保存的内容；导出到教学大屏后请及时删除。"
-          } > notes.md
-          cat notes.md
-
-      - name: 创建 Release 附件
-        working-directory: artifacts
-        shell: bash
-        run: |
-          ZIP="xqd-downloader-v${VERSION}.zip"
-          # ★ GitHub 的 immutable release 发布后不能覆盖附件；删除整个 Release 后
-          #   也不能用同一 tag 重建（tag_name was used by an immutable release）。
-          #   所以绝不自动删除已发布 Release，直接给出明确指引让维护者换版本号。
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "::error::Release $TAG 已存在且不可变：不能覆盖附件，也不能用同一 tag 重建。请换新版本号后重新打 tag。"
-            exit 1
-          fi
-          gh release create "$TAG" "$ZIP" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "兴趣岛视频下载器 v${VERSION}" \
-            --notes-file notes.md
-          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,assets
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: 兴趣岛视频下载器 ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          files: |
+            xqd-avalonia/dist/xqd-downloader-v*.exe

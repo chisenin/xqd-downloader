@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    ★ 发布配置（只在 dotnet publish 时生效，Debug 构建不受影响）。
+    自包含单文件：目标机器**不需要装 .NET**，拷过去双击就能跑。
+    这正是「换机器后无法运行」的根治手段。
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

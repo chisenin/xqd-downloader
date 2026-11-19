@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xqd-core"
+version = "1.7.0"
+description = "兴趣岛视频下载器 · Python 核心库（只做想法验证，正式版是 C# + Avalonia）"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []          # ★ 零第三方依赖：纯标准库，任何机器上都能跑
+license = { text = "MIT" }
+
+[tool.setuptools]
+packages = ["xqd"]

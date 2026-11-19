@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Xqd.Avalonia.Views.EnvCheckWindow"
+        Title="环境检查"
+        Width="620" Height="520"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="BorderOnly"
+        Background="{StaticResource BgBrush}"
+        FontFamily="Microsoft YaHei UI, Segoe UI">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="20,18,20,16">
+
+    <StackPanel Grid.Row="0" Spacing="6">
+      <TextBlock Text="运行环境检查" FontSize="16" FontWeight="SemiBold"
+                 Foreground="{StaticResource TextBrush}" />
+      <TextBlock Text="换机器后最常见的两个坑：没装 ffmpeg（合并不了 MP4）、MuMu 装在非常规目录（读不到授权）。这里都能一键处理。"
+                 FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+    </StackPanel>
+
+    <Border Grid.Row="1" x:Name="InstallPanel" IsVisible="False" Margin="0,12,0,0"
+            Background="#FFFFFF" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+            CornerRadius="8" Padding="12,10">
+      <StackPanel Spacing="8">
+        <TextBlock x:Name="LblInstall" FontSize="12" Foreground="{StaticResource TextBrush}"
+                   Text="正在下载 ffmpeg…" />
+        <ProgressBar x:Name="BarInstall" Height="10" Minimum="0" Maximum="100" Value="0" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2" Margin="0,12,0,12" Background="#FFFFFF"
+            BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8">
+      <ListBox x:Name="LstDeps" SelectionMode="Single">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Border Padding="12,9" BorderBrush="#EEF1F6" BorderThickness="0,0,0,1">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border Width="8" Height="8" CornerRadius="4" VerticalAlignment="Center"
+                        Background="{Binding DotColor, Converter={StaticResource Hex}}" />
+                <StackPanel Grid.Column="1" Margin="10,0,10,0" Spacing="2">
+                  <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                             Foreground="{StaticResource TextBrush}" />
+                  <TextBlock Text="{Binding Detail}" FontSize="11.5" TextWrapping="Wrap"
+                             Foreground="{StaticResource MutedBrush}" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="11.5"
+                           VerticalAlignment="Center"
+                           Foreground="{Binding StatusColor, Converter={StaticResource Hex}}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <TextBlock Grid.Row="3" x:Name="LblHint" FontSize="11.5" TextWrapping="Wrap"
+               Foreground="{StaticResource MutedBrush}"
+               Text="ffmpeg 会装在用户目录下（~/.xqd_tool/ffmpeg/bin），不写系统 PATH、不需要管理员权限。" />
+
+    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8"
+                Margin="0,12,0,0">
+      <Button x:Name="BtnPickMumu" Content="指定 MuMuManager…" Click="BtnPickMumu_Click" />
+      <Button x:Name="BtnInstall" Content="自动安装 ffmpeg" Click="BtnInstall_Click" />
+      <Button Content="重新检查" Click="BtnRefresh_Click" />
+      <Button Content="关闭" MinWidth="84" Click="BtnClose_Click"
+              Background="#2F6FB2" Foreground="White" BorderBrush="#2A64A0" />
+    </StackPanel>
+  </Grid>
+</Window>

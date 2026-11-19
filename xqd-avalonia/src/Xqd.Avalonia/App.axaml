@@ -1,0 +1,143 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:Xqd.Avalonia.Converters"
+             x:Class="Xqd.Avalonia.App"
+             RequestedThemeVariant="Light">
+
+  <Application.Resources>
+    <conv:HexBrushConverter x:Key="Hex" />
+
+    <!-- 配色：深蓝顶栏 + 浅灰内容区，长时间盯着不刺眼 -->
+    <SolidColorBrush x:Key="BgBrush" Color="#F4F6FA" />
+    <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="LineBrush" Color="#DCE3EC" />
+    <SolidColorBrush x:Key="TextBrush" Color="#1F2937" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#6B7A8C" />
+    <SolidColorBrush x:Key="BrandBrush" Color="#2C5282" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#2F6FB2" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E8F1FB" />
+    <SolidColorBrush x:Key="TopFgBrush" Color="#EAF2FB" />
+    <SolidColorBrush x:Key="TopSubBrush" Color="#A9C0DA" />
+    <SolidColorBrush x:Key="OkBrush" Color="#2E7D4F" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#B26A00" />
+    <SolidColorBrush x:Key="ErrBrush" Color="#B33A3A" />
+
+    <LinearGradientBrush x:Key="BrandGrad" StartPoint="0%,0%" EndPoint="100%,0%">
+      <GradientStop Offset="0" Color="#1E3A5F" />
+      <GradientStop Offset="1" Color="#2C5282" />
+    </LinearGradientBrush>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+
+    <!-- 通用按钮 -->
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{StaticResource CardBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="MinHeight" Value="30" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#ECF2FA" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#DDE8F5" />
+    </Style>
+
+    <!-- 主按钮 -->
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#2A64A0" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#3A7CC0" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#265F99" />
+    </Style>
+    <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#A9C0DA" />
+    </Style>
+
+    <!-- 顶栏按钮 -->
+    <Style Selector="Button.top">
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="Foreground" Value="{StaticResource TopFgBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="10,5" />
+    </Style>
+    <Style Selector="Button.top:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#22FFFFFF" />
+    </Style>
+    <Style Selector="Button.win">
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="Foreground" Value="{StaticResource TopFgBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Width" Value="46" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="Button.win:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#26FFFFFF" />
+    </Style>
+    <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#C42B1C" />
+    </Style>
+
+    <!-- 视图切换（RadioButton 当标签用） -->
+    <Style Selector="RadioButton.tab">
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="MinHeight" Value="28" />
+    </Style>
+    <Style Selector="RadioButton.tab:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    </Style>
+    <Style Selector="RadioButton.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#F0F4FA" />
+    </Style>
+
+    <!-- 输入框 -->
+    <Style Selector="TextBox">
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="9,6" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="MinHeight" Value="30" />
+      <Setter Property="BorderBrush" Value="#CBD6E2" />
+    </Style>
+
+    <!-- 列表：条目本身不要内边距，选中色换成本主题的浅蓝 -->
+    <Style Selector="ListBox">
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#DCEBFA" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+  </Application.Styles>
+</Application>

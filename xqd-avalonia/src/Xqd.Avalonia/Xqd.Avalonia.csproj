@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Xqd.Avalonia</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <!-- ★ 反射绑定：ItemTemplate 里直接绑 ViewModel 属性，不必到处写 x:DataType -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- ★ 版本号唯一来源：PkgVersion（CI 用 tag vX.Y.Z 传入） -->
+    <PkgVersion Condition="'$(PkgVersion)' == ''">1.7.0</PkgVersion>
+    <Version>$(PkgVersion)</Version>
+    <AssemblyName>xqd-downloader-v$(PkgVersion)</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.23" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.23" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.23" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.23" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.23" Condition="'$(Configuration)' == 'Debug'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ★ 与 CLI / 本地网页版共用同一套核心（接口网关、引擎、命名、历史） -->
+    <ProjectReference Include="..\..\..\xqd-csharp\src\Xqd.Core\Xqd.Core.csproj" />
+  </ItemGroup>
+
+</Project>

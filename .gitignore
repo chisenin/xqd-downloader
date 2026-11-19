@@ -104,3 +104,16 @@ NUL
 
 # ── 本地项目工作记录：含内部笔记，只留本机、不进版本库 ──
 .workbuddy/
+
+# ── v1.7.0 新结构：构建产物与运行时缓存 ────────────────
+xqd-csharp/**/bin/
+xqd-csharp/**/obj/
+xqd-avalonia/**/bin/
+xqd-avalonia/**/obj/
+xqd-avalonia/dist/
+src/**/bin/
+src/**/obj/
+__pycache__/
+*.pyc
+*.egg-info/
+.xqd_tool/

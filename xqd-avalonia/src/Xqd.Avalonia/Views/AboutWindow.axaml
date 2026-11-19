@@ -1,0 +1,71 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Xqd.Avalonia.Views.AboutWindow"
+        Title="关于"
+        Width="520" Height="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="BorderOnly"
+        Background="{StaticResource BgBrush}"
+        FontFamily="Microsoft YaHei UI, Segoe UI">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="22,20,22,16">
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12">
+      <Border Width="42" Height="42" CornerRadius="12" Background="#2F6FB2">
+        <TextBlock Text="岛" FontSize="22" Foreground="White" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+      </Border>
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="兴趣岛视频下载器" FontSize="17" FontWeight="SemiBold"
+                   Foreground="{StaticResource TextBrush}" />
+        <TextBlock x:Name="LblVersionLine" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+      </StackPanel>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" Margin="0,16,0,12">
+      <StackPanel Spacing="12">
+        <TextBlock Text="把已购课程与公开课归档到本地，支持断点续传、分片并发、成品校验。"
+                   FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
+
+        <Border Background="#FFFFFF" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="12,10">
+          <StackPanel Spacing="6">
+            <TextBlock Text="数据与路径" FontSize="12.5" FontWeight="SemiBold"
+                       Foreground="{StaticResource MutedBrush}" />
+            <TextBlock x:Name="LblToolDir" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{StaticResource TextBrush}" />
+            <TextBlock x:Name="LblOutDir" FontSize="12" TextWrapping="Wrap"
+                       Foreground="{StaticResource TextBrush}" />
+          </StackPanel>
+        </Border>
+
+        <Border Background="#FFFFFF" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="12,10">
+          <StackPanel Spacing="6">
+            <TextBlock Text="快捷键与用法" FontSize="12.5" FontWeight="SemiBold"
+                       Foreground="{StaticResource MutedBrush}" />
+            <TextBlock Text="· 左侧勾选营 → 课表并入右侧同一张表" FontSize="12"
+                       Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="· 不选行直接点「开始下载」= 下所有待下载的课" FontSize="12"
+                       Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="· 选中若干行再点「开始下载」= 只下这几行" FontSize="12"
+                       Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="· 双击任意行 = 单独下这一节；右键 = 重试 / 复制课名 / 删成品" FontSize="12"
+                       Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="· Ctrl+Q 退出" FontSize="12" Foreground="{StaticResource TextBrush}" />
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="本工具只处理你自己账号里可访问的课程，请勿用于传播或商业分发。"
+                   FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button x:Name="BtnCopy" Content="复制环境信息" Click="BtnCopy_Click" />
+      <Button Content="关闭" MinWidth="84" Click="BtnClose_Click"
+              Background="#2F6FB2" Foreground="White" BorderBrush="#2A64A0" />
+    </StackPanel>
+  </Grid>
+</Window>
