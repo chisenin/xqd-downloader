@@ -128,8 +128,15 @@ internal static class Program
         Eq("只有非法字符兜底", "_____", Naming.SafeName("/////"));
 
         long ms = DateTimeOffset.Parse("2025-03-12T12:00:00+08:00").ToUnixTimeMilliseconds();
-        Eq("startTime -> YYYY.MM.DD", "2025.03.12", Naming.FmtDate(ms));
-        Eq("startTime -> MM.DD HH:MM", "03.12 12:00", Naming.FmtWhen(ms));
+        // ★ 期望值必须按「本地时区」推算：FmtDate/FmtWhen 的语义就是转本地时间。
+        //   写死 "03.12 12:00" 的旧断言在 UTC runner 上必挂（CI 首次就是这么红的）。
+        var local = DateTimeOffset.FromUnixTimeMilliseconds(ms).ToLocalTime();
+        Eq("startTime -> YYYY.MM.DD",
+           local.ToString("yyyy.MM.dd", System.Globalization.CultureInfo.InvariantCulture),
+           Naming.FmtDate(ms));
+        Eq("startTime -> MM.DD HH:MM",
+           local.ToString("MM.dd HH:mm", System.Globalization.CultureInfo.InvariantCulture),
+           Naming.FmtWhen(ms));
         Eq("startTime=0 -> 空", "", Naming.FmtDate(0));
 
         var le = SampleLesson();
