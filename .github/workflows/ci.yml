@@ -35,7 +35,7 @@ jobs:
         shell: pwsh
         run: dotnet restore xqd-csharp/Xqd.sln --configfile .github/nuget.ci.config
 
-      - name: C# 离线回归（281 项：签名链 / 命名 / 去重 / 视图过滤 / Ui 组件）
+      - name: C# 离线回归（292 项：签名链 / 命名 / 去重 / 视图过滤 / Ui 组件 / MuMu 定位）
         shell: pwsh
         run: |
           dotnet build xqd-csharp/Xqd.sln -c Release --no-restore

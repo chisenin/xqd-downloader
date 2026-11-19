@@ -35,7 +35,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       # ── 1. 回归不过就不发版 ──
-      - name: C# 离线回归（281 项）
+      - name: C# 离线回归（292 项）
         shell: pwsh
         run: |
           dotnet restore xqd-csharp/Xqd.sln --configfile .github/nuget.ci.config

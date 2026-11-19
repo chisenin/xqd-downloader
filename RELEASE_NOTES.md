@@ -1,3 +1,8 @@
+> ⚠️ **本文只保留 v1.6.3 及以前的历史发行说明**（其中「zip + gui/cli」「需要 .NET 桌面运行时」
+> 等描述已随 v1.7.0 的架构改版作废）。**v1.7.0 起的发行说明由 GitHub Actions
+> 在打 tag 时自动生成**，请直接看
+> <https://github.com/chisenin/xqd-downloader/releases>。
+
 # 兴趣岛视频下载器 v1.6.3 发行说明
 
 > **v1.6.3：首次启动自动检查环境，缺什么给一键装。**

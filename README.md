@@ -12,6 +12,9 @@
 - 不需要装 Python、不需要解压成一堆 dll；
 - Windows 10 / 11 x64，双击即用。
 
+> **交付以 Release 上的这份 exe 为准**（由 CI 在 tag 提交上构建）。
+> 仓库里的 `xqd-avalonia/dist/` 只是本地自测产物，不对外分发。
+
 ## 第一次运行
 
 1. 顶栏「环境检查」→ 缺 ffmpeg 就点「一键安装 ffmpeg」（装到 `%USERPROFILE%\.xqd_tool\ffmpeg\bin`，
@@ -59,6 +62,7 @@ xqd/                 Python 核心库（只做想法验证，零第三方依赖�
   platform.py          兴趣岛业务网关（禁代理、认 state.code）
 tools/probe_env.py   环境探测脚本（相当于 --check）
 xqd-csharp/          C# 领域层：Xqd.Core / Xqd.Cli / Xqd.Server / Xqd.Tests
+                     （Cli / Server 留在仓库便于本地调试，**不随 Release 发资产**）
 xqd-avalonia/        C# + Avalonia 正式 GUI（发版产物 = 这里打出来的单文件 exe）
 docs/                已验证事实、API、踩坑记录、界面规格
 ```
@@ -69,7 +73,7 @@ docs/                已验证事实、API、踩坑记录、界面规格
 
 ```powershell
 cd xqd-avalonia
-.\build.cmd            # 输出 dist\xqd-downloader-v1.7.0.exe（自包含单文件）
+.\build.cmd            # 输出 dist\xqd-downloader-v1.7.1.exe（自包含单文件）
 .\build.cmd --check    # 命令行环境体检
 ```
 
@@ -79,7 +83,7 @@ Linux / Git Bash：
 cd xqd-avalonia && ./build.sh
 ```
 
-跑回归（281 项，离线，不发网络请求）：
+跑回归（292 项，离线，不发网络请求）：
 
 ```powershell
 dotnet build xqd-csharp/Xqd.sln -c Release
