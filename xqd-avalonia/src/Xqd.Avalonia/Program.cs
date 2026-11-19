@@ -16,6 +16,7 @@ internal static class Program
         // ── 无界面模式（CI / 运维用）：不启动 Avalonia，纯控制台 ──
         //   --install-deps   自动装 ffmpeg/ffprobe 后退出
         //   --check          打印依赖与配置体检结果
+        //   --authcheck      打印 MuMu 路径 + 各实例授权状态（换机器排障用）
         //   --version        打印版本
         if (args.Length > 0)
         {
@@ -29,6 +30,10 @@ internal static class Program
             {
                 RunCheck();
                 return 0;
+            }
+            if (cmd == "--authcheck")
+            {
+                return RunAuthCheck();
             }
             if (cmd == "--version")
             {
@@ -67,5 +72,25 @@ internal static class Program
         Console.WriteLine();
         foreach (var d in DependencyCheck.CheckAll())
             Console.WriteLine($"  {(d.Ok ? "[✓]" : "[✗]")} {d.Name}：{d.Detail}");
+    }
+
+    /// <summary>
+    /// --authcheck：换机器「拿不到授权」时的自证入口。
+    /// 打印 MuMuManager 实际路径、每台实例的启动与登录状态、最终会选哪台。
+    /// </summary>
+    private static int RunAuthCheck()
+    {
+        Console.WriteLine("xqd-downloader " + AppInfo.Version + " · 授权诊断");
+        try
+        {
+            var text = Xqd.Core.Auth.MumuAuth.DiagnoseAsync().GetAwaiter().GetResult();
+            Console.WriteLine(text);
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("诊断失败：" + e.Message);
+            return 1;
+        }
     }
 }

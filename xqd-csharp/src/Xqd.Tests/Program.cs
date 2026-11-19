@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Xqd.Core;
+using Xqd.Core.Setup;
 using Xqd.Core.Ui;   // 界面无关的 ViewModel 真实源码（K 组）
 
 namespace Xqd.Tests;
@@ -80,14 +81,106 @@ internal static class Program
         Group("I. 业务 API / 平台 / 授权 / 进程", ApiTests);
         Group("J. 163 内核 / 服务装配", MiscTests);
         Group("K. 营/课程 全选 ↔ 勾选框联动（v1.5.2）", CheckLinkTests);
+        Group("L. MuMu 定位 / 实例探测（v1.7.1 换机器授权修复）", MumuLocateTests);
 
         Console.WriteLine($"\n=== 结果：通过 {_pass} / 失败 {_fail} ===");
         try { Directory.Delete(_tmp, true); } catch { /* ignore */ }
         return _fail == 0 ? 0 : 1;
     }
 
-    private static void Group(string title, Action fn)
+    // ─────────────────────────────────────────────────────────
+    /// <summary>
+    /// v1.7.1 换机器授权修复：MuMu 装在任意目录都要能找到。
+    /// ★ 全部用临时目录模拟「任意安装根」，不依赖本机是否装了 MuMu。
+    /// </summary>
+    private static void MumuLocateTests()
     {
+        string Layout(string name, string rel)
+        {
+            var root = Path.Combine(_tmp, "mumu_" + name);
+            var exe = Path.Combine(root, rel);
+            Directory.CreateDirectory(Path.GetDirectoryName(exe)!);
+            File.WriteAllText(exe, "stub");
+            return root;
+        }
+
+        var m1 = Layout("nx_main", Path.Combine("nx_main", "MuMuManager.exe"));
+        Eq("标准 nx_main 布局", Path.Combine(m1, "nx_main", "MuMuManager.exe"),
+           ToolLocator.ManagerIn(m1));
+
+        var m2 = Layout("shell", Path.Combine("shell", "MuMuManager.exe"));
+        Eq("shell 布局", Path.Combine(m2, "shell", "MuMuManager.exe"),
+           ToolLocator.ManagerIn(m2));
+
+        var m3 = Layout("nxdev", Path.Combine("nx_device", "shell", "MuMuManager.exe"));
+        Eq("nx_device\\shell 布局", Path.Combine(m3, "nx_device", "shell", "MuMuManager.exe"),
+           ToolLocator.ManagerIn(m3));
+
+        var m4 = Layout("flat", "MuMuManager.exe");
+        Eq("根目录直放", Path.Combine(m4, "MuMuManager.exe"), ToolLocator.ManagerIn(m4));
+
+        // 向上回溯：拿到的是「安装根下面几层」也能找回去
+        var m5 = Layout("deep", Path.Combine("nx_main", "MuMuManager.exe"));
+        var deep = Path.Combine(m5, "a", "b", "c");
+        Directory.CreateDirectory(deep);
+        Eq("向上回溯 3 层", Path.Combine(m5, "nx_main", "MuMuManager.exe"),
+           ToolLocator.ManagerIn(deep, 3));
+
+        Eq("不存在的路径不抛异常", "", ToolLocator.ManagerIn(Path.Combine(_tmp, "no_such_dir")));
+
+        // DisplayIcon 形如 "D:\...\uninstall.exe,0"：逗号后的图标号必须切掉
+        var iconHint = Path.Combine(_tmp, "MuMuPlayer-12.0", "uninstall.exe") + ",0";
+        Eq("DisplayIcon 去掉 ,0", Path.Combine(_tmp, "MuMuPlayer-12.0", "uninstall.exe"),
+           ToolLocator.CleanHint(iconHint));
+        Eq("带引号的命令行去引号", @"D:\MuMu\nx_main\MuMuManager.exe",
+           ToolLocator.CleanHint("\"D:\\MuMu\\nx_main\\MuMuManager.exe\" -start"));
+
+        // 真实 .lnk 解析（官方安装包必建快捷方式，装在任意目录都能命中）
+        if (OperatingSystem.IsWindows())
+        {
+            var lnkDir = Path.Combine(_tmp, "lnk");
+            Directory.CreateDirectory(lnkDir);
+            var target = Path.Combine(lnkDir, "MuMuNxMain.exe");
+            File.WriteAllText(target, "stub");
+            bool made = false;
+            try
+            {
+                var shellType = Type.GetTypeFromProgID("WScript.Shell");
+                var shell = shellType == null ? null : Activator.CreateInstance(shellType);
+                if (shell != null)
+                {
+                    object sc = shellType!.InvokeMember("CreateShortcut",
+                        BindingFlags.InvokeMethod, null, shell,
+                        new object[] { Path.Combine(lnkDir, "MuMu模拟器.lnk") })!;
+                    sc.GetType().InvokeMember("TargetPath", BindingFlags.SetProperty, null, sc,
+                        new object[] { target });
+                    sc.GetType().InvokeMember("Save", BindingFlags.InvokeMethod, null, sc, null);
+                    made = true;
+                }
+            }
+            catch { made = false; }
+            if (made)
+                True("快捷方式解析出 TargetPath",
+                     ToolLocator.ShortcutTargets(new[] { lnkDir }).Contains(target));
+            else
+                Console.WriteLine("  [SKIP] 本机 WScript.Shell 不可用，跳过 .lnk 解析断言");
+        }
+
+        // 找不到时必须返回 null（用空目录把 PATH 挡不住，只验证不抛异常）
+        try
+        {
+            var found = ToolLocator.FindMumuManager();
+            True("FindMumuManager 不抛异常", true);
+            if (!string.IsNullOrEmpty(found))
+                Console.WriteLine("  [i] 本机找到 MuMu：" + found);
+        }
+        catch (Exception e)
+        {
+            True("FindMumuManager 不抛异常 -> " + e.Message, false);
+        }
+    }
+
+    private static void Group(string title, Action fn)    {
         Console.WriteLine("\n" + title);
         var before = _fail;
         try { fn(); }

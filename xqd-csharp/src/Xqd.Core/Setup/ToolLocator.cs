@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Win32;
 
 namespace Xqd.Core.Setup;
 
@@ -248,7 +250,19 @@ public static class ToolLocator
 
     /// <summary>
     /// 找 MuMuManager.exe（找不到返回 null，不抛异常 —— 让界面决定怎么引导）。
-    /// 顺序：点选记录 → 环境变量 → 常规安装位置（深搜限 2 层）→ PATH。
+    ///
+    /// ★★ 2026-11-19 换机器实测：只靠「固定目录 + 各盘写死路径」还是会漏 ——
+    ///   用户把 MuMu 装在自己建的目录里就全找不到。官方安装包一定会留下痕迹，
+    ///   按可靠性排序（与 hgvd-downloader 的修复同源）：
+    ///     ① 点选记录（tools.json）
+    ///     ② 环境变量 XQD_MUMU_MANAGER / XQD_MUMU_HOME
+    ///     ③ **运行中的 MuMu 进程**的 exe 路径 —— 授权时模拟器必然开着，最权威
+    ///     ④ 开始菜单 / 桌面 .lnk 快捷方式（安装包必建）
+    ///     ⑤ 卸载注册表里 DisplayName 含 MuMu 的 InstallLocation / DisplayIcon
+    ///     ⑥ 各盘 Program Files / Netease / 盘根下名字含 MuMu 或 Nemu 的目录
+    ///     ⑦ PATH
+    ///   每个候选都做「向上回溯 3 层 + 拼相对位置」，兼容
+    ///   nx_main\MuMuManager.exe（MuMu 6 / 12）、shell\、nx_device\shell\、根目录直放。
     /// </summary>
     public static string FindMumuManager()
     {
@@ -257,34 +271,319 @@ public static class ToolLocator
         if (!string.IsNullOrWhiteSpace(chosen) && File.Exists(chosen)) return chosen;
 
         // ② 环境变量
-        string env = Environment.GetEnvironmentVariable("XQD_MUMU_MANAGER") ?? "";
-        if (!string.IsNullOrWhiteSpace(env) && File.Exists(env)) return env;
+        foreach (var env in new[] { "XQD_MUMU_MANAGER", "XQD_MUMU_HOME" })
+        {
+            string v = (Environment.GetEnvironmentVariable(env) ?? "").Trim().Trim('"');
+            if (string.IsNullOrEmpty(v)) continue;
+            if (File.Exists(v) && SameFile(v, "MuMuManager.exe")) return Path.GetFullPath(v);
+            if (Directory.Exists(v))
+            {
+                var hit = ManagerIn(v);
+                if (hit.Length > 0) return hit;
+            }
+        }
 
-        // ③ 常规位置 + 深搜
+        // ③ 运行中的 MuMu 进程
+        foreach (var hint in ProcessHints())
+        {
+            var hit = ManagerIn(hint);
+            if (hit.Length > 0) return hit;
+        }
+
+        // ④ 开始菜单 / 桌面快捷方式
+        foreach (var hint in ShortcutHints())
+        {
+            var hit = ManagerIn(hint);
+            if (hit.Length > 0) return hit;
+        }
+
+        // ⑤ 卸载注册表
+        foreach (var hint in RegistryHints())
+        {
+            var hit = ManagerIn(hint);
+            if (hit.Length > 0) return hit;
+        }
+
+        // ⑥ 各盘目录枚举（名字含 mumu / nemu）
+        foreach (var dir in FolderHints())
+        {
+            var hit = ManagerIn(dir);
+            if (hit.Length > 0) return hit;
+        }
+
+        // ⑦ 固定候选（老布局兜底：已知标准安装位置）
         foreach (var root in MumuRoots())
         {
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root)) continue;
-            foreach (var rel in new[]
-                     {
-                         Path.Combine("nx_main", "MuMuManager.exe"),
-                         "MuMuManager.exe",
-                         Path.Combine("nemu", "MuMuManager.exe"),
-                         Path.Combine("shell", "MuMuManager.exe"),
-                         Path.Combine("vms", "MuMuManager.exe"),
-                     })
-            {
-                var p = Path.Combine(root, rel);
-                if (File.Exists(p)) return p;
-            }
-            var found = SearchFile(root, "MuMuManager.exe", 0);
-            if (found != null) return found;
+            var hit = ManagerIn(root);
+            if (hit.Length > 0) return hit;
         }
 
-        // ④ PATH
+        // ⑧ PATH
         foreach (var p in PathCandidates("MuMuManager"))
             if (File.Exists(p)) return Path.GetFullPath(p);
 
         return null;
+    }
+
+    private static bool SameFile(string path, string fileName) =>
+        string.Equals(Path.GetFileName(path), fileName, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// 在给定路径（文件或目录）里，以及它往上 N 层父目录里，
+    /// 按已知相对布局找 MuMuManager.exe。
+    /// </summary>
+    public static string ManagerIn(string root, int levels = 3)
+    {
+        if (string.IsNullOrWhiteSpace(root)) return "";
+        DirectoryInfo dir;
+        try
+        {
+            var fi = new FileInfo(root);
+            if (fi.Exists)
+            {
+                if (string.Equals(fi.Name, "MuMuManager.exe", StringComparison.OrdinalIgnoreCase))
+                    return fi.FullName;
+                dir = fi.Directory;
+            }
+            else
+            {
+                if (!Directory.Exists(root)) return "";
+                dir = new DirectoryInfo(root);
+            }
+        }
+        catch { return ""; }
+        if (dir == null) return "";
+
+        for (int i = 0; i <= levels && dir != null; i++)
+        {
+            foreach (var rel in ManagerRelatives)
+            {
+                string cand;
+                try { cand = Path.Combine(dir.FullName, rel); } catch { continue; }
+                if (File.Exists(cand)) return cand;
+            }
+            dir = dir.Parent;
+        }
+        return "";
+    }
+
+    private static readonly string[] ManagerRelatives =
+    {
+        Path.Combine("nx_main", "MuMuManager.exe"),
+        "MuMuManager.exe",
+        Path.Combine("nemu", "MuMuManager.exe"),
+        Path.Combine("shell", "MuMuManager.exe"),
+        Path.Combine("vms", "MuMuManager.exe"),
+        Path.Combine("nx_device", "shell", "MuMuManager.exe"),
+    };
+
+    /// <summary>
+    /// 运行中的 MuMu 进程 → 它的 exe 路径。
+    /// ★ 授权的前提就是模拟器开着，所以这条最可靠；装在任意奇怪目录都能拿到。
+    /// </summary>
+    private static IEnumerable<string> ProcessHints()
+    {
+        string[] names = { "MuMuNxMain", "MuMuNxDevice", "MuMuPlayer", "MuMuMultiPlayer", "MuMuManager", "NemuPlayer" };
+        foreach (var name in names)
+        {
+            Process[] ps;
+            try { ps = Process.GetProcessesByName(name); } catch { continue; }
+            foreach (var p in ps)
+            {
+                string file = "";
+                try { file = p.MainModule != null ? p.MainModule.FileName : ""; }
+                catch { /* 权限不足就跳过 */ }
+                finally { p.Dispose(); }
+                if (!string.IsNullOrEmpty(file)) yield return file;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 开始菜单 / 桌面快捷方式 → TargetPath。
+    /// ★ 官方安装包必建 .lnk（本机实测指向 …\nx_main\MuMuNxMain.exe），
+    ///   用户把 MuMu 装在自己建的目录里也能命中。
+    /// </summary>
+    private static IEnumerable<string> ShortcutHints()
+    {
+        if (!OperatingSystem.IsWindows()) yield break;
+        string[] dirs =
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs"),
+            Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory),
+        };
+        foreach (var target in ShortcutTargets(dirs)) yield return target;
+    }
+
+    /// <summary>
+    /// 把目录里名字含 MuMu 的 .lnk 解析成 TargetPath。
+    /// ★ 抽成 public 是为了能用「临时目录 + 真实 .lnk」写回归，不依赖具体安装目录。
+    /// </summary>
+    public static List<string> ShortcutTargets(IEnumerable<string> dirs)
+    {
+        var targets = new List<string>();
+        if (!OperatingSystem.IsWindows()) return targets;
+
+        object shell = null;
+        try
+        {
+            var t = Type.GetTypeFromProgID("WScript.Shell");
+            if (t != null) shell = Activator.CreateInstance(t);
+        }
+        catch { }
+        if (shell == null) return targets;
+
+        foreach (var dir in dirs)
+        {
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) continue;
+            string[] files;
+            try { files = Directory.GetFiles(dir, "*.lnk", SearchOption.AllDirectories); }
+            catch { continue; }
+            foreach (var link in files)
+            {
+                var nm = Path.GetFileNameWithoutExtension(link) ?? "";
+                if (!nm.ToLowerInvariant().Contains("mumu")) continue;
+                var target = ResolveShortcut(shell, link);
+                if (target.Length > 0) targets.Add(target);
+            }
+        }
+        return targets;
+    }
+
+    /// <summary>用 WScript.Shell COM 拿 .lnk 的 TargetPath（不用 dynamic，走反射更稳）。</summary>
+    private static string ResolveShortcut(object shell, string link)
+    {
+        try
+        {
+            object sc = shell.GetType().InvokeMember(
+                "CreateShortcut",
+                System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { link });
+            if (sc == null) return "";
+            var target = sc.GetType().InvokeMember(
+                "TargetPath",
+                System.Reflection.BindingFlags.GetProperty, null, sc, null) as string;
+            return target ?? "";
+        }
+        catch { return ""; }
+    }
+
+    /// <summary>注册表里 DisplayName 含 MuMu 的安装路径 / 图标 / 卸载命令行（清洗成纯路径）。</summary>
+    private static IEnumerable<string> RegistryHints()
+    {
+        if (!OperatingSystem.IsWindows()) yield break;
+        RegistryKey[] hives = { Registry.LocalMachine, Registry.CurrentUser };
+        string[] subs =
+        {
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+            @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+            @"SOFTWARE\Netease",
+            @"SOFTWARE\WOW6432Node\Netease",
+        };
+        foreach (var hive in hives)
+        {
+            foreach (var sub in subs)
+            {
+                RegistryKey key = null;
+                try { key = hive.OpenSubKey(sub); } catch { }
+                if (key == null) continue;
+                try
+                {
+                    string[] names;
+                    try { names = key.GetSubKeyNames(); } catch { continue; }
+                    foreach (var name in names)
+                    {
+                        RegistryKey sk = null;
+                        try { sk = key.OpenSubKey(name); } catch { }
+                        if (sk == null) continue;
+                        try
+                        {
+                            string display = "";
+                            try { display = (sk.GetValue("DisplayName") as string) ?? ""; } catch { }
+                            // Netease 分支通常没有 DisplayName，用子键名兜底
+                            if (!((display + " " + name).ToLowerInvariant().Contains("mumu"))) continue;
+                            foreach (var vn in new[] { "InstallLocation", "DisplayIcon", "UninstallString", "InstallPath", "Path" })
+                            {
+                                string val = "";
+                                try { val = (sk.GetValue(vn) as string) ?? ""; } catch { }
+                                val = CleanHint(val);
+                                if (val.Length > 0) yield return val;
+                            }
+                        }
+                        finally { sk.Close(); }
+                    }
+                }
+                finally { key.Close(); }
+            }
+        }
+    }
+
+    /// <summary>把 DisplayIcon 的 "D:\x\uninstall.exe,0"、带引号的命令行清洗成纯路径。</summary>
+    public static string CleanHint(string raw)
+    {
+        string s = (raw ?? "").Trim();
+        if (s.Length == 0) return "";
+        if (s[0] == '"')
+        {
+            int end = s.IndexOf('"', 1);
+            if (end > 0) s = s.Substring(1, end - 1);
+        }
+        if (s.Contains(',') && !File.Exists(s) && !Directory.Exists(s))
+            s = s.Substring(0, s.LastIndexOf(',')).Trim().Trim('"');
+        if (s.Contains(" -") && !File.Exists(s) && !Directory.Exists(s))
+            s = s.Substring(0, s.IndexOf(" -", StringComparison.Ordinal)).Trim().Trim('"');
+        return s;
+    }
+
+    /// <summary>各盘 Program Files / Netease / 盘根下名字含 MuMu 或 Nemu 的目录。</summary>
+    private static IEnumerable<string> FolderHints()
+    {
+        var parents = new List<string>();
+        foreach (var v in new[] { "ProgramFiles", "ProgramFiles(x86)", "ProgramW6432" })
+        {
+            var d = Environment.GetEnvironmentVariable(v) ?? "";
+            if (d.Length > 0) parents.Add(d);
+        }
+        var local = Environment.GetEnvironmentVariable("LOCALAPPDATA") ?? "";
+        if (local.Length > 0) parents.Add(Path.Combine(local, "Programs"));
+
+        foreach (var drive in FixedDrives())
+        {
+            parents.Add(drive);
+            parents.Add(Path.Combine(drive, "Program Files"));
+            parents.Add(Path.Combine(drive, "Program Files (x86)"));
+            parents.Add(Path.Combine(drive, "Programs"));
+        }
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var parent in parents)
+        {
+            if (string.IsNullOrEmpty(parent) || !seen.Add(parent) || !Directory.Exists(parent))
+                continue;
+            string[] dirs;
+            try { dirs = Directory.GetDirectories(parent); } catch { continue; }
+            foreach (var full in dirs)
+            {
+                var name = Path.GetFileName(full) ?? "";
+                var low = name.ToLowerInvariant();
+                if (low.Contains("mumu") || low == "nemu")
+                {
+                    yield return full;
+                }
+                else if (low == "netease")
+                {
+                    string[] subdirs;
+                    try { subdirs = Directory.GetDirectories(full); } catch { continue; }
+                    foreach (var sub in subdirs)
+                    {
+                        var sname = Path.GetFileName(sub) ?? "";
+                        if (sname.ToLowerInvariant().Contains("mumu")) yield return sub;
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>限深搜索（避免在各盘乱爬）。</summary>

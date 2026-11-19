@@ -12,7 +12,7 @@ namespace Xqd.Core;
 public static class States
 {
     public const string AppTitle = "兴趣岛视频下载器";
-    public const string AppVersion = "1.7.0";   // v1.7.0：Avalonia 版 + 自包含单文件 + 全量去本机化
+    public const string AppVersion = "1.7.1";   // v1.7.1：修「换机器拿不到授权」（MuMu 定位 + 实例全探）
     /// <summary>产品名基址（不含版本号）。实际 exe 名为 xqd-downloader-vX.Y.Z.exe，
     ///   由 Xqd.Gui.csproj 的 PkgVersion 派生 —— 改版本号不用动这里。</summary>
     public const string ProductExeName = "xqd-downloader";

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,10 @@ namespace Xqd.Core.Auth;
 public sealed class MumuAuth : IAuthService
 {
     // ── 已验证的常量（docs/01 〇之二、docs/11 A）─────────────────────
-    private const int VmIndex = 0;
+    // ★ v1.7.1：实例号不再写死 0 —— 多开时用户可能只开了实例 3，
+    //   固定 -v 0 必然读不到 Cookie（换机器/换习惯就对不上）。
+    //   _vmIndex 由 ChooseInstanceAsync 在流程开始时探出来（0~7 全探）。
+    private const int MaxVmIndex = 8;          // 探 0..7
     private const string QianliaoPackage = "com.qlchat.xingqudao";
     private const string CookieDb =
         "/data/data/com.qlchat.xingqudao/app_webview/Default/Cookies";
@@ -75,6 +79,8 @@ public sealed class MumuAuth : IAuthService
     // 这样「App 未登录 → 去登录 → 点重试」第二次跑时依然认得出是谁启动的。
     private bool _sessionMain;
     private bool _sessionDevice;
+    /// <summary>本次流程选中/探测到的 MuMu 实例号（-1 = 还没探）。</summary>
+    private int _vmIndex = 0;
     /// <summary>最近一次定位到的 MuMuManager.exe，供无参 CloseAll() 收尾复用。</summary>
     private string _manager = "";
 
@@ -183,15 +189,24 @@ public sealed class MumuAuth : IAuthService
         _manager = manager;
         Say(onStatus, "MuMu 管理器：" + manager);
 
+        // ★ v1.7.1：先探实例（0~7 全探），再决定对哪台操作 —— 绝不写死实例 0。
+        _vmIndex = await ChooseInstanceAsync(manager, onStatus, ct).ConfigureAwait(false);
+
         // autoLaunch=false：设备没在跑就直接失败，绝不启动。
-        if (!autoLaunch && !await IsRunningAsync(manager, ct).ConfigureAwait(false))
+        if (!autoLaunch && !await IsRunningAsync(manager, _vmIndex, ct).ConfigureAwait(false))
             return Fail("MuMu / 安卓设备未运行。请先启动 MuMu 并在兴趣岛 App "
                         + "中登录，然后回到本工具点「重试」。");
 
         // ★ 直接确保设备：control launch 会连带拉起主程序（约 13 秒就绪）；
         //   绝不先 main launch —— 实测那样反而会卡住（docs/11 A）。
         if (!await EnsureDeviceAsync(manager, onStatus, ct).ConfigureAwait(false))
-            return Fail("安卓设备启动超时（240 秒）。");
+            return Fail($"安卓设备启动超时（240 秒，实例 {_vmIndex}）。");
+
+        // ★ 换了台机器的常见剧本：MuMu 装了、实例也在跑，但这台实例里没装兴趣岛 App。
+        //   不给出这一步，用户只会反复看到「App 未登录」，以为是登录问题。
+        if (!await AppInstalledAsync(manager, ct).ConfigureAwait(false))
+            return Fail("实例 " + _vmIndex + " 里没有「兴趣岛」App。"
+                        + "\n\n请在 MuMu 的这个实例里安装并登录兴趣岛，然后回到本工具点「重试」。");
 
         Say(onStatus, "读取 App 授权…");
 
@@ -286,11 +301,11 @@ public sealed class MumuAuth : IAuthService
     ///   写成 -v 0 info 会打印帮助并返回非 0（docs/01 〇之二）。
     /// ★ main 是全局子命令、不带 -v，另见 MainCmd。
     /// </summary>
-    private static string[] ManagerCmd(string sub, params string[] extra)
+    private static string[] ManagerCmd(int index, string sub, params string[] extra)
     {
         var list = new List<string>
         {
-            sub, "-v", VmIndex.ToString(CultureInfo.InvariantCulture)
+            sub, "-v", index.ToString(CultureInfo.InvariantCulture)
         };
         if (extra != null && extra.Length > 0) list.AddRange(extra);
         return list.ToArray();
@@ -342,12 +357,155 @@ public sealed class MumuAuth : IAuthService
         return null;
     }
 
-    /// <summary>player_info：info -v 0 的 JSON；失败返回 default(JsonElement)（等价 {}）。</summary>
-    private async Task<JsonElement> PlayerInfoAsync(string manager, CancellationToken ct)
+    /// <summary>一个 MuMu 安卓实例（多开时每台是独立安卓系统）。</summary>
+    public sealed class MumuInstance
+    {
+        public int Index;
+        public bool Started;
+        public string Name = "";
+        public override string ToString() =>
+            $"实例 {Index}" + (Started ? "（运行中）" : "（未启动）");
+    }
+
+    /// <summary>
+    /// 枚举 0~7 号实例（MuMuManager info -v i）。
+    /// ★ 必须全探：用户可能只开了实例 2，不能「0/1 没启动就收工」。
+    /// </summary>
+    public async Task<List<MumuInstance>> ListInstancesAsync(string manager, CancellationToken ct)
+    {
+        var list = new List<MumuInstance>();
+        for (int i = 0; i < MaxVmIndex; i++)
+        {
+            ct.ThrowIfCancellationRequested();
+            JsonElement info;
+            try
+            {
+                var r = await RunAsync(manager, ManagerCmd(i, "info"), InfoTimeoutMs, ct)
+                              .ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(r.Out)) continue;
+                info = J.Parse(r.Out);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch { continue; }        // 该实例不存在 / 输出不是 JSON
+
+            var root = info;
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                var arr = root.EnumerateArray().ToList();
+                if (arr.Count == 0) continue;
+                root = arr[0];
+            }
+            if (root.ValueKind != JsonValueKind.Object) continue;
+            if (!root.TryGetProperty("index", out _) && !root.TryGetProperty("is_android_started", out _))
+                continue;              // 不是正常 info 返回
+
+            list.Add(new MumuInstance
+            {
+                Index = (int)J.Long(root, "index", i),
+                Started = J.Bool(root, "is_android_started", false),
+                Name = J.Str(root, "name", "实例 " + i),
+            });
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// 选出本次要用的实例。
+    /// ★ 多开时不能只按「最近修改时间」猜，也不能固定实例 0：
+    ///   逐台试读 Cookie，取第一台真的有 userId + rsessionId 的；
+    ///   多台都有登录态时再联网验证，取服务端认可的那台；
+    ///   全都读不到就退回「第一台运行中的」，把 App 拉起来让用户登录。
+    /// </summary>
+    private async Task<int> ChooseInstanceAsync(string manager, Action<string> onStatus,
+                                                CancellationToken ct)
+    {
+        var insts = await ListInstancesAsync(manager, ct).ConfigureAwait(false);
+        var running = insts.Where(i => i.Started).OrderBy(i => i.Index).ToList();
+
+        if (running.Count == 0)
+        {
+            int idx = insts.Count > 0 ? insts.OrderBy(i => i.Index).First().Index : 0;
+            Say(onStatus, $"没有实例在运行，准备启动实例 {idx}…");
+            return idx;
+        }
+
+        // 只有一台在跑：直接用它（最常见）
+        if (running.Count == 1)
+        {
+            Say(onStatus, $"使用实例 {running[0].Index}（{running[0].Name}）");
+            return running[0].Index;
+        }
+
+        // 多开：逐台试读
+        var candidates = new List<(int Index, string Header)>();
+        foreach (var inst in running)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                // 先看这台上有没有装兴趣岛 App —— 没装的读了也白读
+                if (!await AppInstalledOnAsync(manager, inst.Index, ct).ConfigureAwait(false)) continue;
+                var header = await ReadHeaderOnAsync(manager, inst.Index, ct).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(header)) candidates.Add((inst.Index, header));
+            }
+            catch (OperationCanceledException) { throw; }
+            catch { /* 这台读不到，跳过 */ }
+        }
+
+        if (candidates.Count == 0)
+        {
+            Say(onStatus, $"检测到 {running.Count} 台实例在运行，但都没读到登录态；"
+                          + $"先用实例 {running[0].Index}");
+            return running[0].Index;
+        }
+        if (candidates.Count == 1)
+        {
+            Say(onStatus, $"使用实例 {candidates[0].Index}（已读到登录态）");
+            return candidates[0].Index;
+        }
+
+        // 多台都有 cookie：联网验证，取服务端认可的那台
+        foreach (var c in candidates)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                var p = new Xqd.Core.Api.QianliaoPlatform(c.Header);
+                var (ok, _) = await p.CheckAuthAsync(ct).ConfigureAwait(false);
+                if (ok)
+                {
+                    Say(onStatus, $"使用实例 {c.Index}（授权在线验证有效）");
+                    return c.Index;
+                }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch { /* 网络不通就继续 */ }
+        }
+
+        // 全都验证不了（可能断网）：退第一台读得到的，并提示
+        Say(onStatus, $"授权无法在线验证，先使用实例 {candidates[0].Index}");
+        return candidates[0].Index;
+    }
+
+    /// <summary>在指定实例上读一次 Cookie 头（读不到返回空，不抛）。</summary>
+    private async Task<string> ReadHeaderOnAsync(string manager, int index, CancellationToken ct)
+    {
+        var command = "sqlite3 '" + CookieDb + "' \"" + CookieQuery + "\"";
+        var (outText, ok) = await ShellAsync(manager, index, command, ShellTimeoutMs, ct)
+                                  .ConfigureAwait(false);
+        if (VmNotRunning(outText)) return "";
+        if (!ok && string.IsNullOrWhiteSpace(outText)) return "";
+
+        var cookies = ParseCookies(outText, out var missing);
+        return missing.Count == 0 ? BuildHeader(cookies) : "";
+    }
+
+    /// <summary>player_info：info -v N 的 JSON；失败返回 default(JsonElement)（等价 {}）。</summary>
+    private async Task<JsonElement> PlayerInfoAsync(string manager, int index, CancellationToken ct)
     {
         try
         {
-            var r = await RunAsync(manager, ManagerCmd("info"), InfoTimeoutMs, ct)
+            var r = await RunAsync(manager, ManagerCmd(index, "info"), InfoTimeoutMs, ct)
                           .ConfigureAwait(false);
             return J.Parse(r.Out);
         }
@@ -358,30 +516,35 @@ public sealed class MumuAuth : IAuthService
     }
 
     /// <summary>is_running：info 的 is_android_started。</summary>
-    private async Task<bool> IsRunningAsync(string manager, CancellationToken ct)
+    private async Task<bool> IsRunningAsync(string manager, int index, CancellationToken ct)
     {
-        var info = await PlayerInfoAsync(manager, ct).ConfigureAwait(false);
+        var info = await PlayerInfoAsync(manager, index, ct).ConfigureAwait(false);
+        if (info.ValueKind == JsonValueKind.Array)
+        {
+            var arr = info.EnumerateArray().ToList();
+            info = arr.Count > 0 ? arr[0] : default;
+        }
         return J.Bool(info, "is_android_started");
     }
 
-    /// <summary>launch_player：control -v 0 launch。</summary>
-    private async Task<bool> LaunchPlayerAsync(string manager, CancellationToken ct)
+    /// <summary>launch_player：control -v N launch。</summary>
+    private async Task<bool> LaunchPlayerAsync(string manager, int index, CancellationToken ct)
     {
         try
         {
-            await RunAsync(manager, ManagerCmd("control", "launch"), ControlTimeoutMs, ct)
+            await RunAsync(manager, ManagerCmd(index, "control", "launch"), ControlTimeoutMs, ct)
                   .ConfigureAwait(false);
             return true;
         }
         catch (Exception e) when (!(e is OperationCanceledException)) { return false; }
     }
 
-    /// <summary>shutdown_player：control -v 0 shutdown。</summary>
-    private async Task<bool> ShutdownPlayerAsync(string manager, CancellationToken ct)
+    /// <summary>shutdown_player：control -v N shutdown。</summary>
+    private async Task<bool> ShutdownPlayerAsync(string manager, int index, CancellationToken ct)
     {
         try
         {
-            await RunAsync(manager, ManagerCmd("control", "shutdown"), ControlTimeoutMs, ct)
+            await RunAsync(manager, ManagerCmd(index, "control", "shutdown"), ControlTimeoutMs, ct)
                   .ConfigureAwait(false);
             return true;
         }
@@ -389,19 +552,20 @@ public sealed class MumuAuth : IAuthService
     }
 
     /// <summary>wait_until_ready：轮询 info 直到 is_android_started=true。</summary>
-    private async Task<bool> WaitUntilReadyAsync(string manager, Action<string> onStatus,
+    private async Task<bool> WaitUntilReadyAsync(string manager, int index,
+                                                Action<string> onStatus,
                                                 CancellationToken ct, int timeoutMs)
     {
         var sw = Stopwatch.StartNew();
         while (sw.ElapsedMilliseconds < timeoutMs)
         {
             ct.ThrowIfCancellationRequested();
-            if (await IsRunningAsync(manager, ct).ConfigureAwait(false))
+            if (await IsRunningAsync(manager, index, ct).ConfigureAwait(false))
             {
-                Say(onStatus, $"安卓设备已就绪（{sw.Elapsed.TotalSeconds:0}s）");
+                Say(onStatus, $"安卓设备已就绪（实例 {index}，{sw.Elapsed.TotalSeconds:0}s）");
                 return true;
             }
-            Say(onStatus, $"等待安卓设备启动… {sw.Elapsed.TotalSeconds:0}s");
+            Say(onStatus, $"等待安卓设备启动… 实例 {index}，{sw.Elapsed.TotalSeconds:0}s");
             await Task.Delay(PollMs, ct).ConfigureAwait(false);
         }
         return false;
@@ -417,12 +581,12 @@ public sealed class MumuAuth : IAuthService
     private async Task<bool> EnsureDeviceAsync(string manager, Action<string> onStatus,
                                                 CancellationToken ct, bool force = false)
     {
-        if (!force && await IsRunningAsync(manager, ct).ConfigureAwait(false))
+        if (!force && await IsRunningAsync(manager, _vmIndex, ct).ConfigureAwait(false))
             return true;   // 已在跑（用户自己开的），不标记会话
 
-        Say(onStatus, "安卓设备未启动，正在启动…");
-        await LaunchPlayerAsync(manager, ct).ConfigureAwait(false);
-        if (!await WaitUntilReadyAsync(manager, onStatus, ct, DeviceReadyTimeoutMs)
+        Say(onStatus, $"安卓设备未启动，正在启动实例 {_vmIndex}…");
+        await LaunchPlayerAsync(manager, _vmIndex, ct).ConfigureAwait(false);
+        if (!await WaitUntilReadyAsync(manager, _vmIndex, onStatus, ct, DeviceReadyTimeoutMs)
                   .ConfigureAwait(false))
             return false;
 
@@ -468,12 +632,12 @@ public sealed class MumuAuth : IAuthService
     /// MuMuManager 的 sh 会把错误 JSON 混进 stdout；超时（Proc 返回 Code=-9）
     /// 不当作输出，避免把「超时」二字误当成 Cookie 行。
     /// </summary>
-    private async Task<(string Out, bool Ok)> ShellAsync(string manager, string command,
+    private async Task<(string Out, bool Ok)> ShellAsync(string manager, int index, string command,
                                                          int timeoutMs, CancellationToken ct)
     {
         try
         {
-            var r = await RunAsync(manager, ManagerCmd("sh", "-c", command), timeoutMs, ct)
+            var r = await RunAsync(manager, ManagerCmd(index, "sh", "-c", command), timeoutMs, ct)
                           .ConfigureAwait(false);
             var text = r.Out;
             if (string.IsNullOrWhiteSpace(text) && r.Code != -9 &&
@@ -487,27 +651,31 @@ public sealed class MumuAuth : IAuthService
         }
     }
 
-    /// <summary>launch_app：control -v 0 app launch --package &lt;pkg&gt;。</summary>
+    /// <summary>launch_app：control -v N app launch --package &lt;pkg&gt;。</summary>
     private async Task<bool> LaunchAppAsync(string manager, CancellationToken ct)
     {
         try
         {
             await RunAsync(manager,
-                          ManagerCmd("control", "app", "launch", "--package", QianliaoPackage),
+                          ManagerCmd(_vmIndex, "control", "app", "launch", "--package", QianliaoPackage),
                           ControlTimeoutMs, ct).ConfigureAwait(false);
             return true;
         }
         catch (Exception e) when (!(e is OperationCanceledException)) { return false; }
     }
 
-    /// <summary>app_installed：pm list packages 是否含该包。</summary>
-    private async Task<bool> AppInstalledAsync(string manager, CancellationToken ct)
+    /// <summary>app_installed：pm list packages 是否含该包（指定实例）。</summary>
+    private async Task<bool> AppInstalledOnAsync(string manager, int index, CancellationToken ct)
     {
         var (outText, _) = await ShellAsync(
-            manager, "pm list packages " + QianliaoPackage, 30_000, ct)
+            manager, index, "pm list packages " + QianliaoPackage, 30_000, ct)
             .ConfigureAwait(false);
         return outText.Contains("package:" + QianliaoPackage);
     }
+
+    /// <summary>app_installed：当前实例。</summary>
+    private Task<bool> AppInstalledAsync(string manager, CancellationToken ct) =>
+        AppInstalledOnAsync(manager, _vmIndex, ct);
 
     /// <summary>
     /// vm_not_running：设备已停时 sh 返回
@@ -528,12 +696,12 @@ public sealed class MumuAuth : IAuthService
         try
         {
             await RunAsync(manager,
-                           ManagerCmd("control", "app", "close", "--package", QianliaoPackage),
+                           ManagerCmd(_vmIndex, "control", "app", "close", "--package", QianliaoPackage),
                            ControlTimeoutMs, ct).ConfigureAwait(false);
         }
         catch (Exception e) when (!(e is OperationCanceledException))
         { /* 失败仍继续 force-stop */ }
-        await ShellAsync(manager, "am force-stop " + QianliaoPackage, 30_000, ct)
+        await ShellAsync(manager, _vmIndex, "am force-stop " + QianliaoPackage, 30_000, ct)
               .ConfigureAwait(false);
         return true;
     }
@@ -546,7 +714,7 @@ public sealed class MumuAuth : IAuthService
         {
             ct.ThrowIfCancellationRequested();
             var (outText, _) = await ShellAsync(
-                manager, "pidof " + QianliaoPackage, 15_000, ct).ConfigureAwait(false);
+                manager, _vmIndex, "pidof " + QianliaoPackage, 15_000, ct).ConfigureAwait(false);
             if (VmNotRunning(outText)) return true;
             if (string.IsNullOrWhiteSpace(outText)) return true;
             await Task.Delay(1_000, ct).ConfigureAwait(false);
@@ -597,14 +765,14 @@ public sealed class MumuAuth : IAuthService
     /// </summary>
     private async Task<bool> ClosePlayerAsync(string manager, CancellationToken ct)
     {
-        if (!await ShutdownPlayerAsync(manager, ct).ConfigureAwait(false)) return false;
+        if (!await ShutdownPlayerAsync(manager, _vmIndex, ct).ConfigureAwait(false)) return false;
         var sw = Stopwatch.StartNew();
         while (sw.ElapsedMilliseconds < ShutdownWaitMs)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                if (!await IsRunningAsync(manager, ct).ConfigureAwait(false)) break;
+                if (!await IsRunningAsync(manager, _vmIndex, ct).ConfigureAwait(false)) break;
             }
             catch (Exception e) when (!(e is OperationCanceledException)) { break; }
             await Task.Delay(2_000, ct).ConfigureAwait(false);
@@ -641,22 +809,11 @@ public sealed class MumuAuth : IAuthService
     // ════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// read_app_cookies：sqlite3 读 App WebView Cookie 库，返回 {name: value}。
-    /// ★ 顶层域（host 以 '.' 开头）优先：同名 cookie 取 .qianliao.net 那条，
-    ///   它对所有子域生效（docs/01 〇之二、docs/11 A5）。
-    /// ★ 设备已停 → 抛 VmNotRunningException，由主流程触发 ensure_device 重启。
+    /// sqlite3 输出 → {name: CookieVal}，并算出缺失的必需字段。
+    /// ★ 顶层域（host 以 '.' 开头）优先：同名 cookie 取 .qianliao.net 那条。
     /// </summary>
-    private async Task<Dictionary<string, CookieVal>> ReadAppCookiesAsync(
-        string manager, CancellationToken ct)
+    private static Dictionary<string, CookieVal> ParseCookies(string outText, out List<string> missing)
     {
-        var command = "sqlite3 '" + CookieDb + "' \"" + CookieQuery + "\"";
-        var (outText, ok) = await ShellAsync(manager, command, ShellTimeoutMs, ct)
-                                  .ConfigureAwait(false);
-
-        if (VmNotRunning(outText)) throw new VmNotRunningException();
-        if (!ok && string.IsNullOrWhiteSpace(outText))
-            throw new AuthException("读取 Cookie 库失败（sqlite3 无输出）。");
-
         var cookies = new Dictionary<string, CookieVal>(StringComparer.Ordinal);
         foreach (var raw in (outText ?? "").Split('\n'))
         {
@@ -669,11 +826,46 @@ public sealed class MumuAuth : IAuthService
             var value = parts[2];
             bool domainPref = host.StartsWith(".", StringComparison.Ordinal);
 
-            // 顶层域优先：仅当「还没有」或「已有非顶层域、当前是顶层域」时覆盖。
-            if (!cookies.TryGetValue(name, out var existing)
-                || (domainPref && !existing.DomainPref))
+            if (!cookies.TryGetValue(name, out var existing) || (domainPref && !existing.DomainPref))
                 cookies[name] = new CookieVal { Value = value, DomainPref = domainPref };
         }
+
+        missing = new List<string>();
+        foreach (var name in RequiredCookies)
+            if (!cookies.TryGetValue(name, out var required) || string.IsNullOrEmpty(required.Value))
+                missing.Add(name);
+        return cookies;
+    }
+
+    /// <summary>拼 Cookie 请求头（必需 + 有值才带的可选字段）。绝不输出任何值到日志。</summary>
+    private static string BuildHeader(Dictionary<string, CookieVal> cookies)
+    {
+        var parts = new List<string>();
+        foreach (var name in RequiredCookies)
+            if (cookies.TryGetValue(name, out var required) && !string.IsNullOrEmpty(required.Value))
+                parts.Add(name + "=" + required.Value);
+        foreach (var name in OptionalCookies)
+            if (cookies.TryGetValue(name, out var optional) && !string.IsNullOrEmpty(optional.Value))
+                parts.Add(name + "=" + optional.Value);
+        return string.Join("; ", parts);
+    }
+
+    /// <summary>
+    /// read_app_cookies：sqlite3 读 App WebView Cookie 库（当前实例）。
+    /// ★ 设备已停 → 抛 VmNotRunningException，由主流程触发 ensure_device 重启。
+    /// </summary>
+    private async Task<Dictionary<string, CookieVal>> ReadAppCookiesAsync(
+        string manager, CancellationToken ct)
+    {
+        var command = "sqlite3 '" + CookieDb + "' \"" + CookieQuery + "\"";
+        var (outText, ok) = await ShellAsync(manager, _vmIndex, command, ShellTimeoutMs, ct)
+                                  .ConfigureAwait(false);
+
+        if (VmNotRunning(outText)) throw new VmNotRunningException();
+        if (!ok && string.IsNullOrWhiteSpace(outText))
+            throw new AuthException("读取 Cookie 库失败（sqlite3 无输出）。");
+
+        var cookies = ParseCookies(outText, out var _);
         return cookies;
     }
 
@@ -684,29 +876,18 @@ public sealed class MumuAuth : IAuthService
     /// </summary>
     private async Task<string> GetCookieHeaderAsync(string manager, CancellationToken ct)
     {
-        var cookies = await ReadAppCookiesAsync(manager, ct).ConfigureAwait(false);
+        var command = "sqlite3 '" + CookieDb + "' \"" + CookieQuery + "\"";
+        var (outText, ok) = await ShellAsync(manager, _vmIndex, command, ShellTimeoutMs, ct)
+                                  .ConfigureAwait(false);
+        if (VmNotRunning(outText)) throw new VmNotRunningException();
+        if (!ok && string.IsNullOrWhiteSpace(outText))
+            throw new AuthException("读取 Cookie 库失败（sqlite3 无输出）。");
 
-        var missing = new List<string>();
-        foreach (var name in RequiredCookies)
-        {
-            if (!cookies.TryGetValue(name, out var required)
-                || string.IsNullOrEmpty(required.Value))
-                missing.Add(name);
-        }
+        var cookies = ParseCookies(outText, out var missing);
         if (missing.Count > 0)
             throw new AppNotLoginException(
                 "App 未登录（缺少 " + string.Join("、", missing) + "）。");
-
-        var parts = new List<string>();
-        foreach (var name in RequiredCookies)
-            parts.Add(name + "=" + cookies[name].Value);
-        foreach (var name in OptionalCookies)
-        {
-            if (cookies.TryGetValue(name, out var optional)
-                && !string.IsNullOrEmpty(optional.Value))
-                parts.Add(name + "=" + optional.Value);
-        }
-        return string.Join("; ", parts);
+        return BuildHeader(cookies);
     }
 
     /// <summary>check_auth：只检查本地是否有可用授权（不联网）。对应 xqd_auth.check_auth。</summary>
@@ -721,6 +902,50 @@ public sealed class MumuAuth : IAuthService
         catch (AuthException e) { return (false, e.Message); }
         catch (Exception e) when (!(e is OperationCanceledException))
         { return (false, "检查授权时出错：" + e.Message); }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  诊断（--authcheck）：给「换机器拿不到授权」一个自证入口
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 打印：MuMuManager 实际路径 + 0~7 各实例的启动/登录状态 + 最终会选哪台。
+    /// ★ 只报「有没有登录态」，绝不输出任何 cookie 值。
+    /// </summary>
+    public static async Task<string> DiagnoseAsync(CancellationToken ct = default)
+    {
+        var sb = new System.Text.StringBuilder();
+        string manager = Setup.ToolLocator.FindMumuManager() ?? "";
+        sb.AppendLine("MuMuManager：" + (manager.Length > 0 ? manager : "（未找到）"));
+        if (manager.Length == 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("→ 请确认已安装 MuMu，或在界面里点「指定 MuMuManager…」选一次。");
+            return sb.ToString();
+        }
+
+        var auth = new MumuAuth();
+        var insts = await auth.ListInstancesAsync(manager, ct).ConfigureAwait(false);
+        sb.AppendLine($"实例数：{insts.Count}");
+        foreach (var inst in insts)
+        {
+            string login = "未登录";
+            if (inst.Started)
+            {
+                try
+                {
+                    var header = await auth.ReadHeaderOnAsync(manager, inst.Index, ct).ConfigureAwait(false);
+                    login = header.Length > 0 ? "✓ 有登录态" : "✗ 没有 userId/rsessionId";
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception e) { login = "读取失败：" + e.Message; }
+            }
+            sb.AppendLine($"  实例 {inst.Index}  {(inst.Started ? "运行中" : "未启动")}  {inst.Name}  {login}");
+        }
+
+        var chosen = await auth.ChooseInstanceAsync(manager, null, ct).ConfigureAwait(false);
+        sb.AppendLine($"→ 会使用实例 {chosen}");
+        return sb.ToString();
     }
 
     // ════════════════════════════════════════════════════════════════

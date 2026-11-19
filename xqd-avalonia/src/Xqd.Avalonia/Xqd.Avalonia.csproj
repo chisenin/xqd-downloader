@@ -12,7 +12,7 @@
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- ★ 版本号唯一来源：PkgVersion（CI 用 tag vX.Y.Z 传入） -->
-    <PkgVersion Condition="'$(PkgVersion)' == ''">1.7.0</PkgVersion>
+    <PkgVersion Condition="'$(PkgVersion)' == ''">1.7.1</PkgVersion>
     <Version>$(PkgVersion)</Version>
     <AssemblyName>xqd-downloader-v$(PkgVersion)</AssemblyName>
   </PropertyGroup>

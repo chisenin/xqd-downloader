@@ -26,7 +26,7 @@ export DOTNET_NOLOGO=1
 
 PROJ="src/Xqd.Avalonia/Xqd.Avalonia.csproj"
 OUT="dist"
-VER="${1:-1.7.0}"
+VER="${1:-1.7.1}"
 
 if [ "${1:-}" = "check" ]; then
     "$DOTNET" run --project "$PROJ" -c Debug -- --check
@@ -37,7 +37,7 @@ echo "[1/3] 还原依赖"
 "$DOTNET" restore "$PROJ" --configfile "./NuGet.config" -r win-x64
 
 echo "[2/3] 发布自包含单文件（win-x64，目标机器无需安装 .NET）"
-"$DOTNET" publish "$PROJ" -c Release --no-restore -o "$OUT" -p:PkgVersion="$VER"
+"$DOTNET" publish "$PROJ" -c Release --no-restore -o "$OUT" -p:PkgVersion="$VER" -p:DebugType=None
 
 echo "[3/3] 产物"
 ls -la "$OUT"

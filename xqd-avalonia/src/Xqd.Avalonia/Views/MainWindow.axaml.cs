@@ -18,6 +18,8 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Xqd.Avalonia.Controls;
 using Xqd.Core;
+using Xqd.Core.Auth;
+using Xqd.Core.Setup;
 using Xqd.Core.Ui;
 
 namespace Xqd.Avalonia.Views;
@@ -151,11 +153,25 @@ public partial class MainWindow : Window
     private async Task<bool> EnsureAuthAsync(bool force)
     {
         LblStatus.Text = force ? "正在从 MuMu 读取登录态…" : "正在检查本机授权…";
-        var auth = await Services.Auth.EnsureAuthAsync(
-            force, Log,
-            ChkAutoLaunch.IsChecked == true,
-            ChkAutoClose.IsChecked == true,
-            _uiCts.Token);
+
+        // ★ 点了「重新授权」却连 MuMuManager 都找不到时，别只甩一句报错 ——
+        //   直接弹文件选择框让用户选一次（选完记住），与 hgvd 的兜底一致。
+        if (force && !await EnsureMumuLocatedAsync())
+        {
+            LblAuth.Text = "未授权";
+            ShowBanner("没找到 MuMuManager.exe，已取消选择。可先打开 MuMu，"
+                       + "或再点一次「重新授权」手动指定位置。", BannerKind.Err);
+            return false;
+        }
+
+        var auth = await RunAuthOnceAsync(force);
+
+        // 授权逻辑内部找不到 MuMu 时也兜底：让用户选一次，然后立刻重试（只重试一次）
+        if (!auth.Ok && (auth.Message ?? "").Contains("找不到 MuMuManager.exe"))
+        {
+            if (await PickMumuManagerAsync())
+                auth = await RunAuthOnceAsync(force);
+        }
 
         if (!auth.Ok)
         {
@@ -176,6 +192,59 @@ public partial class MainWindow : Window
             ? "已使用本机保存的授权（未启动模拟器）"
             : "已从模拟器读取登录态并落盘复用");
         return true;
+    }
+
+    private Task<AuthResult> RunAuthOnceAsync(bool force) =>
+        Services.Auth.EnsureAuthAsync(
+            force, Log,
+            ChkAutoLaunch.IsChecked == true,
+            ChkAutoClose.IsChecked == true,
+            _uiCts.Token);
+
+    /// <summary>MuMu 已能定位就直接过；否则引导用户点选一次 MuMuManager.exe。</summary>
+    private async Task<bool> EnsureMumuLocatedAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(MumuAuth.FindMumu())) return true;
+        }
+        catch { /* 定位失败 → 走点选 */ }
+        return await PickMumuManagerAsync();
+    }
+
+    /// <summary>文件选择框选 MuMuManager.exe，选完记进 tools.json（下次不再问）。</summary>
+    private async Task<bool> PickMumuManagerAsync()
+    {
+        try
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "选择 MuMuManager.exe（通常在 MuMu 安装目录的 nx_main 里）",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("MuMuManager.exe")
+                    {
+                        Patterns = new[] { "MuMuManager.exe" },
+                    },
+                },
+            });
+            if (files == null || files.Count == 0) return false;
+            string path = files[0].TryGetLocalPath() ?? "";
+            if (path.Length == 0) return false;
+            if (!ToolLocator.RememberMumuManager(path))
+            {
+                ShowBanner("选中的不是 MuMuManager.exe：" + path, BannerKind.Err);
+                return false;
+            }
+            Log("已记住 MuMu 位置：" + path);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log("选择 MuMu 位置失败：" + e.Message);
+            return false;
+        }
     }
 
     private async void BtnAuth_Click(object sender, RoutedEventArgs e)

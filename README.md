@@ -16,8 +16,11 @@
 
 1. 顶栏「环境检查」→ 缺 ffmpeg 就点「一键安装 ffmpeg」（装到 `%USERPROFILE%\.xqd_tool\ffmpeg\bin`，
    不写系统 PATH、不需要管理员权限）。
-2. 点「重新授权」→ 程序自动拉起 MuMu 模拟器读取登录态（MuMu 装在非常规目录时，
-   点「指定 MuMuManager…」选一次，位置会记住）。
+2. 点「重新授权」→ 程序自动找 MuMu 并拉起装了兴趣岛的实例读取登录态。
+   MuMu 装在非常规目录、或者只开了实例 2/3 都没关系：程序会按「运行中的进程 →
+   开始菜单快捷方式 → 卸载注册表 → 各盘目录」找到它，并 **0~7 号实例全探**；
+   实在定位不到会弹文件选择框让你选一次 `MuMuManager.exe`，位置记在
+   `~/.xqd_tool/tools.json`，下次不再问。排障用 `--authcheck`。
 3. 左侧勾选要下载的营 → 课表并入右侧表格 → 点「开始下载」。
 
 ## 换机器为什么现在能跑
@@ -88,6 +91,7 @@ dotnet build xqd-csharp/Xqd.sln -c Release
 ```
 xqd-downloader --version      打印版本
 xqd-downloader --check        环境体检（依赖 / 目录 / 设备）
+xqd-downloader --authcheck    授权诊断：MuMu 路径 + 各实例登录状态（换机器排障用）
 xqd-downloader --install-deps 自动下载 ffmpeg 到 ~/.xqd_tool/ffmpeg/bin
 ```
 

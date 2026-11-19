@@ -21,7 +21,7 @@ if not defined DOTNET (
 
 set "PROJ=src\Xqd.Avalonia\Xqd.Avalonia.csproj"
 set "OUT=dist"
-set "VER=1.7.0"
+set "VER=1.7.1"
 if not "%~1"=="" if not "%~1"=="--check" set "VER=%~1"
 
 if "%~1"=="--check" (
@@ -33,7 +33,7 @@ echo [1/3] 还原依赖
 "%DOTNET%" restore "%PROJ%" --configfile ".\NuGet.config" -r win-x64 || exit /b 1
 
 echo [2/3] 发布自包含单文件（win-x64，目标机器无需安装 .NET）
-"%DOTNET%" publish "%PROJ%" -c Release --no-restore -o "%OUT%" -p:PkgVersion=%VER% || exit /b 1
+"%DOTNET%" publish "%PROJ%" -c Release --no-restore -o "%OUT%" -p:PkgVersion=%VER% -p:DebugType=None || exit /b 1
 
 echo [3/3] 产物
 dir /b "%OUT%"
