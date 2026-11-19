@@ -1,10 +1,11 @@
 @echo off
-rem ══════════════════════════════════════════════════════════════
-rem  兴趣岛视频下载器 - Avalonia 版 构建脚本
-rem  用法：build.cmd            构建 Release（输出到 .\dist）
-rem        build.cmd 1.7.1      指定版本号
-rem        build.cmd --check    跑无头环境体检
-rem ══════════════════════════════════════════════════════════════
+rem ================================================================
+rem  XQD Downloader - Avalonia edition build script
+rem  Usage: build.cmd            build Release into .\dist
+rem         build.cmd 1.7.1      use a specific version
+rem         build.cmd --check    run the headless environment check
+rem  NOTE: this file must stay CRLF + ASCII, otherwise cmd.exe mis-parses it.
+rem ================================================================
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
@@ -15,7 +16,7 @@ if not defined DOTNET (
 )
 if not defined DOTNET if exist "%ProgramFiles%\dotnet\dotnet.exe" set "DOTNET=%ProgramFiles%\dotnet\dotnet.exe"
 if not defined DOTNET (
-    echo [失败] 找不到 dotnet —— 请安装 .NET 8 SDK，或设置 DOTNET_ROOT 后重试。
+    echo [FAIL] dotnet not found - install the .NET 8 SDK, or set DOTNET_ROOT and retry.
     exit /b 1
 )
 
@@ -29,13 +30,13 @@ if "%~1"=="--check" (
     exit /b %errorlevel%
 )
 
-echo [1/3] 还原依赖
+echo [1/3] restore
 "%DOTNET%" restore "%PROJ%" --configfile ".\NuGet.config" -r win-x64 || exit /b 1
 
-echo [2/3] 发布自包含单文件（win-x64，目标机器无需安装 .NET）
+echo [2/3] publish self-contained single file (win-x64, no .NET needed on target)
 "%DOTNET%" publish "%PROJ%" -c Release --no-restore -o "%OUT%" -p:PkgVersion=%VER% -p:DebugType=None || exit /b 1
 
-echo [3/3] 产物
+echo [3/3] artifact
 dir /b "%OUT%"
 echo.
-echo 完成：%CD%\%OUT%\xqd-downloader-v%VER%.exe
+echo done: %CD%\%OUT%\xqd-downloader-v%VER%.exe

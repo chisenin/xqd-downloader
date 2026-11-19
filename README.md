@@ -93,7 +93,11 @@ xqd-downloader --version      打印版本
 xqd-downloader --check        环境体检（依赖 / 目录 / 设备）
 xqd-downloader --authcheck    授权诊断：MuMu 路径 + 各实例登录状态（换机器排障用）
 xqd-downloader --install-deps 自动下载 ffmpeg 到 ~/.xqd_tool/ffmpeg/bin
+xqd-downloader --waitauth     只开「等待登录」小窗（可带秒数），登录成功自动退出
 ```
+
+`--waitauth` 是排障用的独立入口：不加载主界面，每 2 秒扫一遍实例 0~7，谁先读到登录态
+就把实例号打回并退出。远程指导用户时让他跑这一条，窗自动消失即表示授权链路通了。
 
 ## 发版
 

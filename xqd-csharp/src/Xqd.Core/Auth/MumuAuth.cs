@@ -285,6 +285,115 @@ public sealed class MumuAuth : IAuthService
     }
 
     // ════════════════════════════════════════════════════════════════
+    //  边等边取（对应 hgvd 的 WaitForAuth / GUI WaitAuthWindow）
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>等授权的结果。</summary>
+    public sealed class WaitLoginResult
+    {
+        /// <summary>读到登录态的实例号；-1 = 没等到。</summary>
+        public int Index = -1;
+        public bool TimedOut;
+        public string Message = "";
+        public bool Ok => Index >= 0;
+    }
+
+    /// <summary>
+    /// 每 2 秒扫一遍正在运行的实例，谁先出现「能拼出 userId + rsessionId」的登录态就返回谁。
+    /// ★ 用户可能还没启动那台装了兴趣岛的安卓机、或 App 还没登录；
+    ///   与其让用户对着「App 未登录」反复点重试，不如等他自己去操作。
+    /// ★ 只负责「等到」，落盘仍由 EnsureAuthAsync 完成 —— 等待窗关掉后重跑一次授权即可。
+    /// </summary>
+    public static async Task<WaitLoginResult> WaitForLoginAsync(
+        int timeoutSec, Action<string> onStatus, CancellationToken ct)
+    {
+        string manager = Setup.ToolLocator.FindMumuManager() ?? "";
+        if (manager.Length == 0)
+            return new WaitLoginResult
+            {
+                Message = "找不到 MuMuManager.exe，无法等待授权。"
+                          + "请先在界面里点「指定 MuMuManager…」选一次。",
+            };
+
+        var probe = new MumuAuth();
+        var deadline = DateTime.UtcNow.AddSeconds(Math.Max(5, timeoutSec));
+        int lastRunning = -1;
+        string lastError = "";
+
+        while (DateTime.UtcNow < deadline)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                var insts = await probe.ListInstancesAsync(manager, ct).ConfigureAwait(false);
+                var running = insts.Where(i => i.Started).OrderBy(i => i.Index).ToList();
+
+                if (running.Count == 0)
+                {
+                    if (lastRunning != 0)
+                    {
+                        Say(onStatus, "还没有安卓实例在运行 —— 请打开 MuMu，"
+                                      + "启动那台装了「兴趣岛」的安卓机。");
+                        lastRunning = 0;
+                    }
+                }
+                else
+                {
+                    foreach (var inst in running)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        try
+                        {
+                            if (!await probe.AppInstalledOnAsync(manager, inst.Index, ct)
+                                      .ConfigureAwait(false))
+                                continue;
+                            var header = await probe.ReadHeaderOnAsync(manager, inst.Index, ct)
+                                                    .ConfigureAwait(false);
+                            if (!string.IsNullOrEmpty(header))
+                            {
+                                Say(onStatus, $"✓ 实例 {inst.Index} 已登录，正在读取…");
+                                return new WaitLoginResult
+                                {
+                                    Index = inst.Index,
+                                    Message = $"实例 {inst.Index} 已登录",
+                                };
+                            }
+                        }
+                        catch (OperationCanceledException) { throw; }
+                        catch { /* 这台读不到，下轮再看 */ }
+                    }
+
+                    if (lastRunning != running.Count)
+                    {
+                        Say(onStatus, $"检测到 {running.Count} 台实例在运行，"
+                                      + "正在等「兴趣岛」登录态…（请在 App 里确认已登录）");
+                        lastRunning = running.Count;
+                    }
+                }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception e)
+            {
+                // 读失败不代表没登录，继续等；同一个错误只播报一次
+                if (lastError != e.Message)
+                {
+                    Say(onStatus, "等待中：" + e.Message);
+                    lastError = e.Message;
+                }
+            }
+
+            await Task.Delay(2_000, ct).ConfigureAwait(false);
+        }
+
+        return new WaitLoginResult
+        {
+            TimedOut = true,
+            Message = $"等待 {timeoutSec} 秒仍未读到登录态。"
+                      + "请在 MuMu 里确认：安卓机已启动 → 兴趣岛 App 已安装 → 已登录。",
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════════
     //  子进程封装：所有外部程序一律走 Xqd.Core.Proc
     // ════════════════════════════════════════════════════════════════
 

@@ -173,6 +173,19 @@ public partial class MainWindow : Window
                 auth = await RunAuthOnceAsync(force);
         }
 
+        // ★ 模拟器在跑但没登录 / 这台没装 App：不逼用户反复点「重试」，
+        //   弹置顶小窗边等边取（每 2 秒扫实例，最多 180 秒），读到就自动继续。
+        if (!auth.Ok && NeedsWaitForLogin(auth.Message))
+        {
+            var win = new WaitAuthWindow(180);
+            int idx = await win.ShowDialog<int>(this);
+            if (idx >= 0)
+            {
+                Log($"实例 {idx} 已登录，重新读取授权…");
+                auth = await RunAuthOnceAsync(true);
+            }
+        }
+
         if (!auth.Ok)
         {
             LblAuth.Text = "未授权";
@@ -210,6 +223,18 @@ public partial class MainWindow : Window
         }
         catch { /* 定位失败 → 走点选 */ }
         return await PickMumuManagerAsync();
+    }
+
+    /// <summary>
+    /// 这些失败属于「人还没操作完」，适合开等待窗：
+    /// App 没登录 / 没读到登录态 / 这台实例没装 App（用户可能正在装）。
+    /// </summary>
+    private static bool NeedsWaitForLogin(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return false;
+        return message.Contains("App 未登录")
+            || message.Contains("未检测到登录态")
+            || message.Contains("没有「兴趣岛」App");
     }
 
     /// <summary>文件选择框选 MuMuManager.exe，选完记进 tools.json（下次不再问）。</summary>

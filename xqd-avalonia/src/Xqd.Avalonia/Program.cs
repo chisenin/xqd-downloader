@@ -40,11 +40,25 @@ internal static class Program
                 Console.WriteLine(AppInfo.Version);
                 return 0;
             }
+            if (cmd == "--waitauth")
+            {
+                // 支持用：单独打开「等待授权」窗（不碰主界面），适合远程指导用户
+                //   可带秒数：--waitauth 30
+                WaitAuthMode = true;
+                if (args.Length > 1 && int.TryParse(args[1], out int sec) && sec > 0 && sec <= 3600)
+                    WaitAuthTimeoutSec = sec;
+            }
         }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         return 0;
     }
+
+    /// <summary>--waitauth：只开等待授权窗（不加载主界面）。</summary>
+    public static bool WaitAuthMode { get; private set; }
+
+    /// <summary>--waitauth 的等待上限，默认 180 秒。</summary>
+    public static int WaitAuthTimeoutSec { get; private set; } = 180;
 
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<App>()

@@ -14,8 +14,17 @@ public sealed partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow();
-            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            if (Program.WaitAuthMode)
+            {
+                // --waitauth：只开等待窗，关掉就退出（不加载主界面）
+                desktop.MainWindow = new WaitAuthWindow(Program.WaitAuthTimeoutSec);
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            }
+            else
+            {
+                desktop.MainWindow = new MainWindow();
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            }
         }
         base.OnFrameworkInitializationCompleted();
     }
