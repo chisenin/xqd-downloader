@@ -1,26 +1,45 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="using:Xqd.Avalonia.Converters"
+             xmlns:presenters="using:Avalonia.Controls.Presenters"
              x:Class="Xqd.Avalonia.App"
              RequestedThemeVariant="Light">
 
   <Application.Resources>
     <conv:HexBrushConverter x:Key="Hex" />
 
-    <!-- 配色：深蓝顶栏 + 浅灰内容区，长时间盯着不刺眼 -->
+    <!-- ══════════ 配色：深蓝顶栏 + 浅灰内容区（沿用 hgvd 的层级，换成兴趣岛的蓝） ══════════ -->
     <SolidColorBrush x:Key="BgBrush" Color="#F4F6FA" />
     <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="LineBrush" Color="#DCE3EC" />
-    <SolidColorBrush x:Key="TextBrush" Color="#1F2937" />
-    <SolidColorBrush x:Key="MutedBrush" Color="#6B7A8C" />
+    <SolidColorBrush x:Key="LineBrush" Color="#E0E5EE" />
+    <SolidColorBrush x:Key="TextBrush" Color="#2B3445" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#8494A8" />
+    <SolidColorBrush x:Key="HintBrush" Color="#A8B2C1" />
+    <SolidColorBrush x:Key="SectionTitleBrush" Color="#2F3D52" />
+    <SolidColorBrush x:Key="HeaderBgBrush" Color="#EEF2F8" />
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#4A5A72" />
+    <SolidColorBrush x:Key="StatusBgBrush" Color="#E8EDF5" />
+    <SolidColorBrush x:Key="LogBgBrush" Color="#1F2733" />
+    <SolidColorBrush x:Key="LogFgBrush" Color="#C9D6E5" />
+
     <SolidColorBrush x:Key="BrandBrush" Color="#2C5282" />
     <SolidColorBrush x:Key="AccentBrush" Color="#2F6FB2" />
     <SolidColorBrush x:Key="AccentSoftBrush" Color="#E8F1FB" />
-    <SolidColorBrush x:Key="TopFgBrush" Color="#EAF2FB" />
-    <SolidColorBrush x:Key="TopSubBrush" Color="#A9C0DA" />
+    <SolidColorBrush x:Key="TopFgBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TopSubBrush" Color="#C6D9EE" />
     <SolidColorBrush x:Key="OkBrush" Color="#2E7D4F" />
     <SolidColorBrush x:Key="WarnBrush" Color="#B26A00" />
     <SolidColorBrush x:Key="ErrBrush" Color="#B33A3A" />
+
+    <SolidColorBrush x:Key="BannerInfoBg" Color="#E8F1FB" />
+    <SolidColorBrush x:Key="BannerInfoBd" Color="#B9D4EF" />
+    <SolidColorBrush x:Key="BannerInfoFg" Color="#185FA5" />
+    <SolidColorBrush x:Key="BannerOkBg" Color="#EAF7EE" />
+    <SolidColorBrush x:Key="BannerOkBd" Color="#B8E0C4" />
+    <SolidColorBrush x:Key="BannerOkFg" Color="#1F7A3D" />
+    <SolidColorBrush x:Key="BannerErrBg" Color="#FDEEEE" />
+    <SolidColorBrush x:Key="BannerErrBd" Color="#F0C2C2" />
+    <SolidColorBrush x:Key="BannerErrFg" Color="#B03030" />
 
     <LinearGradientBrush x:Key="BrandGrad" StartPoint="0%,0%" EndPoint="100%,0%">
       <GradientStop Offset="0" Color="#1E3A5F" />
@@ -31,113 +50,202 @@
   <Application.Styles>
     <FluentTheme />
 
-    <!-- 通用按钮 -->
-    <Style Selector="Button">
-      <Setter Property="Background" Value="{StaticResource CardBrush}" />
-      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <!-- ══════════ 卡片 ══════════ -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="White" />
       <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Padding" Value="12" />
+    </Style>
+
+    <!-- ══════════ 按钮（自带圆角模板，Avalonia 的 Button 没有 CornerRadius 属性） ══════════ -->
+    <Style Selector="Button">
       <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="#33415C" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#D3DAE6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12,6" />
       <Setter Property="MinHeight" Value="30" />
-      <Setter Property="HorizontalContentAlignment" Value="Center" />
-      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate TargetType="Button">
+          <Border Name="PART_Root"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="6"
+                  Padding="{TemplateBinding Padding}">
+            <presenters:ContentPresenter Content="{TemplateBinding Content}"
+                                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
     </Style>
-    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#ECF2FA" />
+    <Style Selector="Button:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="#EAF1FA" />
+      <Setter Property="BorderBrush" Value="#A9C4E2" />
     </Style>
-    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button:pressed /template/ Border#PART_Root">
       <Setter Property="Background" Value="#DDE8F5" />
+    </Style>
+    <Style Selector="Button:disabled /template/ Border#PART_Root">
+      <Setter Property="Background" Value="#F1F3F7" />
+      <Setter Property="BorderBrush" Value="#E2E6EC" />
+    </Style>
+    <Style Selector="Button:disabled">
+      <Setter Property="Foreground" Value="#A8B2C1" />
+      <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+
+    <!-- 顶栏按钮：贴在深色栏上，白底更清楚 -->
+    <Style Selector="Button.top">
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="MinHeight" Value="28" />
     </Style>
 
     <!-- 主按钮 -->
     <Style Selector="Button.primary">
+      <Setter Property="Foreground" Value="White" />
       <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-      <Setter Property="Foreground" Value="#FFFFFF" />
-      <Setter Property="BorderBrush" Value="#2A64A0" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.primary:pointerover /template/ Border#PART_Root">
       <Setter Property="Background" Value="#3A7CC0" />
+      <Setter Property="BorderBrush" Value="#3A7CC0" />
     </Style>
-    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.primary:pressed /template/ Border#PART_Root">
       <Setter Property="Background" Value="#265F99" />
+      <Setter Property="BorderBrush" Value="#265F99" />
     </Style>
-    <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#A9C0DA" />
+    <Style Selector="Button.primary:disabled /template/ Border#PART_Root">
+      <Setter Property="Background" Value="#CFDDEB" />
+      <Setter Property="BorderBrush" Value="#CFDDEB" />
     </Style>
-
-    <!-- 顶栏按钮 -->
-    <Style Selector="Button.top">
-      <Setter Property="Background" Value="#00000000" />
-      <Setter Property="Foreground" Value="{StaticResource TopFgBrush}" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="10,5" />
-    </Style>
-    <Style Selector="Button.top:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#22FFFFFF" />
-    </Style>
-    <Style Selector="Button.win">
-      <Setter Property="Background" Value="#00000000" />
-      <Setter Property="Foreground" Value="{StaticResource TopFgBrush}" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="CornerRadius" Value="0" />
-      <Setter Property="Width" Value="46" />
-      <Setter Property="Height" Value="34" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="FontSize" Value="14" />
-    </Style>
-    <Style Selector="Button.win:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#26FFFFFF" />
-    </Style>
-    <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#C42B1C" />
+    <Style Selector="Button.primary:disabled">
+      <Setter Property="Foreground" Value="#F4F7FB" />
     </Style>
 
-    <!-- 视图切换（RadioButton 当标签用） -->
-    <Style Selector="RadioButton.tab">
-      <Setter Property="Background" Value="#00000000" />
-      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
-      <Setter Property="Padding" Value="12,6" />
-      <Setter Property="FontSize" Value="12.5" />
-      <Setter Property="MinHeight" Value="28" />
-    </Style>
-    <Style Selector="RadioButton.tab:checked /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-      <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-    </Style>
-    <Style Selector="RadioButton.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#F0F4FA" />
+    <!-- 危险按钮 -->
+    <Style Selector="Button.danger">
+      <Setter Property="Foreground" Value="#B03030" />
+      <Setter Property="BorderBrush" Value="#E8C6C6" />
     </Style>
 
-    <!-- 输入框 -->
+    <!-- ══════════ 输入框 ══════════ -->
     <Style Selector="TextBox">
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="9,6" />
       <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="#2B3445" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#D3DAE6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="8,5" />
       <Setter Property="MinHeight" Value="30" />
-      <Setter Property="BorderBrush" Value="#CBD6E2" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="TextBox.round:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
     </Style>
 
-    <!-- 列表：条目本身不要内边距，选中色换成本主题的浅蓝 -->
+    <!-- ══════════ 文本样式 ══════════ -->
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource SectionTitleBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{StaticResource HintBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ══════════ 列表 ══════════ -->
     <Style Selector="ListBox">
-      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="0" />
     </Style>
     <Style Selector="ListBoxItem">
       <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0" />
-      <Setter Property="Background" Value="#00000000" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Background" Value="Transparent" />
       <Setter Property="MinHeight" Value="0" />
     </Style>
-    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#EAF1FA" />
+    </Style>
+    <Style Selector="ListBoxItem:selected">
       <Setter Property="Background" Value="#DCEBFA" />
     </Style>
-    <Style Selector="CheckBox">
-      <Setter Property="FontSize" Value="12.5" />
-      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Style Selector="ListBoxItem:selected:focus">
+      <Setter Property="Background" Value="#DCEBFA" />
+    </Style>
+
+    <!-- ══════════ 表头 ══════════ -->
+    <Style Selector="Border.thead">
+      <Setter Property="Background" Value="{StaticResource HeaderBgBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="TextBlock.thead">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource HeaderTextBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ══════════ 日志框：深底浅字，长时间看不刺眼 ══════════ -->
+    <Style Selector="TextBox.log">
+      <Setter Property="Background" Value="{StaticResource LogBgBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource LogFgBrush}" />
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New, monospace" />
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="AcceptsReturn" Value="True" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+    </Style>
+
+    <!-- ══════════ 视图切换（单选按钮当胶囊标签） ══════════ -->
+    <Style Selector="RadioButton.pill">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#4A5A72" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Template">
+        <ControlTemplate TargetType="RadioButton">
+          <Border Name="PART_Root" Background="Transparent" CornerRadius="5" Padding="9,3">
+            <presenters:ContentPresenter Content="{TemplateBinding Content}"
+                                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.pill:pointerover /template/ Border#PART_Root">
+      <Setter Property="Background" Value="#EAF1FA" />
+    </Style>
+    <Style Selector="RadioButton.pill:checked /template/ Border#PART_Root">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    </Style>
+    <Style Selector="RadioButton.pill:checked">
+      <Setter Property="Foreground" Value="White" />
     </Style>
   </Application.Styles>
 </Application>

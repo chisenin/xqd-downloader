@@ -36,8 +36,8 @@ namespace Xqd.Avalonia.Views;
 public partial class MainWindow : Window
 {
     // ── 单表列宽（必须与 XAML 表头一致；标题列由窗口宽度算） ──
-    private const double WState = 92, WCamp = 120, WDur = 66, WSize = 112,
-                         WSpeed = 78, WEta = 78, WProg = 150;
+    private const double WState = 80, WCamp = 96, WDur = 56, WSize = 88,
+                         WSpeed = 68, WEta = 60, WProg = 108;
 
     public static readonly StyledProperty<double> TitleWidthProperty =
         AvaloniaProperty.Register<MainWindow, double>(nameof(TitleWidth), 280);
@@ -434,6 +434,7 @@ public partial class MainWindow : Window
         {
             var row = new LessonRow(l, item.Camp, l.Index + 1);
             row.ShowCampColumn = true;
+            row.StateWord = States.WordPending;   // 默认「待下载」：空胶囊看着像丢数据
 
             // 已成品判定：文件名主键 + 10KB 门槛 + ffprobe 时长容差
             var state = _checker?.Check(campName, Naming.LessonStem(l), l.Duration);
@@ -592,7 +593,7 @@ public partial class MainWindow : Window
         if (avail <= 0) return;
         double fixedW = WState + WDur + WSize + WSpeed + WEta + WProg + (ShowCampColumn ? WCamp : 0);
         double w = avail - fixedW - 26;      // 26：左右内边距 + 滚动条
-        TitleWidth = Math.Max(160, w);
+        TitleWidth = Math.Max(110, w);
     }
 
     // ══════════════════════════════════════════════════════ 行交互
@@ -1034,7 +1035,7 @@ public partial class MainWindow : Window
             _histVm.Clear();
             foreach (var h in _hist.Take(60)) _histVm.Add(new HistVm(h));
             LblHistCount.Text = _hist.Count + " 条";
-            LblHist.Text = "上次下载（" + _hist.Count + " 条）";
+            LblHist.Text = "上次下载";
             Log($"已载入下载历史 {_hist.Count} 条");
         }
         catch (Exception e)
@@ -1253,7 +1254,9 @@ public partial class MainWindow : Window
     {
         if (e.Property != WindowStateProperty) return;
         if (BtnWinMax != null)
-            BtnWinMax.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+            BtnWinMax.Kind = WindowState == WindowState.Maximized
+                ? Xqd.Avalonia.Controls.WindowButtonKind.Restore
+                : Xqd.Avalonia.Controls.WindowButtonKind.Maximize;
         UpdateTitleWidth();
     }
 

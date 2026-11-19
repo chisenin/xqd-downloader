@@ -102,6 +102,7 @@ public static class States
         word == "已完成" || word == "失败" || word == "已存在" || word == "需重下";
 
     public const string WordQueued = "排队中";
+    public const string WordPending = "待下载";
     public const string WordPaused = "已暂停";
     public const string WordDone = "已完成";
     public const string WordFailed = "失败";
@@ -132,6 +133,7 @@ public static class States
         ["校验中"] = new[] { "#FAEEDA", "#854F0B", "#BA7517" },
         ["已暂停"] = new[] { "#FAEEDA", "#854F0B", "#BA7517" },
         ["排队中"] = new[] { "#EEEDFE", "#534AB7", "#7F77DD" },
+        ["待下载"] = new[] { "#EEF2F8", "#5A6B80", "#D3DAE6" },
         ["失败"] = new[] { "#FCEBEB", "#A32D2D", "#E24B4A" },
         ["需重下"] = new[] { "#FCEBEB", "#A32D2D", "#E24B4A" },
     };
